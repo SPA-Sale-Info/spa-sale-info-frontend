@@ -1,0 +1,80 @@
+/**
+ * _document.js - HTML 문서의 구조를 정의하는 파일
+ *
+ * 이 파일은 서버에서만 렌더링되며, HTML의 <html>, <head>, <body> 태그를 커스터마이징합니다.
+ *
+ * 왜 필요한가요?
+ * - 웹 폰트 추가
+ * - 메타 태그 설정
+ * - 전역 스크립트 추가
+ * - 언어 설정 등
+ *
+ * 주의사항:
+ * - 이 파일은 서버에서만 실행되므로, onClick 같은 이벤트 핸들러는 작동하지 않습니다
+ * - 애플리케이션 로직은 _app.js나 각 페이지에 작성해야 합니다
+ */
+
+// Next.js에서 제공하는 Document 관련 컴포넌트들을 import 합니다
+import { Html, Head, Main, NextScript } from 'next/document'
+
+/**
+ * Document 컴포넌트
+ *
+ * HTML 문서의 기본 구조를 정의합니다
+ */
+export default function Document() {
+  return (
+    /**
+     * <Html> 태그
+     * - HTML의 최상위 태그입니다
+     * - lang="ko"는 웹사이트의 주 언어가 한국어임을 나타냅니다
+     * - 스크린 리더와 검색 엔진이 이 정보를 활용합니다
+     */
+    <Html lang="ko">
+      {/**
+       * <Head> 태그
+       * - HTML의 <head> 부분을 정의합니다
+       * - 메타데이터, 폰트, 파비콘 등을 여기에 추가합니다
+       *
+       * 주의: 이것은 HTML의 <head>이고, next/head와는 다릅니다
+       * - next/head는 각 페이지에서 동적으로 head를 수정할 때 사용
+       * - _document.js의 Head는 모든 페이지에 공통으로 적용
+       */}
+      <Head>
+        {/* 웹사이트 설명 메타 태그 */}
+        <meta name="description" content="SPA 브랜드 가격 인하 정보를 제공하는 패션 큐레이션 서비스" />
+
+        {/* 파비콘 설정 */}
+        <link rel="icon" href="/favicon.ico" />
+
+        {/*
+          구글 폰트 추가 예시 (필요시 주석 해제)
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+        */}
+      </Head>
+
+      {/**
+       * <body> 태그
+       * - HTML의 <body> 부분을 정의합니다
+       * - 실제 콘텐츠가 렌더링되는 영역입니다
+       */}
+      <body>
+        {/**
+         * <Main /> 컴포넌트
+         * - Next.js가 렌더링한 페이지 컨텐츠가 여기에 삽입됩니다
+         * - 반드시 포함되어야 합니다
+         */}
+        <Main />
+
+        {/**
+         * <NextScript /> 컴포넌트
+         * - Next.js가 필요로 하는 스크립트들을 자동으로 삽입합니다
+         * - React를 실행하는 스크립트, 페이지 간 이동을 위한 스크립트 등
+         * - 반드시 포함되어야 합니다
+         */}
+        <NextScript />
+      </body>
+    </Html>
+  )
+}

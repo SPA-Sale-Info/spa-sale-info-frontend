@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "name": "spa-sale-info-frontend",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "env": {
+    "API_URL": "@api_url"
+  }
+}

@@ -1,0 +1,361 @@
+/**
+ * ProductCard.module.css - 상품 카드 컴포넌트 스타일
+ *
+ * 이 파일은 상품 카드의 디자인을 정의합니다
+ */
+
+/**
+ * 카드 컨테이너
+ *
+ * position: relative:
+ * - 자식의 absolute 위치 기준점이 됨
+ * - 호버 오버레이를 위해 필요
+ *
+ * background-color: white:
+ * - 배경색
+ *
+ * border-radius: 12px:
+ * - 모서리를 둥글게
+ *
+ * overflow: hidden:
+ * - 자식 요소가 카드 밖으로 나가지 않도록
+ * - border-radius가 이미지에도 적용되도록
+ *
+ * cursor: pointer:
+ * - 마우스 오버 시 손가락 모양
+ *
+ * transition:
+ * - 변화 애니메이션
+ * - transform 0.3s ease, box-shadow 0.3s ease:
+ *   - transform과 box-shadow를 각각 0.3초 동안 애니메이션
+ */
+.card {
+  position: relative;
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/**
+ * 카드 호버 효과
+ *
+ * transform: translateY(-8px):
+ * - 위로 8px 올라가는 효과
+ *
+ * box-shadow:
+ * - 그림자를 더 크고 진하게
+ * - 0 12px 24px: 더 넓게 퍼진 그림자
+ * - rgba(0, 0, 0, 0.15): 15% 불투명도
+ */
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/**
+ * 이미지 컨테이너
+ *
+ * position: relative:
+ * - Next.js Image의 layout="fill"을 위해 필요
+ *
+ * width: 100%:
+ * - 카드 전체 너비
+ *
+ * padding-top: 133.33%:
+ * - 패딩 트릭으로 비율 유지
+ * - 133.33% = 3:4 비율 (세로가 가로의 1.33배)
+ * - padding-top은 부모 너비를 기준으로 계산됨
+ *
+ * 왜 이렇게 하나요?
+ * - 이미지가 로드되기 전에도 공간을 확보
+ * - 레이아웃 시프트(Layout Shift) 방지
+ * - 모든 카드의 이미지 영역을 동일한 비율로 유지
+ */
+.imageContainer {
+  position: relative;
+  width: 100%;
+  padding-top: 133.33%; /* 3:4 비율 */
+  background-color: #f5f5f5;
+  overflow: hidden;
+}
+
+/**
+ * 이미지 스타일
+ *
+ * transition: transform:
+ * - 이미지 확대 애니메이션
+ */
+.image {
+  transition: transform 0.3s ease;
+}
+
+/**
+ * 카드 호버 시 이미지 확대
+ *
+ * .card:hover .image:
+ * - .card에 호버될 때 그 안의 .image에 적용
+ * - 자손 선택자 (Descendant Selector)
+ *
+ * transform: scale(1.05):
+ * - 1.05배 확대 (5% 크게)
+ */
+.card:hover .image {
+  transform: scale(1.05);
+}
+
+/**
+ * 할인율 배지
+ *
+ * position: absolute:
+ * - 절대 위치 지정
+ * - 부모(.imageContainer)를 기준으로 위치 설정
+ *
+ * top: 10px, left: 10px:
+ * - 이미지 좌상단에서 10px씩 떨어진 위치
+ *
+ * z-index: 2:
+ * - 쌓임 순서 (높을수록 위에)
+ * - 이미지 위에 표시되도록
+ */
+.discountBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #ff4757;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+}
+
+/**
+ * 감성 태그 배지
+ *
+ * top: 10px, right: 10px:
+ * - 우상단에 위치
+ *
+ * background-color: rgba(0, 0, 0, 0.7):
+ * - 반투명 검정 배경 (70% 불투명도)
+ * - 이미지 위에서도 글자가 잘 보이도록
+ */
+.vibeBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  z-index: 2;
+  backdrop-filter: blur(10px); /* 배경 블러 효과 (최신 브라우저) */
+}
+
+/**
+ * 상품 정보 영역
+ */
+.info {
+  padding: 1.25rem;
+}
+
+/**
+ * 브랜드 영역
+ */
+.brand {
+  margin-bottom: 0.5rem;
+}
+
+/**
+ * 브랜드 이름
+ */
+.brandName {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #007bff;
+  text-transform: uppercase; /* 대문자로 변환 */
+  letter-spacing: 0.5px; /* 자간 (글자 간격) */
+}
+
+/**
+ * 상품명
+ *
+ * overflow: hidden:
+ * - 넘치는 텍스트 숨김
+ *
+ * text-overflow: ellipsis:
+ * - 넘치는 텍스트를 ...으로 표시
+ *
+ * display: -webkit-box:
+ * - Webkit 박스 레이아웃 (여러 줄 말줄임표용)
+ *
+ * -webkit-line-clamp: 2:
+ * - 2줄까지만 표시하고 나머지는 ...
+ *
+ * -webkit-box-orient: vertical:
+ * - 박스를 세로 방향으로
+ *
+ * line-height: 1.4:
+ * - 줄 간격
+ *
+ * 이 속성들을 조합하면 여러 줄 말줄임표 구현 가능:
+ * 긴 상품명이 2줄을 넘으면 "상품명이 아주 길어서..."처럼 표시
+ */
+.productName {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+}
+
+/**
+ * 가격 컨테이너
+ */
+.priceContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/**
+ * 원가 (할인 전 가격)
+ *
+ * text-decoration: line-through:
+ * - 취소선
+ *
+ * opacity: 0.6:
+ * - 60% 불투명도 (연하게 표시)
+ */
+.originalPrice {
+  font-size: 0.9rem;
+  color: #999;
+  text-decoration: line-through;
+}
+
+/**
+ * 판매가 (할인 후 가격)
+ */
+.salePrice {
+  font-size: 1.25rem;
+  color: #ff4757;
+  font-weight: 700;
+}
+
+/**
+ * 호버 오버레이
+ *
+ * position: absolute:
+ * - 카드 위에 겹치도록
+ *
+ * top: 0, left: 0, right: 0, bottom: 0:
+ * - 카드 전체를 덮음
+ * - inset: 0과 동일 (최신 문법)
+ *
+ * background-color: rgba(0, 0, 0, 0.5):
+ * - 반투명 검정 배경
+ *
+ * display: flex, justify-content, align-items:
+ * - 중앙 정렬
+ *
+ * opacity: 0:
+ * - 기본적으로 투명 (안 보임)
+ *
+ * transition:
+ * - opacity 변화를 0.3초 동안 애니메이션
+ *
+ * pointer-events: none:
+ * - 마우스 이벤트를 받지 않음
+ * - 오버레이를 클릭해도 카드가 반응하도록
+ */
+.hoverOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/**
+ * 카드 호버 시 오버레이 표시
+ *
+ * .card:hover .hoverOverlay:
+ * - 카드에 호버되면 오버레이의 opacity를 1로
+ */
+.card:hover .hoverOverlay {
+  opacity: 1;
+}
+
+/**
+ * 미디어 쿼리 - 모바일
+ */
+@media (max-width: 768px) {
+  .info {
+    /* 모바일에서는 여백을 줄임 */
+    padding: 1rem;
+  }
+
+  .productName {
+    font-size: 0.95rem;
+  }
+
+  .salePrice {
+    font-size: 1.1rem;
+  }
+
+  .discountBadge,
+  .vibeBadge {
+    /* 배지 크기를 조금 줄임 */
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+}
+
+/**
+ * 접근성 - 포커스 상태
+ */
+.card:focus {
+  outline: 3px solid #007bff;
+  outline-offset: 2px;
+}
+
+/**
+ * 프린트 시 스타일
+ *
+ * @media print:
+ * - 페이지를 인쇄할 때 적용되는 스타일
+ */
+@media print {
+  .card {
+    /* 인쇄 시에는 호버 효과 제거 */
+    box-shadow: none;
+    break-inside: avoid; /* 카드가 페이지 중간에 잘리지 않도록 */
+  }
+
+  .hoverOverlay {
+    /* 인쇄 시 오버레이 숨김 */
+    display: none;
+  }
+}
