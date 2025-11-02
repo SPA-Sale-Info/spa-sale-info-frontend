@@ -1,37 +1,67 @@
 /**
- * globals.css - 전역 스타일 파일
+ * globals.css - 완전히 새로운 프리미엄 디자인 시스템
  *
- * 이 파일은 모든 페이지에 적용되는 스타일을 정의합니다
- * _app.js에서 import하여 전체 애플리케이션에 적용됩니다
- *
- * CSS 기본 개념:
- * - 선택자 { 속성: 값; }
- * - 선택자: 스타일을 적용할 HTML 요소를 지정
- * - 속성: 변경할 스타일 속성 (color, font-size 등)
- * - 값: 속성에 할당할 값
+ * 포트폴리오용 전문적이고 세련된 디자인
  */
 
-/**
- * CSS 리셋 및 기본 설정
- *
- * * 선택자:
- * - 모든(universal) HTML 요소를 선택
- *
- * *::before, *::after:
- * - 모든 요소의 가상 요소(pseudo-elements)를 선택
- * - ::before: 요소 내용 앞에 생성되는 가상 요소
- * - ::after: 요소 내용 뒤에 생성되는 가상 요소
- *
- * box-sizing: border-box:
- * - width와 height에 padding과 border를 포함
- * - 기본값(content-box)은 포함하지 않아 계산이 복잡함
- * - border-box를 사용하면 크기 계산이 직관적
- *
- * 예시:
- * width: 100px, padding: 10px, border: 5px일 때
- * - content-box: 실제 너비 = 130px (100 + 10*2 + 5*2)
- * - border-box: 실제 너비 = 100px (padding과 border 포함)
- */
+/* CSS 변수로 디자인 시스템 정의 */
+:root {
+  /* 색상 시스템 - 세련된 다크/라이트 팔레트 */
+  --color-primary: #6366f1;
+  --color-primary-light: #818cf8;
+  --color-primary-dark: #4f46e5;
+
+  --color-secondary: #ec4899;
+  --color-secondary-light: #f472b6;
+
+  --color-accent: #f59e0b;
+  --color-accent-light: #fbbf24;
+
+  --color-dark: #0f172a;
+  --color-dark-light: #1e293b;
+  --color-text: #334155;
+  --color-text-light: #64748b;
+  --color-text-lighter: #94a3b8;
+
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #f1f5f9;
+
+  /* 타이포그래피 */
+  --font-heading: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* 간격 시스템 */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+
+  /* 그림자 시스템 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* 트랜지션 */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 기본 리셋 */
 *,
 *::before,
 *::after {
@@ -40,190 +70,177 @@
   padding: 0;
 }
 
-/**
- * HTML과 body 기본 설정
- *
- * font-family:
- * - 폰트 우선순위를 지정
- * - 왼쪽부터 순서대로 시도하며, 없으면 다음 폰트 사용
- * - 시스템 폰트를 사용하여 로딩 속도 향상
- *
- * -apple-system: macOS/iOS 시스템 폰트
- * BlinkMacSystemFont: macOS Chrome
- * "Segoe UI": Windows
- * "Malgun Gothic", "맑은 고딕": 한글 폰트
- * sans-serif: 기본 산세리프 폰트 (폴백)
- *
- * line-height:
- * - 줄 간격 (행간)
- * - 1.6 = 폰트 크기의 1.6배
- * - 가독성 향상을 위해 1.4~1.8 권장
- *
- * color:
- * - 텍스트 색상
- * - #333: 진한 회색 (순수 검정 #000보다 눈에 편함)
- *
- * background-color:
- * - 배경색
- * - #fafafa: 밝은 회색 (순수 흰색 #fff보다 부드러움)
- */
-html,
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic",
-    "맑은 고딕", sans-serif;
-  line-height: 1.6;
-  color: #333;
-  background-color: #fafafa;
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/**
- * a 태그 (링크) 기본 스타일 제거
- *
- * color: inherit:
- * - 부모 요소의 색상을 상속
- * - 브라우저 기본 파란색 링크 색상 제거
- *
- * text-decoration: none:
- * - 밑줄 제거
- * - 브라우저 기본값은 underline
- */
+body {
+  font-family: var(--font-body);
+  line-height: 1.6;
+  color: var(--color-text);
+  background: var(--color-bg-secondary);
+  overflow-x: hidden;
+}
+
+/* 타이포그래피 */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-dark);
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+h3 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+p {
+  margin-bottom: 1rem;
+  line-height: 1.7;
+}
+
 a {
   color: inherit;
   text-decoration: none;
+  transition: var(--transition-base);
 }
 
-/**
- * 버튼 기본 스타일 제거
- *
- * cursor: pointer:
- * - 마우스 오버 시 손가락 모양 커서
- * - 클릭 가능한 요소임을 시각적으로 표시
- *
- * font: inherit:
- * - 부모의 폰트 설정을 상속
- * - 브라우저마다 다른 기본 폰트를 통일
- */
+a:hover {
+  color: var(--color-primary);
+}
+
 button {
   cursor: pointer;
   font: inherit;
+  border: none;
+  background: none;
+  transition: var(--transition-base);
 }
 
-/**
- * 이미지 기본 설정
- *
- * max-width: 100%:
- * - 이미지가 부모 요소를 넘지 않도록 제한
- * - 반응형 이미지의 기본 설정
- *
- * display: block:
- * - 이미지를 블록 요소로 변경
- * - 기본값 inline은 하단에 여백이 생길 수 있음
- */
 img {
   max-width: 100%;
   display: block;
 }
 
-/**
- * 제목(heading) 태그 설정
- *
- * h1, h2, h3, h4, h5, h6:
- * - 모든 제목 태그에 동일한 스타일 적용
- *
- * font-weight:
- * - 폰트 두께
- * - 600 = semi-bold (400=normal, 700=bold)
- */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-/**
- * 리스트 기본 스타일 제거
- *
- * list-style: none:
- * - 리스트 마커(•, 1., 2. 등) 제거
- * - 네비게이션 메뉴 등을 만들 때 유용
- */
-ul, ol {
-  list-style: none;
-}
-
-/**
- * 스크롤바 스타일 (Webkit 브라우저 - Chrome, Safari, Edge)
- *
- * ::-webkit-scrollbar:
- * - 스크롤바 전체
- * - width: 스크롤바 너비
- *
- * ::-webkit-scrollbar-track:
- * - 스크롤바 트랙 (배경 영역)
- *
- * ::-webkit-scrollbar-thumb:
- * - 스크롤바 손잡이 (움직이는 부분)
- * - border-radius: 모서리를 둥글게
- *
- * :hover:
- * - 마우스 오버 시 스타일
- */
+/* 스크롤바 스타일링 */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--color-bg-tertiary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  background: var(--color-text-lighter);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-bg-tertiary);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--color-text-light);
 }
 
-/**
- * 포커스 아웃라인 스타일
- *
- * :focus-visible:
- * - 키보드로 포커스했을 때만 적용
- * - 마우스 클릭 시에는 적용 안 됨
- * - 접근성을 유지하면서 미관을 개선
- *
- * outline:
- * - 요소 외곽선
- * - 2px solid #007bff: 2픽셀 두께의 파란색 실선
- *
- * outline-offset:
- * - 외곽선과 요소 사이의 간격
- */
-*:focus-visible {
-  outline: 2px solid #007bff;
+/* 선택 영역 스타일 */
+::selection {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* 포커스 스타일 */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/**
- * 반응형 디자인 - 미디어 쿼리
- *
- * @media:
- * - 화면 크기에 따라 다른 스타일 적용
- *
- * max-width: 768px:
- * - 화면 너비가 768px 이하일 때 적용
- * - 태블릿과 모바일 기기를 대상
- *
- * 일반적인 브레이크포인트:
- * - 모바일: max-width: 480px
- * - 태블릿: max-width: 768px
- * - 데스크톱: max-width: 1024px
- * - 대형 화면: 1024px 이상
- */
+/* 유틸리티 클래스 */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.section {
+  padding: var(--space-3xl) 0;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 그라데이션 텍스트 유틸리티 */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 반응형 */
 @media (max-width: 768px) {
-  html,
-  body {
-    /* 모바일에서는 폰트 크기를 조금 줄임 */
-    font-size: 14px;
+  :root {
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    --space-3xl: 4rem;
+  }
+
+  .container {
+    padding: 0 var(--space-md);
   }
 }

@@ -1,267 +1,370 @@
 /**
- * Home.module.css - 홈페이지 전용 스타일
+ * Home.module.css - 완전히 새로운 프리미엄 레이아웃
  *
- * CSS Module이란?
- * - 파일명에 .module.css를 붙이면 CSS Module로 인식
- * - 클래스명이 자동으로 고유하게 변환되어 충돌 방지
- * - 예: .container -> Home_container__xyz123
- *
- * CSS Module의 장점:
- * - 클래스명 충돌 방지 (스코프 분리)
- * - 컴포넌트 단위 스타일 관리
- * - 사용하지 않는 스타일 자동 제거
- *
- * 사용 방법:
- * import styles from './Home.module.css'
- * <div className={styles.container}>
+ * 포트폴리오에 어울리는 전문적인 디자인
  */
 
-/**
- * 메인 컨테이너
- *
- * min-height: 100vh:
- * - 최소 높이를 뷰포트 높이(Viewport Height) 100%로 설정
- * - vh: 뷰포트 높이의 1% (100vh = 화면 전체 높이)
- * - 내용이 적어도 화면을 꽉 채움
- *
- * display: flex:
- * - Flexbox 레이아웃 사용
- * - 자식 요소들을 유연하게 배치
- *
- * flex-direction: column:
- * - 자식 요소를 세로(열) 방향으로 배치
- * - 기본값은 row (가로)
- */
+/* 전체 컨테이너 */
 .container {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  background: var(--color-bg-secondary);
 }
 
-/**
- * 메인 콘텐츠 영역
- *
- * flex: 1:
- * - 남은 공간을 모두 차지
- * - flex-grow: 1, flex-shrink: 1, flex-basis: 0의 축약
- * - 푸터를 하단에 고정시키는 효과
- *
- * padding:
- * - 내부 여백
- * - 2rem = root font-size의 2배 (보통 32px)
- * - rem: root em, 루트 요소의 font-size 기준
- * - em: 부모 요소의 font-size 기준
- *
- * max-width:
- * - 최대 너비 제한
- * - 1200px: 큰 화면에서도 내용이 너무 퍼지지 않도록
- *
- * margin: 0 auto:
- * - 상하 여백 0, 좌우 자동 (중앙 정렬)
- * - 가로 중앙 정렬의 고전적인 방법
- *
- * width: 100%:
- * - 부모 요소의 너비를 100% 차지
- */
-.main {
-  flex: 1;
-  padding: 2rem;
-  max-width: 1200px;
+/* 네비게이션 바 */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: var(--space-md) 0;
+  animation: slideInDown 0.6s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navContent {
+  max-width: 1280px;
   margin: 0 auto;
-  width: 100%;
+  padding: 0 var(--space-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/**
- * 헤더 섹션
- *
- * text-align: center:
- * - 텍스트를 중앙 정렬
- *
- * margin-bottom:
- * - 하단 외부 여백
- * - 3rem = 48px (보통)
- */
-.header {
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.03em;
+}
+
+.navLinks {
+  display: flex;
+  gap: var(--space-lg);
+  list-style: none;
+}
+
+.navLink {
+  font-weight: 500;
+  color: var(--color-text);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  transition: var(--transition-base);
+}
+
+.navLink:hover {
+  color: var(--color-primary);
+  background: var(--color-bg-tertiary);
+}
+
+/* 히어로 섹션 - 완전히 새로운 디자인 */
+.hero {
+  position: relative;
+  padding: var(--space-3xl) 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 히어로 배경 애니메이션 */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 20s ease-in-out infinite;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 15s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(30px, -30px) rotate(5deg);
+  }
+  66% {
+    transform: translate(-20px, 20px) rotate(-5deg);
+  }
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
   text-align: center;
-  margin-bottom: 3rem;
+  color: white;
+  animation: fadeIn 1s ease-out;
 }
 
-/**
- * 제목
- *
- * font-size: 2.5rem:
- * - 폰트 크기를 2.5배로 (보통 40px)
- *
- * margin-bottom: 0.5rem:
- * - 하단 여백을 작게 설정하여 description과 가깝게
- *
- * color: #1a1a1a:
- * - 거의 검정색 (완전한 검정보다 부드러움)
- */
-.title {
+.heroTitle {
+  font-size: clamp(3rem, 6vw, 5rem);
+  font-weight: 900;
+  margin-bottom: var(--space-md);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.heroSubtitle {
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 400;
+  margin-bottom: var(--space-xl);
+  opacity: 0.95;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.heroStats {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2xl);
+  margin-top: var(--space-2xl);
+  flex-wrap: wrap;
+}
+
+.statItem {
+  text-align: center;
+  animation: scaleIn 0.8s ease-out backwards;
+}
+
+.statItem:nth-child(1) { animation-delay: 0.2s; }
+.statItem:nth-child(2) { animation-delay: 0.3s; }
+.statItem:nth-child(3) { animation-delay: 0.4s; }
+
+.statNumber {
   font-size: 2.5rem;
-  margin-bottom: 0.5rem;
-  color: #1a1a1a;
+  font-weight: 800;
+  display: block;
+  margin-bottom: var(--space-xs);
 }
 
-/**
- * 설명 텍스트
- *
- * font-size: 1.1rem:
- * - 기본 크기보다 조금 크게
- *
- * color: #666:
- * - 회색 (본문보다 연하게하여 위계 표현)
- */
-.description {
-  font-size: 1.1rem;
-  color: #666;
+.statLabel {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  font-weight: 500;
 }
 
-/**
- * 상품 그리드
- *
- * display: grid:
- * - CSS Grid 레이아웃 사용
- * - 2차원 레이아웃에 강력함
- *
- * grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)):
- * - 복잡하지만 매우 유용한 반응형 그리드
- *
- * repeat():
- * - 반복 패턴 정의
- *
- * auto-fill:
- * - 가능한 많은 열을 자동으로 생성
- * - 공간이 남으면 빈 트랙 생성
- *
- * minmax(280px, 1fr):
- * - 최소 280px, 최대 1fr (남은 공간을 균등 분배)
- * - 카드가 280px보다 작아지면 다음 줄로 이동
- *
- * 1fr:
- * - fraction(분수) 단위
- * - 남은 공간을 비율로 분배
- *
- * gap: 2rem:
- * - 그리드 아이템 사이의 간격
- * - row-gap과 column-gap을 동시에 설정
- *
- * margin-top: 2rem:
- * - 상단 외부 여백
- */
+/* 메인 컨텐츠 영역 */
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+/* 섹션 헤더 */
+.sectionHeader {
+  margin-bottom: var(--space-2xl);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.sectionTitle {
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 800;
+  margin-bottom: var(--space-sm);
+  color: var(--color-dark);
+}
+
+.sectionSubtitle {
+  font-size: 1.125rem;
+  color: var(--color-text-light);
+  max-width: 600px;
+}
+
+/* 상품 그리드 - 새로운 레이아웃 */
 .productsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-xl);
+  animation: fadeIn 1s ease-out;
 }
 
-/**
- * 로딩 표시
- *
- * display: flex, justify-content, align-items:
- * - Flexbox를 사용한 중앙 정렬
- *
- * justify-content: center:
- * - 주축(가로) 방향 중앙 정렬
- *
- * align-items: center:
- * - 교차축(세로) 방향 중앙 정렬
- *
- * padding: 4rem 0:
- * - 상하 여백 4rem, 좌우 여백 0
- */
+/* 로딩 상태 */
 .loading {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 4rem 0;
-  font-size: 1.1rem;
-  color: #666;
+  padding: var(--space-3xl) 0;
+  gap: var(--space-md);
 }
 
-/**
- * 빈 상태 (상품이 없을 때)
- */
+.loadingSpinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--color-bg-tertiary);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  font-size: 1.125rem;
+  color: var(--color-text-light);
+  font-weight: 500;
+}
+
+/* 빈 상태 */
 .emptyState {
+  text-align: center;
+  padding: var(--space-3xl) var(--space-lg);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: var(--space-md);
+  opacity: 0.3;
+}
+
+.emptyTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+  color: var(--color-dark);
+}
+
+.emptyDescription {
+  font-size: 1.125rem;
+  color: var(--color-text-light);
+}
+
+/* 푸터 */
+.footer {
+  background: var(--color-dark);
+  color: white;
+  padding: var(--space-2xl) 0;
+  margin-top: var(--space-3xl);
+}
+
+.footerContent {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+  text-align: center;
+}
+
+.footerTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.footerText {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  margin-bottom: var(--space-md);
+}
+
+.footerLinks {
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 4rem 0;
-  color: #999;
-  font-size: 1.1rem;
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
 }
 
-/**
- * 푸터
- *
- * border-top:
- * - 상단 테두리
- * - 1px solid #e5e5e5: 1픽셀 실선, 연한 회색
- *
- * text-align: center:
- * - 텍스트 중앙 정렬
- *
- * padding: 2rem:
- * - 모든 방향 여백 2rem
- *
- * background-color: white:
- * - 배경색 흰색
- */
-.footer {
-  border-top: 1px solid #e5e5e5;
-  text-align: center;
-  padding: 2rem;
-  background-color: white;
-  color: #666;
-  font-size: 0.9rem;
+.footerLink {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  transition: var(--transition-base);
 }
 
-/**
- * 미디어 쿼리 - 태블릿
- *
- * @media (max-width: 768px):
- * - 화면 너비가 768px 이하일 때 적용
- */
+.footerLink:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .productsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-lg);
+  }
+}
+
 @media (max-width: 768px) {
-  .main {
-    /* 모바일에서는 여백을 줄임 */
-    padding: 1rem;
+  .navLinks {
+    display: none;
   }
 
-  .title {
-    /* 제목 크기를 줄임 */
+  .hero {
+    padding: var(--space-2xl) 0;
+  }
+
+  .heroStats {
+    gap: var(--space-lg);
+  }
+
+  .statNumber {
     font-size: 2rem;
   }
 
+  .main {
+    padding: var(--space-xl) var(--space-md);
+  }
+
   .productsGrid {
-    /* 그리드 간격을 줄임 */
-    gap: 1rem;
-    /* 카드 최소 크기를 조정 */
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
   }
 }
 
-/**
- * 미디어 쿼리 - 모바일
- */
 @media (max-width: 480px) {
-  .main {
-    padding: 0.5rem;
+  .heroTitle {
+    font-size: 2.5rem;
   }
 
-  .title {
-    font-size: 1.75rem;
+  .heroSubtitle {
+    font-size: 1.125rem;
   }
 
-  .description {
-    font-size: 1rem;
-  }
-
-  .productsGrid {
-    /* 모바일에서는 1열로 표시 */
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .heroStats {
+    flex-direction: column;
+    gap: var(--space-md);
   }
 }
