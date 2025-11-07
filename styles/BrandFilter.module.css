@@ -1,127 +1,78 @@
-/**
- * BrandFilter.module.css - 완전히 새로운 프리미엄 필터 디자인
+/*
+ * BrandFilter.module.css - Brand chip styling
  */
 
 .filterContainer {
-  margin-bottom: var(--space-xl);
-  animation: fadeIn 0.8s ease-out;
+  width: 100%;
 }
 
 .buttonGroup {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
-  justify-content: center;
+  gap: 0.75rem;
 }
 
 .button {
-  position: relative;
-  padding: 0.875rem 1.75rem;
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 1.35rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-text);
-  background: white;
-  border: 2px solid var(--color-bg-tertiary);
+  background: rgba(255, 255, 255, 0.9);
   border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: all var(--transition-base);
-  white-space: nowrap;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 16px 45px -30px rgba(15, 23, 42, 0.55);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base), background var(--transition-base), color var(--transition-base);
+}
+
+.button:hover,
+.button:focus-visible {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 25px 55px -34px rgba(15, 23, 42, 0.55);
+}
+
+.selected {
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  border-color: transparent;
+  box-shadow: 0 30px 70px -32px rgba(99, 102, 241, 0.65);
 }
 
 .logoContainer {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 42px;
   height: 24px;
 }
 
 .brandLogo {
-  height: 20px;
-  width: auto;
-  max-width: 60px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   filter: grayscale(100%);
   transition: filter var(--transition-base);
 }
 
 .button:hover .brandLogo,
-.button.selected .brandLogo {
+.button:focus-visible .brandLogo,
+.selected .brandLogo {
   filter: grayscale(0%);
-}
-
-.button.selected .brandLogo {
-  filter: brightness(0) invert(1);
 }
 
 .brandName {
   display: inline-block;
 }
 
-/* 호버 효과 - 그라데이션 보더 */
-.button::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-  border-radius: var(--radius-full);
-  opacity: 0;
-  z-index: -1;
-  transition: opacity var(--transition-base);
-}
-
-.button:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: transparent;
-}
-
-.button:hover::before {
-  opacity: 1;
-}
-
-.button:active {
-  transform: translateY(0);
-}
-
-/* 선택된 상태 */
-.button.selected {
-  color: white;
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-
-.button.selected::before {
-  opacity: 0;
-}
-
-.button.selected:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
-  filter: brightness(1.1);
-}
-
-/* 포커스 상태 */
-.button:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-/* 반응형 */
 @media (max-width: 768px) {
-  .button {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.95rem;
+  .buttonGroup {
+    gap: 0.5rem;
   }
 
-  .buttonGroup {
-    gap: 0.625rem;
+  .button {
+    padding: 0.6rem 1.1rem;
   }
 }

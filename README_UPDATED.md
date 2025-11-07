@@ -81,7 +81,7 @@ cp .env.example .env.local
 `.env.local` 파일 내용:
 ```
 # API 엔드포인트 주소 (백엔드 서버 주소)
-API_URL=http://localhost:8000
+API_URL=http://localhost:8080
 
 # 또는 실제 배포된 API 주소
 # API_URL=https://your-api-server.com

@@ -14,6 +14,7 @@
  * - vibe: 감성 태그 (예: "AURALEE 맛")
  */
 
+import { useMemo } from 'react'
 // Next.js의 Image 컴포넌트를 import 합니다
 // 일반 <img> 태그 대신 Next.js Image를 사용하는 이유:
 // - 자동 이미지 최적화 (WebP 변환, 리사이징)
@@ -22,6 +23,7 @@
 // - 레이아웃 시프트 방지
 import Image from 'next/image'
 import styles from '../styles/ProductCard.module.css'
+import { getSafeExternalUrl } from '../utils/url'
 
 /**
  * 숫자를 한국 원화 형식으로 포맷하는 유틸리티 함수
@@ -58,7 +60,6 @@ function getBrandDisplayName(brandCode) {
     'ZARA': 'ZARA',
     'UNIQLO': 'UNIQLO',
     'MUJI': 'MUJI',
-    'COS': 'COS',
   }
 
   /**
@@ -74,6 +75,17 @@ function getBrandDisplayName(brandCode) {
   return brandNames[brandCode] || brandCode
 }
 
+function getGenderDisplayMeta(genderCode) {
+  // 코드에서 바로 보기 어려우니, 화면에 보여줄 단어/이모지를 미리 정의합니다.
+  const genderMap = {
+    'men': { label: '남성', emoji: '👔' },
+    'women': { label: '여성', emoji: '👗' },
+    'unisex': { label: '공용', emoji: '🧥' },
+  }
+
+  return genderMap[genderCode] || null
+}
+
 /**
  * ProductCard 컴포넌트
  *
@@ -81,6 +93,7 @@ function getBrandDisplayName(brandCode) {
  */
 function ProductCard({
   brand,
+  gender,
   name,
   originalPrice,
   salePrice,
@@ -89,6 +102,13 @@ function ProductCard({
   productUrl,
   vibe
 }) {
+  // 사용자가 카드 전체를 클릭했을 때 이동할 수 있는 안전한 링크입니다.
+  const safeProductUrl = useMemo(
+    () => getSafeExternalUrl(productUrl),
+    [productUrl],
+  )
+  const hasNavigableLink = Boolean(safeProductUrl)
+
   /**
    * 할인율 계산 (props로 받지 않은 경우를 대비)
    *
@@ -116,10 +136,29 @@ function ProductCard({
    * - noreferrer: HTTP Referer 헤더를 전송하지 않음 (프라이버시)
    */
   const handleCardClick = () => {
-    if (productUrl && productUrl !== '#') {
-      window.open(productUrl, '_blank', 'noopener,noreferrer')
+    if (!hasNavigableLink) {
+      return
+    }
+
+    window.open(safeProductUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  // 키보드(Enter, Space)로도 같은 동작을 하도록 처리합니다.
+  const handleCardKeyDown = (event) => {
+    if (!hasNavigableLink) {
+      return
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleCardClick()
     }
   }
+
+  const genderMeta = getGenderDisplayMeta(gender)
+  const genderClassKey = genderMeta
+    ? `gender${gender.charAt(0).toUpperCase() + gender.slice(1)}`
+    : ''
 
   /**
    * JSX 반환
@@ -135,7 +174,13 @@ function ProductCard({
      * - 접근성 향상
      * - 코드 가독성 증가
      */
-    <article className={styles.card} onClick={handleCardClick}>
+    <article
+      className={styles.card}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      role={hasNavigableLink ? 'link' : undefined}
+      tabIndex={hasNavigableLink ? 0 : undefined}
+    >
       {/**
        * 이미지 컨테이너
        *
@@ -174,27 +219,15 @@ function ProductCard({
          * 주요 속성:
          * - src: 이미지 URL
          * - alt: 대체 텍스트 (이미지 로드 실패 시 또는 스크린 리더용)
-         * - layout="fill": 부모 요소를 가득 채움
-         * - objectFit="cover": 비율을 유지하며 영역을 채움 (CSS의 object-fit과 동일)
-         * - className: CSS 클래스
-         *
-         * layout 옵션:
-         * - "fill": 부모를 채움 (width, height 불필요)
-         * - "responsive": 부모 너비에 맞춰 조절
-         * - "intrinsic": 원본 크기 유지, 작은 화면에서 축소
-         * - "fixed": 고정 크기
-         *
-         * objectFit 옵션:
-         * - "cover": 영역을 채우며 비율 유지 (잘릴 수 있음)
-         * - "contain": 전체가 보이도록 비율 유지 (여백 생길 수 있음)
-         * - "fill": 비율 무시하고 영역을 채움
+         * - fill: 부모 요소의 가용 영역을 채움 (Next.js 13+)
+         * - sizes: 반응형 레이아웃에서 예상되는 렌더링 폭을 브라우저에 전달
          */}
         <Image
           src={imageUrl}
           alt={`${getBrandDisplayName(brand)} - ${name}`}
-          layout="fill"
-          objectFit="cover"
+          fill
           className={styles.image}
+          sizes="(max-width: 768px) 90vw, 320px"
         />
       </div>
 
@@ -209,10 +242,16 @@ function ProductCard({
          * - 인라인 요소 (텍스트 일부를 스타일링할 때 사용)
          * - div는 블록 요소 (전체 줄을 차지)
          */}
-        <div className={styles.brand}>
+        <div className={styles.meta}>
           <span className={styles.brandName}>
             {getBrandDisplayName(brand)}
           </span>
+          {genderMeta && (
+            <span className={`${styles.genderBadge} ${styles[genderClassKey] || ''}`}>
+              <span aria-hidden="true">{genderMeta.emoji}</span>
+              <span>{genderMeta.label}</span>
+            </span>
+          )}
         </div>
 
         {/**

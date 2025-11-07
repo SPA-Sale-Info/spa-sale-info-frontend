@@ -30,7 +30,7 @@ const nextConfig = {
   env: {
     // API 엔드포인트를 여기서 관리합니다
     // 추후 백엔드 API가 준비되면 이 값을 변경하면 됩니다
-    API_URL: process.env.API_URL || 'http://localhost:8000',
+    API_URL: process.env.API_URL || 'http://localhost:8080',
   },
 }
 

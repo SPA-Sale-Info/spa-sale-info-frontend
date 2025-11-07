@@ -27,7 +27,40 @@
  * - 보안에 민감한 정보(API 키 등)를 코드에 직접 넣지 않음
  * - 코드 변경 없이 설정만으로 환경 전환 가능
  */
-const API_BASE_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// 개발 환경에서 백엔드 주소를 따로 입력하지 않았다면 이 값을 씁니다.
+const DEFAULT_DEV_API = 'http://localhost:8080'
+const isDev = process.env.NODE_ENV !== 'production'
+
+function resolveApiBaseUrl() {
+  const rawBaseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.API_URL ||
+    (isDev ? DEFAULT_DEV_API : '')
+
+  if (!rawBaseUrl) {
+    throw new Error('API URL이 설정되지 않았습니다. NEXT_PUBLIC_API_URL 환경변수를 확인하세요.')
+  }
+
+  try {
+    const parsed = new URL(rawBaseUrl)
+    const protocol = parsed.protocol.toLowerCase()
+
+    if (protocol === 'https:' || (isDev && protocol === 'http:')) {
+      return parsed.origin.replace(/\/$/, '')
+    }
+
+    throw new Error(`지원하지 않는 프로토콜입니다: ${protocol}`)
+  } catch (error) {
+    if (isDev) {
+      console.warn('잘못된 API URL이 감지되어 개발용 기본값(http://localhost:8080)으로 대체합니다.', error)
+      return DEFAULT_DEV_API
+    }
+
+    throw error
+  }
+}
+
+const API_BASE_URL = resolveApiBaseUrl()
 
 /**
  * 모든 상품을 가져오는 함수
@@ -332,3 +365,44 @@ export async function searchProducts(query, filters = {}) {
  * import * as api from '../utils/api'
  * api.getProducts()
  */
+
+/**
+ * SPA 세일 상품 목록을 가져오는 함수
+ *
+ * @param {Object} options - 페이지네이션 옵션
+ * @param {number} options.page - 페이지 번호 (기본값 0)
+ * @param {number} options.size - 페이지 크기 (기본값 12)
+ * @returns {Promise<Object>} 백엔드가 반환하는 data 객체
+ */
+export async function fetchSaleProducts({ page = 0, size = 12 } = {}) {
+  try {
+    // 스프링 백엔드가 요구하는 형태: /api/v1/products/sale?page=0&size=10
+    const query = new URLSearchParams({
+      page: String(page),
+      size: String(size),
+    })
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/products/sale?${query.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`세일 상품 조회 실패: ${response.status}`)
+    }
+
+    const payload = await response.json()
+
+    if (!payload?.success) {
+      throw new Error('세일 상품 응답이 성공 상태가 아닙니다.')
+    }
+
+    // payload.data 안에 { content: [...] } 구조가 들어있습니다.
+    return payload.data ?? {}
+  } catch (error) {
+    console.error('세일 상품 데이터를 가져오는데 실패했습니다:', error)
+    throw error
+  }
+}
