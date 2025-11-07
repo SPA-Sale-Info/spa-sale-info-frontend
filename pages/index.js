@@ -160,11 +160,19 @@ export default function Home() {
   const [page, setPage] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [logoStep, setLogoStep] = useState(0)
   const loadMoreRef = useRef(null)
   const dailyMood = useMemo(() => {
     const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '')
     const index = Number(todayKey) % DAILY_MOODS.length
     return DAILY_MOODS[index]
+  }, [])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLogoStep(prev => (prev + 1) % 4)
+    }, 1800)
+    return () => clearInterval(timer)
   }, [])
 
   // API에서 받은 원본 데이터를 화면에서 쓰기 좋은 형태로 바꿉니다.
@@ -277,7 +285,7 @@ export default function Home() {
           loadNextPage()
         }
       },
-      { rootMargin: '200px' }, // 미리 여유를 두고 요청하기 위해 여백을 주었습니다.
+      { rootMargin: '400px 0px', threshold: 0.1 }, // 미리 여유를 두고 요청하기 위해 여백을 주었습니다.
     )
 
     const target = loadMoreRef.current
@@ -285,6 +293,12 @@ export default function Home() {
 
     return () => observer.unobserve(target)
   }, [loadNextPage])
+
+  useEffect(() => {
+    if (!isInitialLoading && hasMore && !isFetchingMore && products.length < PAGE_SIZE * 2) {
+      loadProducts({ pageToLoad: page + 1, replace: false })
+    }
+  }, [hasMore, isFetchingMore, isInitialLoading, loadProducts, page, products.length])
 
   // 브랜드, 성별, 검색어 변경 핸들러
   const handleBrandChange = (brand) => {
@@ -357,7 +371,7 @@ export default function Home() {
       </div>
       <div className={styles.mainContent}>
         <Head>
-          <title>Bang for the buck</title>
+          <title>Sales Product Archive</title>
           <meta name="description" content="고가 브랜드의 감성을 닮은 합리적인 가격의 SPA 브랜드 상품을 발견하세요" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
@@ -366,7 +380,24 @@ export default function Home() {
         <nav className={styles.navbar}>
           <div className={styles.navContent}>
             <div className={styles.logo}>
-              👔 SPA 정보 다이어리
+              <span className={styles.logoSegment}>
+                <span className={styles.logoChar}>S</span>
+                <span className={`${styles.logoWord} ${logoStep >= 1 ? styles.logoWordVisible : ''}`}>
+                  ales
+                </span>
+              </span>
+              <span className={styles.logoSegment}>
+                <span className={styles.logoChar}>P</span>
+                <span className={`${styles.logoWord} ${logoStep >= 2 ? styles.logoWordVisible : ''}`}>
+                  roduct
+                </span>
+              </span>
+              <span className={styles.logoSegment}>
+                <span className={styles.logoChar}>A</span>
+                <span className={`${styles.logoWord} ${logoStep >= 3 ? styles.logoWordVisible : ''}`}>
+                  rchive
+                </span>
+              </span>
             </div>
           </div>
         </nav>
@@ -377,17 +408,18 @@ export default function Home() {
             <div className={styles.heroText}>
               <span className={styles.heroKicker}>Sale archive</span>
               <h1 className={styles.heroTitle}>
-                흩어진 할인 정보를 원하는 순서로
+                흩어진 할인 정보를 한눈에
               </h1>
               <p className={styles.heroSubtitle}>
-                여러 SPA 사이트에 흩어진 세일 소식을 한 곳에 눌러 담았습니다.
-                새벽에 받은 앱 알림이나 브랜드 SNS를 뒤적일 필요 없이, 필요한 장면만 빠르게 스크랩하세요.
+                돈을 아끼며 무드를 챙기세요.
+                <br />
+                매일 갱신되는 세일 정보를 한 눈에 확인하세요.
               </p>
 
               <div className={styles.heroChecklist}>
                 <div className={styles.heroChecklistItem}>
                   <span>01</span>
-                  <p>각 브랜드의 공지와 앱 배너를 훑어 주요 세일 단서를 보기 좋게 정리했습니다.</p>
+                  <p>여러 SPA 사이트에 흩어진 세일 소식을 한 곳에 눌러 담았습니다. </p>
                 </div>
                 <div className={styles.heroChecklistItem}>
                   <span>02</span>
@@ -554,7 +586,7 @@ export default function Home() {
               {/* 이 div는 화면에 보이지 않지만, 관찰 대상이 되어 다음 페이지를 로드합니다. */}
               <div
                 ref={loadMoreRef}
-                style={{ width: '100%', height: '1px' }}
+                style={{ width: '100%', height: '200px' }}
                 aria-hidden="true"
               />
             </>

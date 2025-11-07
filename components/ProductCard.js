@@ -100,7 +100,6 @@ function ProductCard({
   discountRate,
   imageUrl,
   productUrl,
-  vibe
 }) {
   // 사용자가 카드 전체를 클릭했을 때 이동할 수 있는 안전한 링크입니다.
   const safeProductUrl = useMemo(
@@ -199,17 +198,6 @@ function ProductCard({
         {calculatedDiscountRate > 0 && (
           <div className={styles.discountBadge}>
             -{calculatedDiscountRate}%
-          </div>
-        )}
-
-        {/**
-         * 감성 태그 배지
-         *
-         * vibe가 있을 때만 표시
-         */}
-        {vibe && (
-          <div className={styles.vibeBadge}>
-            {vibe}
           </div>
         )}
 
