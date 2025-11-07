@@ -372,17 +372,26 @@ export async function searchProducts(query, filters = {}) {
  * @param {Object} options - 페이지네이션 옵션
  * @param {number} options.page - 페이지 번호 (기본값 0)
  * @param {number} options.size - 페이지 크기 (기본값 12)
+ * @param {string} [options.brandType] - 특정 브랜드(예: 'ZARA')일 경우 해당 브랜드 전용 API를 사용
  * @returns {Promise<Object>} 백엔드가 반환하는 data 객체
  */
-export async function fetchSaleProducts({ page = 0, size = 12 } = {}) {
+export async function fetchSaleProducts({ page = 0, size = 12, brandType } = {}) {
   try {
+    // 브랜드가 지정되면 /api/v1/products/brand/{brand}/sale 엔드포인트로 전환합니다.
+    const normalizedBrand = typeof brandType === 'string' && brandType !== 'all'
+      ? brandType.toUpperCase()
+      : null
+    const endpoint = normalizedBrand
+      ? `/api/v1/products/brand/${normalizedBrand}/sale`
+      : '/api/v1/products/sale'
+
     // 스프링 백엔드가 요구하는 형태: /api/v1/products/sale?page=0&size=10
     const query = new URLSearchParams({
       page: String(page),
       size: String(size),
     })
 
-    const response = await fetch(`${API_BASE_URL}/api/v1/products/sale?${query.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}?${query.toString()}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',

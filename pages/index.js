@@ -4,7 +4,7 @@
  * 포트폴리오용 전문적인 레이아웃
  */
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import Head from 'next/head'
 import BrandFilter from '../components/BrandFilter'
 import GenderFilter from '../components/GenderFilter'
@@ -12,115 +12,212 @@ import ProductCard from '../components/ProductCard'
 import styles from '../styles/Home.module.css'
 import { fetchSaleProducts } from '../utils/api'
 
+/**
+ * API에서 충분히 많은 상품을 받기 위해 한 번에 불러올 개수를 결정합니다.
+ * 값이 너무 작으면 스크롤을 조금만 내려도 계속 네트워크 요청을 하게 됩니다.
+ */
+const PAGE_SIZE = 12
+const FALLBACK_IMAGE = '/placeholder-product.svg'
+
+const resolveImageUrl = (rawUrl) => {
+  if (typeof rawUrl !== 'string' || rawUrl.trim() === '') {
+    return FALLBACK_IMAGE
+  }
+
+  const trimmed = rawUrl.trim()
+
+  // 절대 경로(URL)면 그대로 사용합니다.
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed
+  }
+
+  // 슬래시로 시작하면 Next.js에서 동일 호스트 자원으로 취급할 수 있습니다.
+  if (trimmed.startsWith('/')) {
+    return trimmed
+  }
+
+  // 그 외의 경우(예: assets/hm/... 처럼 상대 경로)는 Next Image가 파싱하지 못하므로
+  // 안전하게 플레이스홀더 이미지를 사용합니다.
+  return FALLBACK_IMAGE
+}
+
+const coerceNumber = (value) => {
+  if (typeof value === 'number' && !Number.isNaN(value)) {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value.replace(/,/g, ''))
+    return Number.isNaN(parsed) ? 0 : parsed
+  }
+
+  return 0
+}
+
+const normalizeProduct = (product = {}) => {
+  const originalPrice = coerceNumber(product.originalPrice)
+  const salePrice = coerceNumber(
+    product.currentPrice !== undefined ? product.currentPrice : product.salePrice,
+  ) || originalPrice
+
+  const discountRate = typeof product.discountRate === 'number'
+    ? product.discountRate
+    : (originalPrice
+      ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
+      : 0)
+
+  const rawImageUrl = Array.isArray(product.imageUrls) && product.imageUrls.length > 0
+    ? product.imageUrls[0]
+    : product.imageUrl
+
+  const imageUrl = resolveImageUrl(rawImageUrl)
+
+  const gender = typeof product.gender === 'string'
+    ? product.gender.toLowerCase()
+    : 'unisex'
+
+  const brand = (product.brandType || product.brandName || 'UNKNOWN').toUpperCase()
+
+  return {
+    id: product.id || product.productCode || `${brand}-${product.name ?? 'unknown'}`,
+    brand,
+    gender,
+    name: product.name || '이름 미정',
+    originalPrice,
+    salePrice,
+    discountRate,
+    imageUrl,
+    productUrl: product.productUrl || '#',
+    vibe: Array.isArray(product.tags) && product.tags.length > 0 ? product.tags[0] : null,
+  }
+}
+
 export default function Home() {
   // 상태 관리
   // ▶ products: 화면에 보여줄 전체 상품 목록
   // ▶ selectedBrand / selectedGender: 사용자가 선택한 필터
-  // ▶ loading / error: API 호출 상태 표시용
+  // ▶ isInitialLoading / isFetchingMore: 처음 로딩과 추가 로딩을 구분해 UI를 부드럽게 합니다.
   const [products, setProducts] = useState([])
   const [selectedBrand, setSelectedBrand] = useState('all')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [selectedGender, setSelectedGender] = useState('all')
-  const filterLoadingTimer = useRef(null)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [isFetchingMore, setIsFetchingMore] = useState(false)
+  const [error, setError] = useState(null)
+  const [hasMore, setHasMore] = useState(true)
+  const [page, setPage] = useState(0)
+  const loadMoreRef = useRef(null)
+
+  // API에서 받은 원본 데이터를 화면에서 쓰기 좋은 형태로 바꿉니다.
+  const normalizeProducts = useCallback((apiProducts = []) => (
+    apiProducts.map(normalizeProduct)
+  ), [])
 
   /**
-   * 1) 페이지가 처음 열리면 fetchSaleProducts를 호출합니다.
-   * 2) 응답(JSON)을 우리가 쓰기 쉬운 모양으로 정리합니다.
-   * 3) 정리된 데이터를 상태에 넣고 로딩을 끕니다.
+   * 실질적으로 데이터를 가져오는 함수입니다.
+   * - replace가 true면 기존 목록을 갈아끼우고(브랜드 변경 등),
+   * - false면 무한 스크롤처럼 목록 뒤에 이어 붙입니다.
+   */
+  const loadProducts = useCallback(async ({ pageToLoad, replace }) => {
+    if (replace) {
+      setIsInitialLoading(true)
+      setError(null)
+    } else {
+      setIsFetchingMore(true)
+    }
+
+    try {
+      const response = await fetchSaleProducts({
+        page: pageToLoad,
+        size: PAGE_SIZE,
+        brandType: selectedBrand !== 'all' ? selectedBrand : undefined,
+      })
+
+      const apiProducts = response?.content ?? []
+      const normalized = normalizeProducts(apiProducts)
+
+      setProducts(prev => (replace ? normalized : [...prev, ...normalized]))
+      setPage(pageToLoad)
+
+      const isLastPage = typeof response?.last === 'boolean'
+        ? response.last
+        : (response?.totalPages
+          ? pageToLoad + 1 >= response.totalPages
+          : normalized.length < PAGE_SIZE)
+
+      setHasMore(!isLastPage)
+    } catch (err) {
+      console.error('상품 데이터를 불러오지 못했습니다.', err)
+      setError(replace
+        ? '상품 정보를 가져오는데 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+        : '추가 상품을 불러오는데 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+      )
+      setHasMore(false)
+      if (replace) {
+        setProducts([])
+      }
+    } finally {
+      if (replace) {
+        setIsInitialLoading(false)
+      } else {
+        setIsFetchingMore(false)
+      }
+    }
+  }, [normalizeProducts, selectedBrand])
+
+  /**
+   * 선택한 브랜드가 바뀌면
+   * 1) 목록을 비우고
+   * 2) 첫 페이지(0페이지)를 다시 불러옵니다.
    */
   useEffect(() => {
-    let isCancelled = false
+    setProducts([])
+    setPage(0)
+    setHasMore(true)
+    loadProducts({ pageToLoad: 0, replace: true })
+  }, [selectedBrand, loadProducts])
 
-    const loadProducts = async () => {
-      setLoading(true)
-      setError(null)
-
-      try {
-        // page=0, size=12 → 첫 페이지 12개만 미리 불러옵니다.
-        const response = await fetchSaleProducts({ page: 0, size: 12 })
-        const apiProducts = response?.content ?? []
-
-        if (isCancelled) {
-          return
-        }
-
-        const normalizedProducts = apiProducts.map((product) => {
-          // 이미지가 없으면 플레이스홀더를 사용해 깨지지 않도록 처리
-          const firstImage = Array.isArray(product.imageUrls) && product.imageUrls.length > 0
-            ? product.imageUrls[0]
-            : 'https://via.placeholder.com/480x600?text=No+Image'
-
-          const normalizedGender = typeof product.gender === 'string'
-            ? product.gender.toLowerCase()
-            : 'unisex'
-
-          return {
-            id: product.id || product.productCode,
-            brand: product.brandType || product.brandName || 'UNKNOWN',
-            gender: normalizedGender,
-            name: product.name,
-            originalPrice: product.originalPrice,
-            salePrice: product.currentPrice,
-            discountRate: product.discountRate,
-            imageUrl: firstImage,
-            productUrl: product.productUrl,
-            vibe: product.tags && product.tags.length > 0 ? product.tags[0] : null,
-          }
-        })
-
-        setProducts(normalizedProducts)
-      } catch (err) {
-        console.error('상품 데이터를 불러오지 못했습니다.', err)
-        if (!isCancelled) {
-          setError('상품 정보를 가져오는데 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.')
-        }
-      } finally {
-        if (!isCancelled) {
-          setLoading(false)
-        }
-      }
+  /**
+   * IntersectionObserver를 사용해 화면 하단에 숨겨둔 loadMoreRef 요소가 보이면
+   * 다음 페이지를 불러옵니다. (무한 스크롤)
+   */
+  const loadNextPage = useCallback(() => {
+    if (isInitialLoading || isFetchingMore || !hasMore) {
+      return
     }
-
-    loadProducts()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [])
+    loadProducts({ pageToLoad: page + 1, replace: false })
+  }, [hasMore, isFetchingMore, isInitialLoading, loadProducts, page])
 
   useEffect(() => {
-    // 필터 로딩 타이머가 남아 있으면 페이지를 떠날 때 깨끗이 정리
-    return () => {
-      if (filterLoadingTimer.current) {
-        clearTimeout(filterLoadingTimer.current)
-      }
+    if (!loadMoreRef.current) {
+      return undefined
     }
-  }, [])
 
-  const triggerFilterLoading = () => {
-    if (filterLoadingTimer.current) {
-      clearTimeout(filterLoadingTimer.current)
-    }
-    // UX를 위해 필터 변경 시 잠깐 로딩 스피너를 돌립니다.
-    setLoading(true)
-    filterLoadingTimer.current = setTimeout(() => {
-      setLoading(false)
-    }, 300)
-  }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries
+        if (entry.isIntersecting) {
+          loadNextPage()
+        }
+      },
+      { rootMargin: '200px' }, // 미리 여유를 두고 요청하기 위해 여백을 주었습니다.
+    )
+
+    const target = loadMoreRef.current
+    observer.observe(target)
+
+    return () => observer.unobserve(target)
+  }, [loadNextPage])
 
   // 브랜드 변경 핸들러
   const handleBrandChange = (brand) => {
     setSelectedBrand(brand)
-    triggerFilterLoading()
   }
 
   const handleGenderChange = (gender) => {
     setSelectedGender(gender)
-    triggerFilterLoading()
   }
 
-  // 상품 필터링
+  // 상품 필터링 (성별은 아직 프론트에서 처리)
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesBrand = selectedBrand === 'all' || product.brand === selectedBrand
@@ -253,7 +350,7 @@ export default function Home() {
           </div>
 
           {/* 로딩 상태 */}
-          {loading && (
+          {isInitialLoading && (
             <div className={styles.loading}>
               <div className={styles.loadingSpinner}></div>
               <p className={styles.loadingText}>상품을 불러오는 중...</p>
@@ -261,7 +358,7 @@ export default function Home() {
           )}
 
           {/* 에러 상태 */}
-          {!loading && error && (
+          {!isInitialLoading && error && products.length === 0 && (
             <div className={styles.errorState} role="status">
               <h3 className={styles.errorTitle}>데이터를 가져오는 데 실패했어요</h3>
               <p className={styles.errorDescription}>
@@ -271,26 +368,51 @@ export default function Home() {
           )}
 
           {/* 상품 그리드 */}
-          {!loading && !error && (
-            <div className={styles.productsGrid}>
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map(product => (
-                  <ProductCard
-                    key={product.id}
-                    {...product}
-                  />
-                ))
-              ) : (
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyIcon}>🔍</div>
-                  <h3 className={styles.emptyTitle}>상품이 없습니다</h3>
-                  <p className={styles.emptyDescription}>
-                    선택하신 브랜드 · 성별 조합에 맞는 상품이 아직 없습니다.
-                    다른 필터를 선택해 보세요.
+          {!isInitialLoading && !error && (
+            <>
+              <div className={styles.productsGrid}>
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map(product => (
+                    <ProductCard
+                      key={product.id}
+                      {...product}
+                    />
+                  ))
+                ) : (
+                  <div className={styles.emptyState}>
+                    <div className={styles.emptyIcon}>🔍</div>
+                    <h3 className={styles.emptyTitle}>상품이 없습니다</h3>
+                    <p className={styles.emptyDescription}>
+                      선택하신 조건에 맞는 상품이 아직 없습니다.
+                      다른 필터를 선택해 보세요.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {isFetchingMore && (
+                <div className={styles.loading}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p className={styles.loadingText}>추가 상품을 불러오는 중...</p>
+                </div>
+              )}
+
+              {!isInitialLoading && error && products.length > 0 && (
+                <div className={styles.errorState} role="status">
+                  <h3 className={styles.errorTitle}>추가 데이터를 가져오지 못했습니다</h3>
+                  <p className={styles.errorDescription}>
+                    {error}
                   </p>
                 </div>
               )}
-            </div>
+
+              {/* 이 div는 화면에 보이지 않지만, 관찰 대상이 되어 다음 페이지를 로드합니다. */}
+              <div
+                ref={loadMoreRef}
+                style={{ width: '100%', height: '1px' }}
+                aria-hidden="true"
+              />
+            </>
           )}
         </main>
 
