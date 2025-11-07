@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import Head from 'next/head'
 import BrandFilter from '../components/BrandFilter'
 import GenderFilter from '../components/GenderFilter'
+import CategoryFilter from '../components/CategoryFilter'
 import ProductCard from '../components/ProductCard'
 import styles from '../styles/Home.module.css'
 import { fetchSaleProducts } from '../utils/api'
@@ -18,6 +19,51 @@ import { fetchSaleProducts } from '../utils/api'
  */
 const PAGE_SIZE = 12
 const FALLBACK_IMAGE = '/placeholder-product.svg'
+const CATEGORY_GROUPS = {
+  TOP: ['SHIRT', 'T_SHIRT', 'KNIT', 'SWEATSHIRT', 'DRESS', 'BLOUSE'],
+  BOTTOM: ['PANTS', 'JEANS', 'SHORTS', 'SKIRT'],
+  OUTER: ['JACKET', 'COAT', 'PADDING'],
+  SHOES: ['SHOES'],
+  ETC: ['ACCESSORIES', 'BAG', 'UNCATEGORIZED', 'UNKNOWN'],
+}
+const DAILY_MOODS = [
+  {
+    palette: '잿빛 스카이블루',
+    fabric: '워셔블 울',
+    focus: '여유 있는 셔츠 아우터',
+    keywords: '스카이블루 · 오트밀 · 니트 텍스처',
+    note: '햇빛 아래에서도 거슬리지 않는 차분한 색감을 골랐어요.',
+    background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.9), rgba(96, 165, 250, 0.85))',
+    textColor: '#f8fafc',
+  },
+  {
+    palette: '먼지 낀 네이비',
+    fabric: '코튼 트윌',
+    focus: '하이웨이스트 팬츠',
+    keywords: '네이비 · 화이트 · 스웨이드',
+    note: '밝고 어두운 아이템을 자연스럽게 연결해 줍니다.',
+    background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 118, 110, 0.85))',
+    textColor: '#e0f2f1',
+  },
+  {
+    palette: '바랜 베이지',
+    fabric: '린넨 &amp; 레이온',
+    focus: '가벼운 드레스 셋업',
+    keywords: '베이지 · 브라운 · 스트라이프',
+    note: '공기를 머금은 느낌이 필요한 날에 어울립니다.',
+    background: 'linear-gradient(135deg, rgba(244, 224, 196, 0.95), rgba(217, 180, 130, 0.85))',
+    textColor: '#4a3425',
+  },
+  {
+    palette: '모래빛 카키',
+    fabric: '나일론 혼방',
+    focus: '가볍게 걸칠 점퍼',
+    keywords: '카키 · 크림 · 러버솔',
+    note: '도로 먼지를 닮은 색감으로 무심한 분위기를 만듭니다.',
+    background: 'linear-gradient(135deg, rgba(64, 64, 59, 0.95), rgba(156, 163, 175, 0.85))',
+    textColor: '#f1f5f9',
+  },
+]
 
 const resolveImageUrl = (rawUrl) => {
   if (typeof rawUrl !== 'string' || rawUrl.trim() === '') {
@@ -77,11 +123,17 @@ const normalizeProduct = (product = {}) => {
     : 'unisex'
 
   const brand = (product.brandType || product.brandName || 'UNKNOWN').toUpperCase()
+  const category = (product.category || 'UNCATEGORIZED').toUpperCase()
+  const categoryGroup = Object.entries(CATEGORY_GROUPS).find(([, items]) => (
+    items.includes(category)
+  ))?.[0] || 'ETC'
 
   return {
     id: product.id || product.productCode || `${brand}-${product.name ?? 'unknown'}`,
     brand,
     gender,
+    category,
+    categoryGroup,
     name: product.name || '이름 미정',
     originalPrice,
     salePrice,
@@ -100,17 +152,43 @@ export default function Home() {
   const [products, setProducts] = useState([])
   const [selectedBrand, setSelectedBrand] = useState('all')
   const [selectedGender, setSelectedGender] = useState('all')
+  const [selectedCategory, setSelectedCategory] = useState('all')
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [isFetchingMore, setIsFetchingMore] = useState(false)
   const [error, setError] = useState(null)
   const [hasMore, setHasMore] = useState(true)
   const [page, setPage] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showScrollTop, setShowScrollTop] = useState(false)
   const loadMoreRef = useRef(null)
+  const dailyMood = useMemo(() => {
+    const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    const index = Number(todayKey) % DAILY_MOODS.length
+    return DAILY_MOODS[index]
+  }, [])
 
   // API에서 받은 원본 데이터를 화면에서 쓰기 좋은 형태로 바꿉니다.
   const normalizeProducts = useCallback((apiProducts = []) => (
     apiProducts.map(normalizeProduct)
   ), [])
+
+  const mergeUniqueProducts = useCallback((prevProducts, incomingProducts, replace) => {
+    if (replace) {
+      return incomingProducts
+    }
+
+    const seenIds = new Set(prevProducts.map(product => product.id))
+    const merged = [...prevProducts]
+
+    incomingProducts.forEach((product) => {
+      if (product.id && !seenIds.has(product.id)) {
+        seenIds.add(product.id)
+        merged.push(product)
+      }
+    })
+
+    return merged
+  }, [])
 
   /**
    * 실질적으로 데이터를 가져오는 함수입니다.
@@ -135,8 +213,8 @@ export default function Home() {
       const apiProducts = response?.content ?? []
       const normalized = normalizeProducts(apiProducts)
 
-      setProducts(prev => (replace ? normalized : [...prev, ...normalized]))
-      setPage(pageToLoad)
+      setProducts(prev => mergeUniqueProducts(prev, normalized, replace))
+     setPage(pageToLoad)
 
       const isLastPage = typeof response?.last === 'boolean'
         ? response.last
@@ -162,7 +240,7 @@ export default function Home() {
         setIsFetchingMore(false)
       }
     }
-  }, [normalizeProducts, selectedBrand])
+  }, [mergeUniqueProducts, normalizeProducts, selectedBrand])
 
   /**
    * 선택한 브랜드가 바뀌면
@@ -208,7 +286,7 @@ export default function Home() {
     return () => observer.unobserve(target)
   }, [loadNextPage])
 
-  // 브랜드 변경 핸들러
+  // 브랜드, 성별, 검색어 변경 핸들러
   const handleBrandChange = (brand) => {
     setSelectedBrand(brand)
   }
@@ -217,22 +295,57 @@ export default function Home() {
     setSelectedGender(gender)
   }
 
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category)
+  }
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+    const keyword = formData.get('keyword') || ''
+    setSearchQuery(String(keyword))
+  }
+
+  const handleSearchInputChange = (event) => {
+    setSearchQuery(event.target.value)
+  }
+
+  useEffect(() => {
+    const onScroll = () => {
+      setShowScrollTop(window.scrollY > 400)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   // 상품 필터링 (성별은 아직 프론트에서 처리)
   const filteredProducts = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase()
+
     return products.filter((product) => {
       const matchesBrand = selectedBrand === 'all' || product.brand === selectedBrand
       const matchesGender =
         selectedGender === 'all' ||
         product.gender === selectedGender ||
         product.gender === 'unisex'
+      const matchesCategory =
+        selectedCategory === 'all' ||
+        product.categoryGroup === selectedCategory
 
-      return matchesBrand && matchesGender
+      const matchesSearch = normalizedQuery === ''
+        || product.name.toLowerCase().includes(normalizedQuery)
+        || (product.brand && product.brand.toLowerCase().includes(normalizedQuery))
+
+      return matchesBrand && matchesGender && matchesCategory && matchesSearch
     })
-  }, [products, selectedBrand, selectedGender])
+  }, [products, selectedBrand, selectedGender, selectedCategory, searchQuery])
 
   // 통계 계산
-  const totalProducts = filteredProducts.length
-  const totalBrands = new Set(filteredProducts.map(p => p.brand)).size
+  const totalBrandLabels = new Set(products.map(p => p.brand)).size
   const avgDiscount = filteredProducts.length > 0
     ? Math.round(filteredProducts.reduce((sum, p) => sum + p.discountRate, 0) / filteredProducts.length)
     : 0
@@ -253,13 +366,8 @@ export default function Home() {
         <nav className={styles.navbar}>
           <div className={styles.navContent}>
             <div className={styles.logo}>
-              👔 SPA 할인정보
+              👔 SPA 정보 다이어리
             </div>
-            <ul className={styles.navLinks}>
-              <li><a href="#products" className={styles.navLink}>상품</a></li>
-              <li><a href="#brands" className={styles.navLink}>브랜드</a></li>
-              <li><a href="#about" className={styles.navLink}>소개</a></li>
-            </ul>
           </div>
         </nav>
 
@@ -267,55 +375,68 @@ export default function Home() {
         <section className={styles.hero}>
           <div className={styles.heroContent}>
             <div className={styles.heroText}>
-              <span className={styles.heroKicker}>Gender aware curation</span>
+              <span className={styles.heroKicker}>Sale archive</span>
               <h1 className={styles.heroTitle}>
-                성별 맞춤 SPA 할인 인텔리전스
+                흩어진 할인 정보를 원하는 순서로
               </h1>
               <p className={styles.heroSubtitle}>
-                남성 · 여성 · 공용 카테고리를 한 번에 스캔하고,
-                지금 가장 매력적인 가격의 아이템을 빠르게 찾아보세요.
+                여러 SPA 사이트에 흩어진 세일 소식을 한 곳에 눌러 담았습니다.
+                새벽에 받은 앱 알림이나 브랜드 SNS를 뒤적일 필요 없이, 필요한 장면만 빠르게 스크랩하세요.
               </p>
 
-              <div className={styles.heroActions}>
-                <a className={styles.primaryCTA} href="#products">
-                  상품 바로 보기
-                </a>
-                <div className={styles.heroHint}>
-                  🔄 필터를 변경하면 즉시 재계산됩니다
+              <div className={styles.heroChecklist}>
+                <div className={styles.heroChecklistItem}>
+                  <span>01</span>
+                  <p>각 브랜드의 공지와 앱 배너를 훑어 주요 세일 단서를 보기 좋게 정리했습니다.</p>
+                </div>
+                <div className={styles.heroChecklistItem}>
+                  <span>02</span>
+                  <p>비슷한 아이템이 겹치지 않도록 실루엣과 텍스처 기준으로 다시 추렸습니다.</p>
+                </div>
+                <div className={styles.heroChecklistItem}>
+                  <span>03</span>
+                  <p>필터를 돌리면 지금 입고 싶은 역할, 색감에 맞는 후보만 남도록 구성했습니다.</p>
                 </div>
               </div>
 
-              <div className={styles.heroStats}>
-                <div className={styles.statItem}>
-                  <span className={styles.statNumber}>{totalProducts}</span>
-                  <span className={styles.statLabel}>실시간 상품</span>
+              <div className={styles.heroInsights}>
+                <div className={styles.heroInsightCard}>
+                  <p className={styles.heroInsightLabel}>오늘의 시선</p>
+                  <strong>{dailyMood.focus}</strong>
+                  <small>{dailyMood.keywords}</small>
                 </div>
-                <div className={styles.statItem}>
-                  <span className={styles.statNumber}>{totalBrands}</span>
-                  <span className={styles.statLabel}>활성 브랜드</span>
-                </div>
-                <div className={styles.statItem}>
-                  <span className={styles.statNumber}>{avgDiscount}%</span>
-                  <span className={styles.statLabel}>평균 할인율</span>
+                <div className={styles.heroInsightCard}>
+                  <p className={styles.heroInsightLabel}>지금 담긴 레이블</p>
+                  <strong>{totalBrandLabels}개 브랜드</strong>
+                  <small>필터로 바로 골라 보세요</small>
                 </div>
               </div>
             </div>
 
             <div className={styles.heroVisual}>
-              <div className={`${styles.heroHighlight} ${styles.heroHighlightMen}`}>
-                <span className={styles.heroHighlightLabel}>👔 남성 베스트</span>
-                <strong>옥스포드 셔츠 · 테일러드</strong>
-                <em>최대 50% 할인</em>
-              </div>
-              <div className={`${styles.heroHighlight} ${styles.heroHighlightWomen}`}>
-                <span className={styles.heroHighlightLabel}>👗 여성 베스트</span>
-                <strong>데님 · 아우터 컬렉션</strong>
-                <em>이번 주 인기 급상승</em>
-              </div>
-              <div className={`${styles.heroHighlight} ${styles.heroHighlightUnisex}`}>
-                <span className={styles.heroHighlightLabel}>🧥 공용 추천</span>
-                <strong>후디 · 린넨 셔츠</strong>
-                <em>편안한 리빙웨어</em>
+              <div
+                className={styles.heroMoodBoard}
+                style={{
+                  background: dailyMood.background,
+                  color: dailyMood.textColor,
+                }}
+              >
+                <p className={styles.heroMoodTitle}>Wardrobe log</p>
+                <div className={styles.heroMoodRow}>
+                  <span>컬러 힌트</span>
+                  <strong>{dailyMood.palette}</strong>
+                </div>
+                <div className={styles.heroMoodRow}>
+                  <span>소재 선택</span>
+                  <strong dangerouslySetInnerHTML={{ __html: dailyMood.fabric }} />
+                </div>
+                <div className={styles.heroMoodRow}>
+                  <span>포커스 아이템</span>
+                  <strong>{dailyMood.focus}</strong>
+                </div>
+                <p className={styles.heroMoodNote}>
+                  {dailyMood.note}
+                </p>
               </div>
             </div>
           </div>
@@ -325,13 +446,30 @@ export default function Home() {
         <main className={styles.main} id="products">
           {/* 섹션 헤더 */}
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>할인 중인 상품</h2>
+            <h2 className={styles.sectionTitle}>오늘 챙겨야 할 옷장 업데이트</h2>
             <p className={styles.sectionSubtitle}>
-              브랜드와 성별을 조합해 원하는 무드를 빠르게 필터링하세요.
+              브랜드·성별·카테고리를 조합해서 지금 역할을 해줄 아이템만 남겨 보세요.
             </p>
           </div>
 
           {/* 필터 패널 */}
+          <div className={styles.searchBarWrap}>
+            <form className={styles.searchForm} onSubmit={handleSearchSubmit}>
+              <input
+                type="text"
+                name="keyword"
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+                className={styles.searchInput}
+                placeholder="상품명이나 브랜드를 검색해 보세요"
+                aria-label="상품 검색"
+              />
+              <button type="submit" className={styles.searchButton}>
+                검색
+              </button>
+            </form>
+          </div>
+
           <div className={styles.filterPanel}>
             <div className={styles.filterGroup}>
               <div className={styles.filterLabel}>브랜드</div>
@@ -345,6 +483,13 @@ export default function Home() {
               <GenderFilter
                 selectedGender={selectedGender}
                 onGenderChange={handleGenderChange}
+              />
+            </div>
+            <div className={styles.filterGroup}>
+              <div className={styles.filterLabel}>카테고리</div>
+              <CategoryFilter
+                selectedCategory={selectedCategory}
+                onCategoryChange={handleCategoryChange}
               />
             </div>
           </div>
@@ -437,6 +582,16 @@ export default function Home() {
       <div className={styles.rightAd}>
         {/* 광고 영역 */}
       </div>
+      {showScrollTop && (
+        <button
+          type="button"
+          className={styles.scrollTopButton}
+          onClick={scrollToTop}
+          aria-label="맨 위로 이동"
+        >
+          ↑
+        </button>
+      )}
     </div>
   )
 }
