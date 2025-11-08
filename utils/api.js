@@ -372,25 +372,45 @@ export async function searchProducts(query, filters = {}) {
  * @param {Object} options - 페이지네이션 옵션
  * @param {number} options.page - 페이지 번호 (기본값 0)
  * @param {number} options.size - 페이지 크기 (기본값 12)
- * @param {string} [options.brandType] - 특정 브랜드(예: 'ZARA')일 경우 해당 브랜드 전용 API를 사용
+ * @param {string} [options.brandType] - 브랜드 코드 (예: 'ZARA')
+ * @param {string} [options.gender] - 'men' 또는 'women'
+ * @param {string} [options.mainCategory] - 'TOP', 'BOTTOM' 등 메인 카테고리
+ * @param {string} [options.keyword] - 검색 키워드
  * @returns {Promise<Object>} 백엔드가 반환하는 data 객체
  */
-export async function fetchSaleProducts({ page = 0, size = 12, brandType } = {}) {
-  try {
-    // 브랜드가 지정되면 /api/v1/products/brand/{brand}/sale 엔드포인트로 전환합니다.
-    const normalizedBrand = typeof brandType === 'string' && brandType !== 'all'
-      ? brandType.toUpperCase()
-      : null
-    const endpoint = normalizedBrand
-      ? `/api/v1/products/brand/${normalizedBrand}/sale`
-      : '/api/v1/products/sale'
+export async function fetchSaleProducts({
+  page = 0,
+  size = 12,
+  brandType,
+  gender,
+  mainCategory,
+  keyword,
+} = {}) {
+  const normalizedBrand = typeof brandType === 'string' && brandType !== 'all'
+    ? brandType.toUpperCase()
+    : null
+  const normalizedGender = typeof gender === 'string' && gender !== 'all'
+    ? gender.toUpperCase()
+    : null
+  const normalizedCategory = typeof mainCategory === 'string' && mainCategory !== 'all'
+    ? mainCategory.toUpperCase()
+    : null
+  const trimmedKeyword = typeof keyword === 'string' && keyword.trim() !== ''
+    ? keyword.trim()
+    : null
 
-    // 스프링 백엔드가 요구하는 형태: /api/v1/products/sale?page=0&size=10
+  const requiresSearch = Boolean(normalizedGender || normalizedCategory || trimmedKeyword)
+
+  const buildQuery = (additionalParams = {}) => {
     const query = new URLSearchParams({
       page: String(page),
       size: String(size),
+      ...additionalParams,
     })
+    return query
+  }
 
+  const request = async (endpoint, query) => {
     const response = await fetch(`${API_BASE_URL}${endpoint}?${query.toString()}`, {
       method: 'GET',
       headers: {
@@ -399,19 +419,43 @@ export async function fetchSaleProducts({ page = 0, size = 12, brandType } = {})
     })
 
     if (!response.ok) {
-      throw new Error(`세일 상품 조회 실패: ${response.status}`)
+      const text = await response.text()
+      throw new Error(`요청 실패 (${response.status}): ${text}`)
     }
 
     const payload = await response.json()
 
-    if (!payload?.success) {
-      throw new Error('세일 상품 응답이 성공 상태가 아닙니다.')
+    if (payload?.success === false) {
+      throw new Error(payload?.message || '응답이 성공 상태가 아닙니다.')
     }
 
-    // payload.data 안에 { content: [...] } 구조가 들어있습니다.
-    return payload.data ?? {}
-  } catch (error) {
-    console.error('세일 상품 데이터를 가져오는데 실패했습니다:', error)
-    throw error
+    if (payload?.data) {
+      return payload.data
+    }
+
+    return payload
   }
+
+  if (requiresSearch) {
+    const searchParams = {}
+    if (normalizedBrand) searchParams.brandType = normalizedBrand
+    if (normalizedGender) searchParams.gender = normalizedGender
+    if (normalizedCategory) searchParams.mainCategory = normalizedCategory
+    if (trimmedKeyword) searchParams.keyword = trimmedKeyword
+    searchParams.onSale = 'true'
+    searchParams.sortBy = 'discount'
+    searchParams.sortDirection = 'desc'
+
+    try {
+      return await request('/api/v1/product/search', buildQuery(searchParams))
+    } catch (error) {
+      console.warn('검색 API 호출에 실패했습니다. 기본 세일 목록으로 대체합니다.', error)
+    }
+  }
+
+  if (normalizedBrand) {
+    return request(`/api/v1/products/brand/${normalizedBrand}/sale`, buildQuery())
+  }
+
+  return request('/api/v1/products/sale', buildQuery())
 }

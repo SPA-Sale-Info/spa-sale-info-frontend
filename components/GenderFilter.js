@@ -11,7 +11,6 @@ const GENDERS = [
   { code: 'all', name: '전체', emoji: '🌈' },
   { code: 'women', name: '여성', emoji: '👗' },
   { code: 'men', name: '남성', emoji: '👔' },
-  { code: 'unisex', name: '공용', emoji: '🧥' },
 ]
 
 function GenderFilter({ selectedGender, onGenderChange }) {

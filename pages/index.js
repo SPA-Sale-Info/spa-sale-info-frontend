@@ -122,16 +122,25 @@ const normalizeProduct = (product = {}) => {
     : 'unisex'
 
   const brand = (product.brandType || product.brandName || 'UNKNOWN').toUpperCase()
-  const category = (product.category || 'UNCATEGORIZED').toUpperCase()
-  const categoryGroup = Object.entries(CATEGORY_GROUPS).find(([, items]) => (
-    items.includes(category)
-  ))?.[0] || 'ETC'
+  const rawMainCategory = (product.mainCategory || '').toUpperCase()
+  const rawSubCategory = (product.category || product.subCategory || '').toUpperCase()
+  const categoryKey = rawMainCategory || rawSubCategory || 'UNCATEGORIZED'
+
+  let categoryGroup = 'ETC'
+  if (CATEGORY_GROUPS[categoryKey]) {
+    categoryGroup = categoryKey
+  } else {
+    const match = Object.entries(CATEGORY_GROUPS).find(([, items]) => items.includes(categoryKey))
+    if (match) {
+      categoryGroup = match[0]
+    }
+  }
 
   return {
     id: product.id || product.productCode || `${brand}-${product.name ?? 'unknown'}`,
     brand,
     gender,
-    category,
+    category: categoryKey,
     categoryGroup,
     name: product.name || '이름 미정',
     originalPrice,
@@ -157,10 +166,13 @@ export default function Home() {
   const [error, setError] = useState(null)
   const [hasMore, setHasMore] = useState(true)
   const [page, setPage] = useState(0)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [searchKeyword, setSearchKeyword] = useState('')
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [logoStep, setLogoStep] = useState(0)
+  const [sortBy, setSortBy] = useState('default') // 'default' | 'discount'
   const loadMoreRef = useRef(null)
+  const filterPanelRef = useRef(null)
   const dailyMood = useMemo(() => {
     const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '')
     const index = Number(todayKey) % DAILY_MOODS.length
@@ -215,6 +227,9 @@ export default function Home() {
         page: pageToLoad,
         size: PAGE_SIZE,
         brandType: selectedBrand !== 'all' ? selectedBrand : undefined,
+        gender: selectedGender !== 'all' ? selectedGender : undefined,
+        mainCategory: selectedCategory !== 'all' ? selectedCategory : undefined,
+        keyword: searchKeyword || undefined,
       })
 
       const apiProducts = response?.content ?? []
@@ -247,7 +262,7 @@ export default function Home() {
         setIsFetchingMore(false)
       }
     }
-  }, [mergeUniqueProducts, normalizeProducts, selectedBrand])
+  }, [mergeUniqueProducts, normalizeProducts, searchKeyword, selectedBrand, selectedCategory, selectedGender])
 
   /**
    * 선택한 브랜드가 바뀌면
@@ -259,16 +274,61 @@ export default function Home() {
     setPage(0)
     setHasMore(true)
     loadProducts({ pageToLoad: 0, replace: true })
-  }, [selectedBrand, loadProducts])
+  }, [selectedBrand, selectedGender, selectedCategory, searchKeyword, loadProducts])
+
+  // 상품 필터링 (성별은 아직 프론트에서 처리)
+  const filteredProducts = useMemo(() => {
+    const normalizedQuery = searchKeyword.trim().toLowerCase()
+
+    return products.filter((product) => {
+      // 이미지가 없는 상품(플레이스홀더)은 제외
+      const hasValidImage = product.imageUrl !== FALLBACK_IMAGE
+
+      const matchesBrand = selectedBrand === 'all' || product.brand === selectedBrand
+      const matchesGender =
+        selectedGender === 'all' ||
+        product.gender === selectedGender ||
+        product.gender === 'unisex'
+      const matchesCategory =
+        selectedCategory === 'all' ||
+        product.categoryGroup === selectedCategory
+
+      const matchesSearch = normalizedQuery === ''
+        || product.name.toLowerCase().includes(normalizedQuery)
+        || (product.brand && product.brand.toLowerCase().includes(normalizedQuery))
+
+      return hasValidImage && matchesBrand && matchesGender && matchesCategory && matchesSearch
+    })
+  }, [products, selectedBrand, selectedGender, selectedCategory, searchKeyword])
+
+  // 상품 정렬
+  const sortedProducts = useMemo(() => {
+    if (sortBy === 'discount') {
+      // 할인율이 큰 순서대로 정렬
+      return [...filteredProducts].sort((a, b) => b.discountRate - a.discountRate)
+    }
+    return filteredProducts
+  }, [filteredProducts, sortBy])
+
+  const filteredCountRef = useRef(0)
+  useEffect(() => {
+    filteredCountRef.current = filteredProducts.length
+  }, [filteredProducts.length])
 
   /**
    * IntersectionObserver를 사용해 화면 하단에 숨겨둔 loadMoreRef 요소가 보이면
    * 다음 페이지를 불러옵니다. (무한 스크롤)
    */
   const loadNextPage = useCallback(() => {
-    if (isInitialLoading || isFetchingMore || !hasMore) {
+    if (
+      isInitialLoading ||
+      isFetchingMore ||
+      !hasMore ||
+      filteredCountRef.current === 0
+    ) {
       return
     }
+
     loadProducts({ pageToLoad: page + 1, replace: false })
   }, [hasMore, isFetchingMore, isInitialLoading, loadProducts, page])
 
@@ -294,10 +354,16 @@ export default function Home() {
   }, [loadNextPage])
 
   useEffect(() => {
-    if (!isInitialLoading && hasMore && !isFetchingMore && products.length < PAGE_SIZE * 2) {
+    if (
+      !isInitialLoading &&
+      hasMore &&
+      !isFetchingMore &&
+      products.length < PAGE_SIZE * 2 &&
+      filteredProducts.length > 0
+    ) {
       loadProducts({ pageToLoad: page + 1, replace: false })
     }
-  }, [hasMore, isFetchingMore, isInitialLoading, loadProducts, page, products.length])
+  }, [filteredProducts.length, hasMore, isFetchingMore, isInitialLoading, loadProducts, page, products.length])
 
   // 브랜드, 성별, 검색어 변경 핸들러
   const handleBrandChange = (brand) => {
@@ -314,13 +380,13 @@ export default function Home() {
 
   const handleSearchSubmit = (event) => {
     event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const keyword = formData.get('keyword') || ''
-    setSearchQuery(String(keyword))
+    const trimmed = searchInput.trim()
+    setSearchKeyword(trimmed)
+    setSearchInput(trimmed)
   }
 
   const handleSearchInputChange = (event) => {
-    setSearchQuery(event.target.value)
+    setSearchInput(event.target.value)
   }
 
   useEffect(() => {
@@ -332,30 +398,13 @@ export default function Home() {
   }, [])
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    // 브랜드 필터 위치로 스크롤
+    if (filterPanelRef.current) {
+      filterPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
-
-  // 상품 필터링 (성별은 아직 프론트에서 처리)
-  const filteredProducts = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase()
-
-    return products.filter((product) => {
-      const matchesBrand = selectedBrand === 'all' || product.brand === selectedBrand
-      const matchesGender =
-        selectedGender === 'all' ||
-        product.gender === selectedGender ||
-        product.gender === 'unisex'
-      const matchesCategory =
-        selectedCategory === 'all' ||
-        product.categoryGroup === selectedCategory
-
-      const matchesSearch = normalizedQuery === ''
-        || product.name.toLowerCase().includes(normalizedQuery)
-        || (product.brand && product.brand.toLowerCase().includes(normalizedQuery))
-
-      return matchesBrand && matchesGender && matchesCategory && matchesSearch
-    })
-  }, [products, selectedBrand, selectedGender, selectedCategory, searchQuery])
 
   // 통계 계산
   const totalBrandLabels = new Set(products.map(p => p.brand)).size
@@ -489,7 +538,7 @@ export default function Home() {
               <input
                 type="text"
                 name="keyword"
-                value={searchQuery}
+                value={searchInput}
                 onChange={handleSearchInputChange}
                 className={styles.searchInput}
                 placeholder="상품명이나 브랜드를 검색해 보세요"
@@ -501,7 +550,7 @@ export default function Home() {
             </form>
           </div>
 
-          <div className={styles.filterPanel}>
+          <div className={styles.filterPanel} ref={filterPanelRef}>
             <div className={styles.filterGroup}>
               <div className={styles.filterLabel}>브랜드</div>
               <BrandFilter
@@ -522,6 +571,25 @@ export default function Home() {
                 selectedCategory={selectedCategory}
                 onCategoryChange={handleCategoryChange}
               />
+            </div>
+            <div className={styles.filterGroup}>
+              <div className={styles.filterLabel}>정렬</div>
+              <div className={styles.sortButtons}>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${sortBy === 'default' ? styles.sortButtonActive : ''}`}
+                  onClick={() => setSortBy('default')}
+                >
+                  기본
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.sortButton} ${sortBy === 'discount' ? styles.sortButtonActive : ''}`}
+                  onClick={() => setSortBy('discount')}
+                >
+                  할인율순
+                </button>
+              </div>
             </div>
           </div>
 
@@ -547,8 +615,8 @@ export default function Home() {
           {!isInitialLoading && !error && (
             <>
               <div className={styles.productsGrid}>
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map(product => (
+                {sortedProducts.length > 0 ? (
+                  sortedProducts.map(product => (
                     <ProductCard
                       key={product.id}
                       {...product}
