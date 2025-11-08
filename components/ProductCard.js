@@ -118,8 +118,13 @@ function ProductCard({
    * 할인율 계산 공식:
    * - (원가 - 할인가) / 원가 * 100
    */
+  const effectiveSalePrice = salePrice
+  const showOriginalPrice = Boolean(originalPrice) && Boolean(effectiveSalePrice) && originalPrice !== effectiveSalePrice
+
   const calculatedDiscountRate = discountRate ||
-    Math.round(((originalPrice - salePrice) / originalPrice) * 100)
+    (showOriginalPrice
+      ? Math.round(((originalPrice - effectiveSalePrice) / originalPrice) * 100)
+      : 0)
 
   /**
    * 카드 클릭 핸들러
@@ -265,7 +270,7 @@ function ProductCard({
            * - originalPrice와 salePrice가 다를 때만 원가 표시
            * - !== 연산자: 값이 다른지 비교
            */}
-          {originalPrice !== salePrice && (
+          {showOriginalPrice && (
             <div className={styles.originalPrice}>
               {formatPrice(originalPrice)}
             </div>
@@ -279,7 +284,7 @@ function ProductCard({
            * - b 태그는 단순 굵게 (의미 없음)
            */}
           <div className={styles.salePrice}>
-            <strong>{formatPrice(salePrice)}</strong>
+            <strong>{formatPrice(effectiveSalePrice)}</strong>
           </div>
         </div>
       </div>

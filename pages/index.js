@@ -102,9 +102,8 @@ const coerceNumber = (value) => {
 
 const normalizeProduct = (product = {}) => {
   const originalPrice = coerceNumber(product.originalPrice)
-  const salePrice = coerceNumber(
-    product.currentPrice !== undefined ? product.currentPrice : product.salePrice,
-  ) || originalPrice
+  const salePriceSource = product.currentPrice !== undefined ? product.currentPrice : product.salePrice
+  const salePrice = coerceNumber(salePriceSource)
 
   const discountRate = typeof product.discountRate === 'number'
     ? product.discountRate
@@ -171,7 +170,7 @@ export default function Home() {
   useEffect(() => {
     const timer = setInterval(() => {
       setLogoStep(prev => (prev + 1) % 4)
-    }, 1800)
+    }, 1200)
     return () => clearInterval(timer)
   }, [])
 

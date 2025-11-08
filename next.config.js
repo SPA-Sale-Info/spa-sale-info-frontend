@@ -23,6 +23,7 @@ const nextConfig = {
       'www.uniqlo.com',      // Uniqlo 이미지
       'image.uniqlo.com',    // Uniqlo CDN
       'img.muji.net',        // MUJI 이미지
+      'product.mujikorea.co.kr', // MUJI Korea
       // 추가 브랜드 도메인은 여기에 계속 추가하면 됩니다
     ],
   },
