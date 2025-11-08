@@ -188,6 +188,13 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+.countNumber {
+  font-variant-numeric: tabular-nums;
+  transition: all 0.3s ease;
+  display: inline-block;
+  min-width: 6ch;
+}
+
 .heroVisual {
   display: flex;
   justify-content: center;
@@ -308,8 +315,8 @@
 }
 
 .filterPanel {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem;
   border-radius: var(--radius-2xl);
@@ -318,10 +325,20 @@
   box-shadow: 0 16px 60px -35px rgba(15, 23, 42, 0.25);
 }
 
+.brandFilterGroup {
+  width: 100%;
+}
+
 .filterGroup {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
 }
 
 .filterLabel {
@@ -515,10 +532,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-.filterPanel {
-    grid-template-columns: 1fr;
-  }
-
   .sectionHeader {
     align-items: flex-start;
   }
@@ -562,6 +575,15 @@
 
   .footerContent {
     padding: 2rem 1.25rem;
+  }
+
+  .filterPanel {
+    gap: 1rem;
+  }
+
+  .filterRow {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }
 

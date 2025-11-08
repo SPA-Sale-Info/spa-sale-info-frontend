@@ -459,3 +459,35 @@ export async function fetchSaleProducts({
 
   return request('/api/v1/products/sale', buildQuery())
 }
+
+/**
+ * 총 할인 상품 개수를 가져오는 함수
+ *
+ * @returns {Promise<number>} 할인 중인 상품 총 개수
+ */
+export async function fetchSaleProductCount() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/products/sale/count`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`요청 실패 (${response.status})`)
+    }
+
+    const payload = await response.json()
+
+    if (payload?.success === false) {
+      throw new Error(payload?.message || '응답이 성공 상태가 아닙니다.')
+    }
+
+    // payload.data가 숫자값
+    return payload?.data ?? 0
+  } catch (error) {
+    console.error('할인 상품 개수 조회 실패:', error)
+    return 0
+  }
+}

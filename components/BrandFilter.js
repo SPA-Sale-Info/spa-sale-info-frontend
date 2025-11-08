@@ -14,11 +14,16 @@ const BRANDS = [
   { code: 'ZARA', name: 'ZARA', logo: '/logos/zara.svg' },
   { code: 'UNIQLO', name: 'UNIQLO', logo: '/logos/uniqlo.svg' },
   { code: 'MUJI', name: 'MUJI', logo: '/logos/muji.svg' },
+  { code: 'MASSIMODUTTI', name: 'Massimo Dutti', logo: '/logos/massimodutti.svg', emoji: '🧥', comingSoon: true, bubblePosition: 'bottom' },
+  { code: 'MANGO', name: 'Mango', logo: '/logos/mango.svg', emoji: '🥭', comingSoon: true, bubblePosition: 'bottom' },
 ]
 
 function BrandFilter({ selectedBrand, onBrandChange }) {
   // 버튼을 누르면 상위 컴포넌트(Home)가 선택한 브랜드를 기억합니다.
-  const handleBrandClick = (brandCode) => {
+  const handleBrandClick = (brandCode, isDisabled) => {
+    if (isDisabled) {
+      return
+    }
     onBrandChange(brandCode)
   }
 
@@ -27,18 +32,14 @@ function BrandFilter({ selectedBrand, onBrandChange }) {
       <div className={styles.buttonGroup}>
         {BRANDS.map((brand) => {
           const isSelected = selectedBrand === brand.code
-          const buttonClassName = `${styles.button} ${isSelected ? styles.selected : ''}`
+          const buttonClassName = [
+            styles.button,
+            isSelected ? styles.selected : '',
+            brand.comingSoon ? styles.buttonDisabled : '',
+          ].filter(Boolean).join(' ')
 
-          // 각 브랜드마다 버튼을 하나씩 그립니다.
-          return (
-            <button
-              key={brand.code}
-              className={buttonClassName}
-              onClick={() => handleBrandClick(brand.code)}
-              aria-pressed={isSelected}
-              aria-label={`${brand.name} 필터`}
-              type="button"
-            >
+          const buttonContent = (
+            <>
               {brand.logo
                 ? (
                   // 로고 파일이 있으면 이미지를 보여줍니다.
@@ -58,7 +59,38 @@ function BrandFilter({ selectedBrand, onBrandChange }) {
                   <span>{brand.emoji}</span>
                 )}
               <span className={styles.brandName}>{brand.name}</span>
+            </>
+          )
+
+          const button = (
+            <button
+              className={buttonClassName}
+              onClick={() => handleBrandClick(brand.code, brand.comingSoon)}
+              aria-pressed={isSelected}
+              aria-label={`${brand.name} 필터${brand.comingSoon ? ' (곧 추가될 예정)' : ''}`}
+              type="button"
+              disabled={brand.comingSoon}
+              aria-disabled={brand.comingSoon}
+              title={brand.comingSoon ? '곧 추가될 예정이에요!' : undefined}
+            >
+              {buttonContent}
             </button>
+          )
+
+          const wrapperClass = brand.comingSoon ? styles.comingSoonWrapper : styles.buttonWrapper
+          const bubbleClass = brand.bubblePosition === 'bottom'
+            ? styles.comingSoonBubbleBottom
+            : styles.comingSoonBubble
+
+          return (
+            <div key={brand.code} className={wrapperClass}>
+              {button}
+              {brand.comingSoon && (
+                <span className={bubbleClass} role="status" aria-live="polite">
+                  곧 추가될 예정이에요!
+                </span>
+              )}
+            </div>
           )
         })}
       </div>
