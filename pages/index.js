@@ -611,9 +611,59 @@ export default function Home() {
       </div>
       <div className={styles.mainContent}>
         <Head>
-          <title>Sales Product Archive</title>
-          <meta name="description" content="고가 브랜드의 감성을 닮은 합리적인 가격의 SPA 브랜드 상품을 발견하세요" />
+          <title>Sale Archive - H&M, ZARA, UNIQLO, MUJI 세일 정보 | 매일 업데이트</title>
+          <meta name="description" content="H&M, ZARA, UNIQLO, MUJI 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 합리적인 쇼핑을 즐기세요." />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+          {/* 구조화된 데이터 (JSON-LD) */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'WebSite',
+                name: 'Sale Archive',
+                description: 'SPA 브랜드 세일 정보 큐레이션 서비스',
+                url: 'https://yourdomain.com',
+                potentialAction: {
+                  '@type': 'SearchAction',
+                  target: 'https://yourdomain.com/?search={search_term_string}',
+                  'query-input': 'required name=search_term_string',
+                },
+              }),
+            }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'ItemList',
+                name: '할인 중인 SPA 브랜드 상품',
+                description: 'H&M, ZARA, UNIQLO, MUJI 등의 세일 상품 모음',
+                numberOfItems: totalSaleCount || 0,
+                itemListElement: filteredProducts.slice(0, 10).map((product, index) => ({
+                  '@type': 'ListItem',
+                  position: index + 1,
+                  item: {
+                    '@type': 'Product',
+                    name: product.name,
+                    brand: {
+                      '@type': 'Brand',
+                      name: product.brand,
+                    },
+                    offers: {
+                      '@type': 'Offer',
+                      price: product.salePrice,
+                      priceCurrency: 'KRW',
+                      availability: 'https://schema.org/InStock',
+                      url: product.productUrl,
+                    },
+                  },
+                })),
+              }),
+            }}
+          />
         </Head>
 
         {/* 네비게이션 */}

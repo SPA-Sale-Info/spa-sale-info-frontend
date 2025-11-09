@@ -1,0 +1,12 @@
+# robots.txt - 검색엔진 크롤러를 위한 가이드
+
+# 모든 검색엔진 크롤러 허용
+User-agent: *
+Allow: /
+
+# 크롤링하지 않을 경로 (필요시 추가)
+Disallow: /api/
+Disallow: /_next/
+
+# Sitemap 위치
+Sitemap: https://yourdomain.com/sitemap.xml

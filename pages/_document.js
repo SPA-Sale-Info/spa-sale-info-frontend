@@ -41,17 +41,32 @@ export default function Document() {
        * - _document.js의 Head는 모든 페이지에 공통으로 적용
        */}
       <Head>
-        {/* 웹사이트 설명 메타 태그 */}
-        <meta name="description" content="SPA 브랜드 가격 인하 정보를 제공하는 패션 큐레이션 서비스" />
+        {/* SEO 기본 메타 태그 */}
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="H&M, ZARA, UNIQLO, MUJI 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 스마트한 쇼핑을 경험하세요." />
+        <meta name="keywords" content="SPA 브랜드, 할인, 세일, H&M, ZARA, UNIQLO, MUJI, 패션, 쇼핑, 가격비교, 세일정보" />
+        <meta name="author" content="Sale Archive" />
+
+        {/* Open Graph 태그 (SNS 공유용) */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Sale Archive" />
+        <meta property="og:title" content="Sale Archive - SPA 브랜드 세일 정보" />
+        <meta property="og:description" content="H&M, ZARA, UNIQLO, MUJI 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요." />
+        <meta property="og:locale" content="ko_KR" />
+
+        {/* Twitter Card 태그 */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Sale Archive - SPA 브랜드 세일 정보" />
+        <meta name="twitter:description" content="H&M, ZARA, UNIQLO, MUJI 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요." />
+
+        {/* 검색엔진 크롤링 설정 */}
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
 
         {/* 파비콘 설정 */}
         <link rel="icon" href="/favicon.ico" />
-
-        {/*
-          구글 폰트 추가 예시 (필요시 주석 해제)
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
-        */}
+        <link rel="canonical" href="https://yourdomain.com" />
       </Head>
 
       {/**
