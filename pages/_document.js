@@ -65,6 +65,13 @@ export default function Document() {
         <meta name="robots" content="index, follow" />
         <meta name="googlebot" content="index, follow" />
 
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6853743390551388"
+          crossOrigin="anonymous"
+        />
+
         {/* 파비콘 설정 */}
         <link rel="icon" href="/favicon.ico" />
         <link rel="canonical" href="https://mion-spa-info.vercel.app" />
