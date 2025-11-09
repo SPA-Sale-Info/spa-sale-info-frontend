@@ -53,6 +53,7 @@ export default function Document() {
         <meta property="og:site_name" content="Sale Archive" />
         <meta property="og:title" content="Sale Archive - SPA 브랜드 세일 정보" />
         <meta property="og:description" content="H&M, ZARA, UNIQLO, MUJI 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요." />
+        <meta property="og:url" content="https://mion-spa-info.vercel.app" />
         <meta property="og:locale" content="ko_KR" />
 
         {/* Twitter Card 태그 */}
@@ -66,7 +67,7 @@ export default function Document() {
 
         {/* 파비콘 설정 */}
         <link rel="icon" href="/favicon.ico" />
-        <link rel="canonical" href="https://yourdomain.com" />
+        <link rel="canonical" href="https://mion-spa-info.vercel.app" />
       </Head>
 
       {/**

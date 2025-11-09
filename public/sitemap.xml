@@ -8,8 +8,8 @@
 
   <!-- 메인 페이지 -->
   <url>
-    <loc>https://yourdomain.com</loc>
-    <lastmod>2025-01-09</lastmod>
+    <loc>https://mion-spa-info.vercel.app</loc>
+    <lastmod>2025-01-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>

@@ -30,14 +30,16 @@
 - 명확한 description
 - 키워드 최적화
 
-## 🚀 배포 전 필수 작업
+## 🚀 배포 정보
 
-### 1. 도메인 변경
-다음 파일들에서 `https://yourdomain.com`을 실제 도메인으로 변경:
-- `pages/_document.js` (line 69)
-- `public/robots.txt` (line 10)
-- `public/sitemap.xml` (line 11, 12)
-- `pages/index.js` (line 627, 630)
+### 실제 도메인
+**https://mion-spa-info.vercel.app** ✅
+
+모든 파일에 도메인 설정 완료:
+- `pages/_document.js` ✅
+- `public/robots.txt` ✅
+- `public/sitemap.xml` ✅
+- `pages/index.js` ✅
 
 ### 2. Open Graph 이미지 추가
 ```javascript

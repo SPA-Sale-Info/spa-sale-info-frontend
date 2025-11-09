@@ -9,4 +9,4 @@ Disallow: /api/
 Disallow: /_next/
 
 # Sitemap 위치
-Sitemap: https://yourdomain.com/sitemap.xml
+Sitemap: https://mion-spa-info.vercel.app/sitemap.xml

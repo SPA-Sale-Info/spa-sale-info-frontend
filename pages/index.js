@@ -624,10 +624,10 @@ export default function Home() {
                 '@type': 'WebSite',
                 name: 'Sale Archive',
                 description: 'SPA 브랜드 세일 정보 큐레이션 서비스',
-                url: 'https://yourdomain.com',
+                url: 'https://mion-spa-info.vercel.app',
                 potentialAction: {
                   '@type': 'SearchAction',
-                  target: 'https://yourdomain.com/?search={search_term_string}',
+                  target: 'https://mion-spa-info.vercel.app/?search={search_term_string}',
                   'query-input': 'required name=search_term_string',
                 },
               }),
