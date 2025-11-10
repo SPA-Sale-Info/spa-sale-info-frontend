@@ -332,11 +332,13 @@ export default function Home() {
   const [searchInput, setSearchInput] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const [logoStep, setLogoStep] = useState(0)
   const [totalSaleCount, setTotalSaleCount] = useState(0)
   const [animatedCount, setAnimatedCount] = useState(0)
   const loadMoreRef = useRef(null)
   const filterPanelRef = useRef(null)
+  const lastScrollY = useRef(0)
   const dailyMood = useMemo(() => {
     const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '')
     const index = Number(todayKey) % DAILY_MOODS.length
@@ -583,7 +585,9 @@ export default function Home() {
 
   useEffect(() => {
     const onScroll = () => {
-      setShowScrollTop(window.scrollY > 400)
+      const currentScrollY = window.scrollY
+      setShowScrollTop(currentScrollY > 400)
+      lastScrollY.current = currentScrollY
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -596,6 +600,10 @@ export default function Home() {
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
+  }
+
+  const toggleFilters = () => {
+    setShowFilters(prev => !prev)
   }
 
   // 통계 계산
@@ -777,7 +785,35 @@ export default function Home() {
             </form>
           </div>
 
-          <div className={styles.filterPanel} ref={filterPanelRef}>
+          {/* 필터 토글 버튼 */}
+          <button
+            className={styles.filterToggleButton}
+            onClick={toggleFilters}
+            aria-label={showFilters ? '필터 숨기기' : '필터 보기'}
+            aria-expanded={showFilters}
+          >
+            <span className={styles.filterToggleIcon}>
+              {showFilters ? '✕' : '⚙'}
+            </span>
+            <span className={styles.filterToggleText}>
+              {showFilters ? '필터 닫기' : '필터'}
+            </span>
+          </button>
+
+          {/* 모바일 오버레이 */}
+          {showFilters && (
+            <div
+              className={styles.filterOverlay}
+              onClick={toggleFilters}
+              aria-hidden="true"
+            />
+          )}
+
+          {/* 필터 패널 */}
+          <div
+            className={`${styles.filterPanel} ${showFilters ? styles.filterPanelVisible : ''}`}
+            ref={filterPanelRef}
+          >
             <div className={`${styles.filterGroup} ${styles.brandFilterGroup}`}>
               <div className={styles.filterLabel}>브랜드</div>
               <BrandFilter
