@@ -229,25 +229,6 @@ function ProductCard({
        */}
       <div className={styles.info}>
         {/**
-         * 브랜드명
-         *
-         * span 태그:
-         * - 인라인 요소 (텍스트 일부를 스타일링할 때 사용)
-         * - div는 블록 요소 (전체 줄을 차지)
-         */}
-        <div className={styles.meta}>
-          <span className={styles.brandName}>
-            {getBrandDisplayName(brand)}
-          </span>
-          {genderMeta && (
-            <span className={`${styles.genderBadge} ${styles[genderClassKey] || ''}`}>
-              <span aria-hidden="true">{genderMeta.emoji}</span>
-              <span>{genderMeta.label}</span>
-            </span>
-          )}
-        </div>
-
-        {/**
          * 상품명
          *
          * h3 태그:
