@@ -6,41 +6,41 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.97);
-  border-radius: var(--radius-2xl);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
   overflow: hidden;
   cursor: pointer;
-  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
-  box-shadow: 0 20px 40px -32px rgba(15, 23, 42, 0.55);
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
   opacity: 0;
-  transform: translateY(24px);
-  animation: cardFadeUp 0.6s ease forwards;
+  transform: translateY(20px);
+  animation: cardFadeUp 0.5s ease forwards;
 }
 
 .card:hover,
 .card:focus-within {
-  transform: translateY(-8px);
-  border-color: rgba(99, 102, 241, 0.35);
-  box-shadow: 0 28px 60px -30px rgba(15, 23, 42, 0.55);
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 
 .imageContainer {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 5;
-  background: linear-gradient(145deg, rgba(241, 245, 249, 0.9), rgba(224, 231, 255, 0.9));
+  background: rgba(241, 245, 249, 0.5);
   overflow: hidden;
 }
 
 .image {
   object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.4s ease;
 }
 
 .card:hover .image,
 .card:focus-within .image {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
 .discountBadge {
@@ -48,12 +48,12 @@
   top: 1rem;
   left: 1rem;
   padding: 0.45rem 0.9rem;
-  background: rgba(220, 38, 38, 0.92);
+  background: rgba(220, 38, 38, 0.95);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 700;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 16px 30px -16px rgba(220, 38, 38, 0.65);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
   z-index: 2;
 }
 
@@ -78,9 +78,9 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-primary);
-  background: rgba(99, 102, 241, 0.08);
-  border-radius: var(--radius-full);
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 100px;
 }
 
 .genderBadge {
@@ -90,10 +90,10 @@
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.3rem 0.8rem;
-  border-radius: var(--radius-full);
+  border-radius: 100px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: rgba(148, 163, 184, 0.16);
+  background: rgba(148, 163, 184, 0.12);
   color: var(--color-text);
 }
 
@@ -190,7 +190,7 @@
 @keyframes cardFadeUp {
   0% {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(20px);
   }
   100% {
     opacity: 1;

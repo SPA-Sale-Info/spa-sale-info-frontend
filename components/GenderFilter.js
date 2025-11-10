@@ -8,9 +8,9 @@ import styles from '../styles/GenderFilter.module.css'
 
 // 사용자가 누를 수 있는 성별 옵션 목록입니다.
 const GENDERS = [
-  { code: 'all', name: '전체', emoji: '🌈' },
-  { code: 'women', name: '여성', emoji: '👗' },
-  { code: 'men', name: '남성', emoji: '👔' },
+  { code: 'all', name: '전체' },
+  { code: 'women', name: '여성' },
+  { code: 'men', name: '남성' },
 ]
 
 function GenderFilter({ selectedGender, onGenderChange }) {
@@ -35,9 +35,6 @@ function GenderFilter({ selectedGender, onGenderChange }) {
             aria-label={`${gender.name} 상품만 보기`}
             type="button"
           >
-            <span className={styles.emoji} aria-hidden="true">
-              {gender.emoji}
-            </span>
             <span>{gender.name}</span>
           </button>
         )

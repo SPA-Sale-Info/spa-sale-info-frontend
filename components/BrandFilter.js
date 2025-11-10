@@ -86,7 +86,7 @@ function BrandFilter({ selectedBrand, onBrandChange }) {
             <div key={brand.code} className={wrapperClass}>
               {button}
               {brand.comingSoon && (
-                <span className={bubbleClass} role="status" aria-live="polite">
+                <span className={styles.comingSoonTooltip} role="status" aria-live="polite">
                   곧 추가될 예정이에요!
                 </span>
               )}

@@ -706,21 +706,6 @@ export default function Home() {
                 매일 갱신되는 세일 정보를 한 눈에 확인하세요.
               </p>
 
-              <div className={styles.heroChecklist}>
-                <div className={styles.heroChecklistItem}>
-                  <span>01</span>
-                  <p>여러 SPA 사이트에 흩어진 세일 소식을 한 곳에 눌러 담았습니다. </p>
-                </div>
-                <div className={styles.heroChecklistItem}>
-                  <span>02</span>
-                  <p>비슷한 아이템이 겹치지 않도록 실루엣과 텍스처 기준으로 다시 추렸습니다.</p>
-                </div>
-                <div className={styles.heroChecklistItem}>
-                  <span>03</span>
-                  <p>필터를 돌리면 지금 입고 싶은 역할, 색감에 맞는 후보만 남도록 구성했습니다.</p>
-                </div>
-              </div>
-
               <div className={styles.heroInsights}>
                 <div className={styles.heroInsightCard}>
                   <p className={styles.heroInsightLabel}>오늘의 시선</p>
