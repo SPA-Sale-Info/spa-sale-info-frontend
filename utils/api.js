@@ -27,15 +27,16 @@
  * - 보안에 민감한 정보(API 키 등)를 코드에 직접 넣지 않음
  * - 코드 변경 없이 설정만으로 환경 전환 가능
  */
-// 개발 환경에서 백엔드 주소를 따로 입력하지 않았다면 이 값을 씁니다.
+// 환경별 기본 API URL
 const DEFAULT_DEV_API = 'http://localhost:8080'
+const DEFAULT_PROD_API = 'https://apimion.click'
 const isDev = process.env.NODE_ENV !== 'production'
 
 function resolveApiBaseUrl() {
   const rawBaseUrl =
     process.env.NEXT_PUBLIC_API_URL ||
     process.env.API_URL ||
-    (isDev ? DEFAULT_DEV_API : '')
+    (isDev ? DEFAULT_DEV_API : DEFAULT_PROD_API)
 
   if (!rawBaseUrl) {
     throw new Error('API URL이 설정되지 않았습니다. NEXT_PUBLIC_API_URL 환경변수를 확인하세요.')
