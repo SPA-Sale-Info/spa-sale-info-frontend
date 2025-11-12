@@ -14,6 +14,8 @@ const BRANDS = [
   { code: 'ZARA', name: 'ZARA', logo: '/logos/zara.svg' },
   { code: 'UNIQLO', name: 'UNIQLO', logo: '/logos/uniqlo.svg' },
   { code: 'MUJI', name: 'MUJI', logo: '/logos/muji.svg' },
+  { code: 'COS', name: 'COS', logo: '/logos/cos.svg', noSale: true },
+  { code: 'ARKET', name: 'ARKET', logo: '/logos/arket.svg', noSale: true },
   { code: 'MASSIMODUTTI', name: 'Massimo Dutti', logo: '/logos/massimodutti.svg', emoji: '🧥', comingSoon: true, bubblePosition: 'bottom' },
   { code: 'MANGO', name: 'Mango', logo: '/logos/mango.svg', emoji: '🥭', comingSoon: true, bubblePosition: 'bottom' },
 ]

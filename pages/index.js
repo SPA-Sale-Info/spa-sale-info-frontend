@@ -338,6 +338,7 @@ export default function Home() {
   const [animatedCount, setAnimatedCount] = useState(0)
   const loadMoreRef = useRef(null)
   const filterPanelRef = useRef(null)
+  const sectionHeaderRef = useRef(null)
   const lastScrollY = useRef(0)
   const dailyMood = useMemo(() => {
     const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '')
@@ -594,11 +595,9 @@ export default function Home() {
   }, [])
 
   const scrollToTop = () => {
-    // 브랜드 필터 위치로 스크롤
-    if (filterPanelRef.current) {
-      filterPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+    // 섹션 헤더 위치로 스크롤
+    if (sectionHeaderRef.current) {
+      sectionHeaderRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
@@ -760,7 +759,7 @@ export default function Home() {
         {/* 메인 컨텐츠 */}
         <main className={styles.main} id="products">
           {/* 섹션 헤더 */}
-          <div className={styles.sectionHeader}>
+          <div className={styles.sectionHeader} ref={sectionHeaderRef}>
             <h2 className={styles.sectionTitle}>오늘 챙겨야 할 옷장 업데이트</h2>
             <p className={styles.sectionSubtitle}>
               브랜드·성별·카테고리를 조합해서 지금 역할을 해줄 아이템만 남겨 보세요.
@@ -870,11 +869,18 @@ export default function Home() {
                   ))
                 ) : (
                   <div className={styles.emptyState}>
-                    <div className={styles.emptyIcon}>🔍</div>
-                    <h3 className={styles.emptyTitle}>상품이 없습니다</h3>
+                    <div className={styles.emptyIcon}>
+                      {(selectedBrand === 'COS' || selectedBrand === 'ARKET') ? '😔' : '🔍'}
+                    </div>
+                    <h3 className={styles.emptyTitle}>
+                      {(selectedBrand === 'COS' || selectedBrand === 'ARKET')
+                        ? '현재 할인 중인 옷이 없는 거 같아요'
+                        : '상품이 없습니다'}
+                    </h3>
                     <p className={styles.emptyDescription}>
-                      선택하신 조건에 맞는 상품이 아직 없습니다.
-                      다른 필터를 선택해 보세요.
+                      {(selectedBrand === 'COS' || selectedBrand === 'ARKET')
+                        ? '다른 브랜드를 선택해 보세요.'
+                        : '선택하신 조건에 맞는 상품이 아직 없습니다. 다른 필터를 선택해 보세요.'}
                     </p>
                   </div>
                 )}
@@ -909,17 +915,12 @@ export default function Home() {
         {/* 푸터 */}
         <footer className={styles.footer}>
           <div className={styles.footerContent}>
-            <h3 className={styles.footerTitle}>맛 프로젝트</h3>
-            <p className={styles.footerText}>
-              고가 브랜드의 감성을 합리적인 가격에 즐기는 스마트한 쇼핑
-            </p>
+            <h3 className={styles.footerTitle}>SPA Project</h3>
             <div className={styles.footerLinks}>
-              <a href="#" className={styles.footerLink}>Instagram</a>
-              <a href="#" className={styles.footerLink}>Twitter</a>
               <a href="#" className={styles.footerLink}>Contact</a>
             </div>
             <p className={styles.footerText} style={{ marginTop: '2rem', fontSize: '0.875rem', opacity: 0.6 }}>
-              © 2024 맛 프로젝트. All rights reserved.
+              © 2024 SPA Project. All rights reserved.
             </p>
           </div>
         </footer>

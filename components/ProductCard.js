@@ -194,19 +194,6 @@ function ProductCard({
        */}
       <div className={styles.imageContainer}>
         {/**
-         * 할인율 배지
-         *
-         * 조건부 렌더링:
-         * - {조건 && JSX}: 조건이 true일 때만 JSX 렌더링
-         * - calculatedDiscountRate > 0이면 배지 표시
-         */}
-        {calculatedDiscountRate > 0 && (
-          <div className={styles.discountBadge}>
-            -{calculatedDiscountRate}%
-          </div>
-        )}
-
-        {/**
          * Next.js Image 컴포넌트
          *
          * 주요 속성:
