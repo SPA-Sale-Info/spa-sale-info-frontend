@@ -34,6 +34,41 @@ const nextConfig = {
     // 추후 백엔드 API가 준비되면 이 값을 변경하면 됩니다
     API_URL: process.env.API_URL || 'http://localhost:8080',
   },
+
+  // SEO 최적화: 압축 활성화
+  compress: true,
+
+  // SEO 최적화: 보안 헤더 설정
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin'
+          },
+        ],
+      },
+    ]
+  },
+
+  // SEO 최적화: 리다이렉트 설정 (필요시)
+  async redirects() {
+    return []
+  },
 }
 
 // 설정을 export하여 Next.js가 사용할 수 있게 합니다

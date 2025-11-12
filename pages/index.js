@@ -620,7 +620,18 @@ export default function Home() {
         <Head>
           <title>Sale Archive - H&M, ZARA, UNIQLO, MUJI 세일 정보 | 매일 업데이트</title>
           <meta name="description" content="H&M, ZARA, UNIQLO, MUJI 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 합리적인 쇼핑을 즐기세요." />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <link rel="canonical" href="https://mion-spa-info.vercel.app" />
+
+          {/* Open Graph 메타 태그 */}
+          <meta property="og:title" content="Sale Archive - SPA 브랜드 세일 정보 | 매일 업데이트" />
+          <meta property="og:description" content="H&M, ZARA, UNIQLO, MUJI 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요." />
+          <meta property="og:type" content="website" />
+          <meta property="og:url" content="https://mion-spa-info.vercel.app" />
+
+          {/* Twitter Card */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="Sale Archive - SPA 브랜드 세일 정보" />
+          <meta name="twitter:description" content="H&M, ZARA, UNIQLO, MUJI 할인 상품을 한눈에 비교하세요." />
 
           {/* 구조화된 데이터 (JSON-LD) */}
           <script
@@ -668,6 +679,20 @@ export default function Home() {
                     },
                   },
                 })),
+              }),
+            }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: 'Sale Archive',
+                url: 'https://mion-spa-info.vercel.app',
+                logo: 'https://mion-spa-info.vercel.app/favicon.ico',
+                description: 'SPA 브랜드 할인 상품 정보를 제공하는 큐레이션 서비스',
+                sameAs: [],
               }),
             }}
           />
