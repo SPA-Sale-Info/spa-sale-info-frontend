@@ -47,6 +47,7 @@ export default function Document() {
         <meta name="description" content="H&M, ZARA, UNIQLO, MUJI 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 스마트한 쇼핑을 경험하세요." />
         <meta name="keywords" content="SPA 브랜드, 할인, 세일, H&M, ZARA, UNIQLO, MUJI, 패션, 쇼핑, 가격비교, 세일정보" />
         <meta name="author" content="Sale Archive" />
+        <meta name="theme-color" content="#FF6B6B" />
 
         {/* Open Graph 태그 (SNS 공유용) */}
         <meta property="og:type" content="website" />
@@ -74,7 +75,10 @@ export default function Document() {
         />
 
         {/* 파비콘 설정 */}
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/favicon.svg" />
+        <link rel="manifest" href="/site.webmanifest" />
         <link rel="canonical" href="https://mion-spa-info.vercel.app" />
       </Head>
 
