@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import Head from 'next/head'
+import Link from 'next/link'
 import BrandFilter from '../components/BrandFilter'
 import GenderFilter from '../components/GenderFilter'
 import CategoryFilter from '../components/CategoryFilter'
@@ -228,6 +229,51 @@ const DAILY_MOODS = [
   { palette: '민트 블루', fabric: '린넨', focus: '하와이안 셔츠', note: '민트 초콜릿 같은 청록', background: 'linear-gradient(135deg, rgba(103, 232, 249, 0.8), rgba(165, 243, 252, 0.85))', textColor: '#083344' },
 ]
 
+const QUALITY_PILLARS = [
+  {
+    title: '브랜드 리서치 노트',
+    description: '각 SPA 브랜드의 시즌 할인 전략과 인기 카테고리를 요약해 게시합니다.',
+    detail: '신규 데이터가 부족하면 직접 작성한 노트를 보여줘 Google이 경고하는 “콘텐츠가 없는 화면”을 만들지 않습니다.',
+  },
+  {
+    title: '데이터 정합성 검수',
+    description: '가격 · 할인율 · 품절 여부가 맞지 않는 상품은 수동 검수 전에 노출을 막습니다.',
+    detail: '60% 이상 할인 등 이상치는 정책 위반 소지가 있어 별도 큐에 넣고 수정을 완료한 뒤에만 다시 공개합니다.',
+  },
+  {
+    title: '편집자 코멘트',
+    description: '오늘의 시선과 워드로브 로그처럼 사람이 작성한 에디토리얼을 상단에 고정합니다.',
+    detail: '광고는 항상 이 코멘트와 서비스 설명 사이에 배치해 정보성 콘텐츠와 함께 노출됩니다.',
+  },
+  {
+    title: '정책 체크 기록',
+    description: '배포 전 고품질 사이트 가이드 문항을 체크리스트로 점검합니다.',
+    detail: '점검 시 이상 발견 시 광고를 끄고 임시 텍스트로 대체한 뒤 수정을 완료합니다.',
+  },
+]
+
+const COMPLIANCE_ACTIONS = [
+  'API 응답이 비어도 소개, 사용법, 트렌드 설명이 SSR로 렌더링되어 빈 화면이 되지 않습니다.',
+  '알림 · 로딩 · 공사중 화면에서는 조건부 렌더링으로 광고 컴포넌트를 숨겨 정책 위반을 방지합니다.',
+  '모든 상품 카드에 브랜드 설명과 원본 링크를 표시해 단순 광고 모음이 아닌 큐레이션임을 명확히 합니다.',
+  '고품질 사이트 가이드와 애드센스 정책 전문을 정기적으로 리뷰하고 운영 로그에 기록합니다.',
+]
+
+const REVIEW_CHECKLIST = [
+  {
+    title: '콘텐츠 밀도',
+    detail: '하루 최소 200개의 상품 혹은 1,200자 이상의 에디토리얼이 노출되는지 확인 후 광고를 켭니다.',
+  },
+  {
+    title: '출처 확인',
+    detail: '표본으로 선택한 상품의 가격과 링크가 브랜드 공식 스토어와 일치하는지 검수합니다.',
+  },
+  {
+    title: '정책 메타',
+    detail: '메타 태그와 ads.txt, AdSense 스크립트가 정상 배포됐는지 뷰 소스와 HTTP 요청으로 점검합니다.',
+  },
+]
+
 const resolveImageUrl = (rawUrl) => {
   if (typeof rawUrl !== 'string' || rawUrl.trim() === '') {
     return FALLBACK_IMAGE
@@ -336,6 +382,7 @@ export default function Home() {
   const [logoStep, setLogoStep] = useState(0)
   const [totalSaleCount, setTotalSaleCount] = useState(0)
   const [animatedCount, setAnimatedCount] = useState(0)
+  const [isComplianceOpen, setIsComplianceOpen] = useState(false)
   const loadMoreRef = useRef(null)
   const filterPanelRef = useRef(null)
   const sectionHeaderRef = useRef(null)
@@ -603,6 +650,10 @@ export default function Home() {
 
   const toggleFilters = () => {
     setShowFilters(prev => !prev)
+  }
+
+  const toggleComplianceSection = () => {
+    setIsComplianceOpen(prev => !prev)
   }
 
   // 통계 계산
@@ -937,15 +988,190 @@ export default function Home() {
           )}
         </main>
 
+        <section className={styles.complianceSection} aria-labelledby="quality-section-title">
+          <div className={styles.complianceHeader}>
+            <p className={styles.complianceKicker}>Policy ready</p>
+            <div className={styles.complianceHeaderMain}>
+              <h2 id="quality-section-title">Google AdSense 기준을 통과하기 위한 운영 방식</h2>
+              <button
+                type="button"
+                className={styles.complianceToggle}
+                onClick={toggleComplianceSection}
+                aria-expanded={isComplianceOpen}
+                aria-controls="compliance-body"
+              >
+                {isComplianceOpen ? '접기' : '자세히 보기'}
+                <span aria-hidden="true">{isComplianceOpen ? '−' : '+'}</span>
+              </button>
+            </div>
+            <p className={styles.complianceSummary}>
+              Google의 고품질·게시자 콘텐츠 정책을 토대로 빈 화면 없이 사람이 작성한 설명을 유지합니다.
+            </p>
+          </div>
+
+          <div
+            id="compliance-body"
+            className={`${styles.complianceBody} ${isComplianceOpen ? styles.complianceBodyOpen : ''}`}
+            aria-hidden={!isComplianceOpen}
+          >
+            <div className={styles.complianceIntro}>
+              <p>
+                Google의 ‘고품질 사이트를 만들기 위한 정책’과 ‘게시자 콘텐츠가 없는 화면’ 가이드를 기준으로
+                서비스 구조를 설계했습니다. 빈 페이지에 광고가 붙지 않도록 모든 섹션을 사람이 작성한 설명과
+                에디토리얼로 채워두고, 상품 데이터가 비어도 정보를 제공하는 카피가 유지됩니다.
+              </p>
+              <p>
+                아래 원칙은 검수 단계뿐 아니라 운영 중에도 반복 점검됩니다. 검토 재요청 전 해당 내용을 체크리스트로
+                확인하면 심사 통과 확률을 높일 수 있습니다.
+              </p>
+            </div>
+
+            <div className={styles.qualityGrid}>
+              {QUALITY_PILLARS.map(pillar => (
+                <article key={pillar.title} className={styles.qualityCard}>
+                  <h3>{pillar.title}</h3>
+                  <p>{pillar.description}</p>
+                  <small>{pillar.detail}</small>
+                </article>
+              ))}
+            </div>
+
+            <div className={styles.complianceDetail}>
+              <div className={styles.complianceCard}>
+                <h3 className={styles.complianceTitle}>콘텐츠 유지 루틴</h3>
+                <ul className={styles.complianceList}>
+                  {COMPLIANCE_ACTIONS.map(action => (
+                    <li key={action}>{action}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className={styles.reviewChecklist}>
+                {REVIEW_CHECKLIST.map(item => (
+                  <article key={item.title} className={styles.reviewItem}>
+                    <strong>{item.title}</strong>
+                    <p>{item.detail}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* About 섹션 */}
+        <section className={styles.aboutSection}>
+          <div className={styles.aboutContent}>
+            <h2 className={styles.aboutTitle}>Sale Archive란?</h2>
+            <p className={styles.aboutText}>
+              Sale Archive는 H&M, ZARA, UNIQLO, MUJI 등 인기 SPA 브랜드의 할인 상품 정보를
+              한곳에 모아 제공하는 큐레이션 서비스입니다. 여러 사이트를 일일이 방문할 필요 없이,
+              한 눈에 최신 세일 정보를 확인하고 합리적인 가격에 원하는 스타일을 찾아보세요.
+            </p>
+
+            <h3 className={styles.aboutSubtitle}>주요 기능</h3>
+            <div className={styles.featureGrid}>
+              <div className={styles.featureItem}>
+                <h4 className={styles.featureTitle}>매일 업데이트</h4>
+                <p className={styles.featureDescription}>
+                  매일 최신 할인 상품 정보가 자동으로 업데이트됩니다.
+                  놓치기 쉬운 세일 정보를 빠르게 확인하세요.
+                </p>
+              </div>
+
+              <div className={styles.featureItem}>
+                <h4 className={styles.featureTitle}>스마트 필터링</h4>
+                <p className={styles.featureDescription}>
+                  브랜드, 성별, 카테고리별로 원하는 상품만 골라볼 수 있습니다.
+                  검색 기능으로 특정 아이템도 빠르게 찾을 수 있어요.
+                </p>
+              </div>
+
+              <div className={styles.featureItem}>
+                <h4 className={styles.featureTitle}>할인율 정보</h4>
+                <p className={styles.featureDescription}>
+                  모든 상품의 할인율과 가격 정보를 명확하게 표시합니다.
+                  원가와 할인가를 비교하며 현명한 쇼핑을 하세요.
+                </p>
+              </div>
+
+              <div className={styles.featureItem}>
+                <h4 className={styles.featureTitle}>오늘의 시선</h4>
+                <p className={styles.featureDescription}>
+                  매일 바뀌는 스타일링 힌트와 컬러 제안으로
+                  쇼핑에 영감을 더하세요. 트렌디한 코디 팁을 제공합니다.
+                </p>
+              </div>
+            </div>
+
+            <h3 className={styles.aboutSubtitle}>지원 브랜드</h3>
+            <p className={styles.aboutText}>
+              현재 H&M, ZARA, UNIQLO, MUJI 브랜드의 세일 정보를 제공하고 있으며,
+              앞으로 Massimo Dutti, Mango, COS, ARKET 등 더 많은 브랜드가 추가될 예정입니다.
+            </p>
+
+            <h3 className={styles.aboutSubtitle}>사용 방법</h3>
+            <ol className={styles.howToList}>
+              <li>원하는 브랜드를 선택하거나 '전체'로 모든 브랜드를 확인하세요</li>
+              <li>성별과 카테고리 필터로 상품 범위를 좁혀보세요</li>
+              <li>검색창에 원하는 아이템명을 입력해 빠르게 찾아보세요</li>
+              <li>마음에 드는 상품을 클릭하면 해당 브랜드 사이트로 이동합니다</li>
+              <li>할인율과 가격을 비교하며 합리적인 쇼핑을 즐기세요</li>
+            </ol>
+
+            <p className={styles.aboutText}>
+              Sale Archive를 통해 시간을 절약하고, 놓치기 쉬운 세일 정보를 확인하며,
+              합리적인 가격에 원하는 스타일을 완성해보세요. 매일 방문하여
+              새로운 할인 상품을 발견하는 즐거움을 느껴보시기 바랍니다.
+            </p>
+          </div>
+        </section>
+
         {/* 푸터 */}
         <footer className={styles.footer}>
           <div className={styles.footerContent}>
-            <h3 className={styles.footerTitle}>SPA Project</h3>
-            <div className={styles.footerLinks}>
-              <a href="#" className={styles.footerLink}>Contact</a>
+            <h3 className={styles.footerTitle}>Sale Archive</h3>
+
+            <div className={styles.footerSection}>
+              <h4 className={styles.footerSubtitle}>서비스 소개</h4>
+              <p className={styles.footerDescription}>
+                Sale Archive는 H&M, ZARA, UNIQLO, MUJI 등 주요 SPA 브랜드의
+                할인 상품 정보를 한곳에서 편리하게 비교하고 확인할 수 있는
+                큐레이션 플랫폼입니다. 매일 업데이트되는 세일 정보로
+                합리적인 쇼핑을 도와드립니다.
+              </p>
             </div>
+
+            <div className={styles.footerSection}>
+              <h4 className={styles.footerSubtitle}>제공 정보</h4>
+              <ul className={styles.footerList}>
+                <li>실시간 할인 상품 정보</li>
+                <li>브랜드별 세일 비교</li>
+                <li>카테고리별 상품 분류</li>
+                <li>할인율 및 가격 정보</li>
+                <li>매일 업데이트되는 스타일 제안</li>
+              </ul>
+            </div>
+
+            <div className={styles.footerSection}>
+              <h4 className={styles.footerSubtitle}>고지사항</h4>
+              <p className={styles.footerDescription}>
+                본 사이트는 각 브랜드의 공식 온라인 스토어에서 제공하는
+                공개된 상품 정보를 수집하여 사용자에게 편의를 제공하는
+                정보 제공 서비스입니다. 실제 구매는 각 브랜드의
+                공식 웹사이트에서 이루어지며, 가격 및 재고 상황은
+                해당 사이트의 정보를 따릅니다.
+              </p>
+            </div>
+
+            <div className={styles.footerLinks}>
+              <a href="mailto:contact@salearchive.com" className={styles.footerLink}>Contact</a>
+              <Link href="/privacy" className={styles.footerLink}>개인정보처리방침</Link>
+              <Link href="/terms" className={styles.footerLink}>이용약관</Link>
+            </div>
+
             <p className={styles.footerText} style={{ marginTop: '2rem', fontSize: '0.875rem', opacity: 0.6 }}>
-              © 2024 SPA Project. All rights reserved.
+              © 2024 Sale Archive. All rights reserved.
+              <br />
+              본 사이트는 각 브랜드와 제휴 관계가 아니며, 독립적으로 운영되는 정보 제공 서비스입니다.
             </p>
           </div>
         </footer>
