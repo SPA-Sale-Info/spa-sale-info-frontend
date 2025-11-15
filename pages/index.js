@@ -671,6 +671,7 @@ export default function Home() {
         <Head>
           <title>Sale Archive - H&M, ZARA, UNIQLO, MUJI 세일 정보 | 매일 업데이트</title>
           <meta name="description" content="H&M, ZARA, UNIQLO, MUJI 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 합리적인 쇼핑을 즐기세요." />
+          <meta name="google-site-verification" content="TorGGEvddw8bZaCn6khd7v_gJeXiLGnI-SiIREZSDos" />
           <link rel="canonical" href="https://mion-spa-info.vercel.app" />
 
           {/* Open Graph 메타 태그 */}
