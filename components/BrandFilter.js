@@ -18,6 +18,12 @@ const BRANDS = [
   { code: 'ARKET', name: 'ARKET', logo: '/logos/arket.svg', noSale: true },
   { code: 'MASSIMODUTTI', name: 'Massimo Dutti', logo: '/logos/massimodutti.svg', emoji: '🧥', comingSoon: true, bubblePosition: 'bottom' },
   { code: 'MANGO', name: 'Mango', logo: '/logos/mango.svg', emoji: '🥭', comingSoon: true, bubblePosition: 'bottom' },
+  { code: 'EIGHTSECONDS', name: '에잇세컨즈', logo: '/logos/eightseconds.svg', comingSoon: true },
+  { code: 'MIXXO', name: '미쏘', logo: '/logos/mixxo.svg', comingSoon: true },
+  { code: 'MUSINSASTANDARD', name: '무신사 스탠다드', logo: '/logos/musinsastandard.svg', comingSoon: true },
+  { code: 'TOPTEN', name: '탑텐', logo: '/logos/topten.svg', comingSoon: true },
+  { code: 'SPAO', name: '스파오', logo: '/logos/spao.svg', comingSoon: true },
+  { code: 'GIORDANO', name: '지오다노', logo: '/logos/giordano.svg', comingSoon: true },
 ]
 
 function BrandFilter({ selectedBrand, onBrandChange }) {

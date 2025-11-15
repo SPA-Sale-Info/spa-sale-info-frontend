@@ -1106,7 +1106,8 @@ export default function Home() {
             <h3 className={styles.aboutSubtitle}>지원 브랜드</h3>
             <p className={styles.aboutText}>
               현재 H&M, ZARA, UNIQLO, MUJI 브랜드의 세일 정보를 제공하고 있으며,
-              앞으로 Massimo Dutti, Mango, COS, ARKET 등 더 많은 브랜드가 추가될 예정입니다.
+              앞으로 Massimo Dutti, Mango, COS, ARKET, 에잇세컨즈, 미쏘, 무신사 스탠다드, 탑텐, 스파오, 지오다노 등
+              더 많은 브랜드가 곧 추가될 예정입니다.
             </p>
 
             <h3 className={styles.aboutSubtitle}>사용 방법</h3>
