@@ -15,6 +15,7 @@
  */
 
 import { useMemo } from 'react'
+import { useRouter } from 'next/router'
 // Next.js의 Image 컴포넌트를 import 합니다
 // 일반 <img> 태그 대신 Next.js Image를 사용하는 이유:
 // - 자동 이미지 최적화 (WebP 변환, 리사이징)
@@ -106,6 +107,8 @@ function ProductCard({
   isFavorite = false, // 현재 찜 상태
   onFavoriteToggle, // 찜 토글 함수
 }) {
+  const router = useRouter()
+
   // 사용자가 카드 전체를 클릭했을 때 이동할 수 있는 안전한 링크입니다.
   const safeProductUrl = useMemo(
     () => getSafeExternalUrl(productUrl),
@@ -133,28 +136,20 @@ function ProductCard({
 
   /**
    * 카드 클릭 핸들러
-   *
-   * window.open():
-   * - 새 창/탭으로 URL을 엽니다
-   * - 첫 번째 인자: URL
-   * - 두 번째 인자: '_blank'는 새 탭에서 열기
-   * - 세 번째 인자: 창 옵션 (noopener, noreferrer는 보안을 위함)
-   *
-   * 왜 noopener, noreferrer를 사용하나요?
-   * - noopener: 새 창이 window.opener로 원본 페이지에 접근하는 것을 방지 (보안)
-   * - noreferrer: HTTP Referer 헤더를 전송하지 않음 (프라이버시)
+   * 상세 페이지로 이동합니다
    */
   const handleCardClick = () => {
-    if (!hasNavigableLink) {
+    if (!product || !product.id) {
       return
     }
 
-    window.open(safeProductUrl, '_blank', 'noopener,noreferrer')
+    // 상세 페이지로 이동 (API를 통해 데이터를 다시 가져옴)
+    router.push(`/product/${product.id}`)
   }
 
   // 키보드(Enter, Space)로도 같은 동작을 하도록 처리합니다.
   const handleCardKeyDown = (event) => {
-    if (!hasNavigableLink) {
+    if (!product || !product.id) {
       return
     }
 
@@ -187,8 +182,8 @@ function ProductCard({
       className={styles.card}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
-      role={hasNavigableLink ? 'link' : undefined}
-      tabIndex={hasNavigableLink ? 0 : undefined}
+      role="button"
+      tabIndex={0}
     >
       {/**
        * 이미지 컨테이너
@@ -249,19 +244,15 @@ function ProductCard({
         </h3>
 
         {/**
-         * 가격 정보
+         * 가격 정보 - 할인가만 표시
          */}
         <div className={styles.priceContainer}>
           {/**
-           * 원가 표시 (할인이 있을 때만)
-           *
-           * 조건부 렌더링:
-           * - originalPrice와 salePrice가 다를 때만 원가 표시
-           * - !== 연산자: 값이 다른지 비교
+           * 할인율 표시 (할인이 있을 때만)
            */}
-          {showOriginalPrice && (
-            <div className={styles.originalPrice}>
-              {formatPrice(originalPrice)}
+          {calculatedDiscountRate > 0 && (
+            <div className={styles.discountBadge}>
+              {calculatedDiscountRate}% OFF
             </div>
           )}
 
@@ -284,7 +275,7 @@ function ProductCard({
        * CSS로 hover 시 표시되는 요소
        */}
       <div className={styles.hoverOverlay}>
-        <span>자세히 보기 →</span>
+        <span>상세 정보 보기 →</span>
       </div>
     </article>
   )

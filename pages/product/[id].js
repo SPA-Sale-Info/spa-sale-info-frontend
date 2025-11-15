@@ -1,0 +1,389 @@
+/**
+ * [id].js - 동적 상품 상세 페이지
+ *
+ * Next.js 동적 라우팅을 사용한 상품 상세 페이지
+ * URL: /product/{productId}
+ *
+ * 주요 기능:
+ * - 상품 이미지 갤러리
+ * - 가격 분석 그래프
+ * - 상품 정보 표시
+ * - 찜하기 기능
+ * - 구매 링크
+ */
+
+import { useRouter } from 'next/router'
+import { useState, useEffect, useRef } from 'react'
+import Head from 'next/head'
+import Link from 'next/link'
+import Image from 'next/image'
+import PriceHistoryChart from '../../components/PriceHistoryChart'
+import FavoriteButton from '../../components/FavoriteButton'
+import useFavorites from '../../hooks/useFavorites'
+import { fetchProductDetail } from '../../utils/api'
+import styles from '../../styles/ProductDetail.module.css'
+
+/**
+ * 브랜드 코드를 표시용 이름으로 변환
+ */
+function getBrandDisplayName(brandCode) {
+  const brandNames = {
+    HM: 'H&M',
+    ZARA: 'ZARA',
+    UNIQLO: 'UNIQLO',
+    MUJI: 'MUJI',
+    CHARLESKEITH: 'Charles & Keith',
+  }
+  return brandNames[brandCode] || brandCode
+}
+
+/**
+ * 성별 표시 메타 정보
+ */
+function getGenderDisplayMeta(genderCode) {
+  const genderMap = {
+    men: { label: '남성', emoji: '👔' },
+    women: { label: '여성', emoji: '👗' },
+    unisex: { label: '공용', emoji: '🧥' },
+  }
+  return genderMap[genderCode] || null
+}
+
+/**
+ * 카테고리 표시 이름
+ */
+function getCategoryDisplayName(category) {
+  const categoryNames = {
+    TOP: '상의',
+    BOTTOM: '하의',
+    OUTER: '아우터',
+    SHOES: '신발',
+    ETC: '기타',
+  }
+  return categoryNames[category] || category
+}
+
+export default function ProductDetail() {
+  const router = useRouter()
+  const { id } = router.query
+
+  const [product, setProduct] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const { toggleFavorite, isFavorite } = useFavorites()
+
+  // API 호출 중복 방지를 위한 ref (상품 ID별로 관리)
+  const lastFetchedIdRef = useRef(null)
+
+  /**
+   * 상품 정보 로드
+   * API를 통해 상품 상세 정보를 가져옵니다
+   */
+  useEffect(() => {
+    if (!id) return
+
+    // React Strict Mode의 이중 실행 방지
+    // 같은 ID로 이미 호출했으면 스킵
+    if (lastFetchedIdRef.current === id) return
+    lastFetchedIdRef.current = id
+
+    const loadProduct = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        // API를 통해 상품 정보 가져오기
+        const productData = await fetchProductDetail(id)
+
+        // API 응답을 프론트엔드 형식으로 변환
+        const normalizedProduct = {
+          id: productData.id,
+          brand: productData.brandType,
+          brandCode: productData.brandType,
+          brandName: productData.brandName,
+          productCode: productData.productCode,
+          name: productData.name,
+          description: productData.description,
+          gender: productData.gender?.toLowerCase() || 'unisex',
+          mainCategory: productData.mainCategory,
+          category: productData.mainCategory,
+          categoryGroup: productData.mainCategory,
+          subCategory: productData.subCategory,
+          originalPrice: productData.originalPrice,
+          salePrice: productData.currentPrice,
+          price: productData.currentPrice,
+          currentPrice: productData.currentPrice,
+          discountRate: productData.discountRate,
+          onSale: productData.onSale,
+          imageUrl: productData.imageUrls?.[0] || '/placeholder-product.svg',
+          imageUrls: productData.imageUrls || [],
+          productUrl: productData.productUrl,
+          colors: productData.colors || [],
+          sizes: productData.sizes || [],
+          inStock: productData.inStock,
+          material: productData.material,
+          tags: productData.tags || [],
+          vibeTags: productData.tags || [],
+          vibe: productData.tags?.[0] || null,
+          saleStartDate: productData.saleStartDate,
+          saleEndDate: productData.saleEndDate,
+          viewCount: productData.viewCount,
+          likeCount: productData.likeCount,
+          createdAt: productData.createdAt,
+          updatedAt: productData.updatedAt,
+        }
+
+        setProduct(normalizedProduct)
+      } catch (err) {
+        console.error('상품 로드 중 오류:', err)
+        setError(err.message || '상품 정보를 불러오는 중 오류가 발생했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadProduct()
+  }, [id])
+
+  /**
+   * 로딩 상태
+   */
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loadingContainer}>
+          <div className={styles.loadingSpinner}></div>
+          <p>상품 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  /**
+   * 에러 상태
+   */
+  if (error || !product) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.errorContainer}>
+          <div className={styles.errorIcon}>😕</div>
+          <h2>{error || '상품을 찾을 수 없습니다'}</h2>
+          <Link href="/" className={styles.backButton}>
+            홈으로 돌아가기
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const genderMeta = getGenderDisplayMeta(product.gender)
+  const brandName = getBrandDisplayName(product.brand)
+
+  return (
+    <>
+      <Head>
+        <title>{`${product.name} - ${brandName} | Sale Archive`}</title>
+        <meta
+          name="description"
+          content={`${product.name} - ${brandName}에서 ${product.discountRate}% 할인된 가격으로 만나보세요.`}
+        />
+      </Head>
+
+      <div className={styles.container}>
+        {/* 뒤로 가기 헤더 */}
+        <header className={styles.header}>
+          <Link href="/" className={styles.backLink}>
+            ← 목록으로
+          </Link>
+          <div className={styles.headerActions}>
+            <FavoriteButton
+              product={product}
+              isFavorite={isFavorite(product.id)}
+              onToggle={toggleFavorite}
+              size="large"
+            />
+          </div>
+        </header>
+
+        <div className={styles.content}>
+          {/* 왼쪽: 이미지 영역 */}
+          <div className={styles.imageSection}>
+            <div className={styles.imageContainer}>
+              <Image
+                src={product.imageUrl}
+                alt={product.name}
+                fill
+                className={styles.productImage}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+              />
+
+              {/* 할인 뱃지 */}
+              {product.discountRate > 0 && (
+                <div className={styles.discountBadge}>
+                  {product.discountRate}% OFF
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 오른쪽: 상품 정보 영역 */}
+          <div className={styles.infoSection}>
+            {/* 브랜드 & 카테고리 */}
+            <div className={styles.meta}>
+              <div className={styles.brandBadge}>{brandName}</div>
+              {genderMeta && (
+                <div className={styles.genderBadge}>
+                  <span>{genderMeta.emoji}</span>
+                  <span>{genderMeta.label}</span>
+                </div>
+              )}
+              {product.categoryGroup && (
+                <div className={styles.categoryBadge}>
+                  {getCategoryDisplayName(product.categoryGroup)}
+                </div>
+              )}
+            </div>
+
+            {/* 상품명 */}
+            <h1 className={styles.productName}>{product.name}</h1>
+
+            {/* Vibe 태그 */}
+            {product.vibe && (
+              <div className={styles.vibeTags}>
+                <span className={styles.vibeTag}>#{product.vibe}</span>
+              </div>
+            )}
+
+            {/* 가격 정보 */}
+            <div className={styles.priceSection}>
+              <div className={styles.currentPrice}>
+                {product.salePrice.toLocaleString('ko-KR')}원
+              </div>
+              {product.originalPrice && product.originalPrice > product.salePrice && (
+                <div className={styles.originalPrice}>
+                  {product.originalPrice.toLocaleString('ko-KR')}원
+                </div>
+              )}
+            </div>
+
+            {/* CTA 버튼 */}
+            <div className={styles.actions}>
+              <a
+                href={product.productUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.purchaseButton}
+              >
+                <span className={styles.buttonIcon}>🛒</span>
+                <span>{brandName}에서 구매하기</span>
+              </a>
+            </div>
+
+            {/* 가격 히스토리 차트 */}
+            {product.originalPrice && product.originalPrice > product.salePrice && (
+              <div className={styles.chartSection}>
+                <PriceHistoryChart
+                  originalPrice={product.originalPrice}
+                  salePrice={product.salePrice}
+                  discountRate={product.discountRate}
+                />
+              </div>
+            )}
+
+            {/* 상품 상세 정보 */}
+            {(product.colors?.length > 0 || product.sizes?.length > 0 || product.material) && (
+              <div className={styles.productSpecs}>
+                <h3 className={styles.specsTitle}>상품 정보</h3>
+
+                {product.colors?.length > 0 && (
+                  <div className={styles.specItem}>
+                    <div className={styles.specLabel}>🎨 색상</div>
+                    <div className={styles.specValue}>
+                      {product.colors.join(', ')}
+                    </div>
+                  </div>
+                )}
+
+                {product.sizes?.length > 0 && (
+                  <div className={styles.specItem}>
+                    <div className={styles.specLabel}>📏 사이즈</div>
+                    <div className={styles.specValue}>
+                      {product.sizes.join(', ')}
+                    </div>
+                  </div>
+                )}
+
+                {product.material && (
+                  <div className={styles.specItem}>
+                    <div className={styles.specLabel}>🧵 소재</div>
+                    <div className={styles.specValue}>
+                      {product.material}
+                    </div>
+                  </div>
+                )}
+
+                {product.inStock !== undefined && (
+                  <div className={styles.specItem}>
+                    <div className={styles.specLabel}>📦 재고</div>
+                    <div className={styles.specValue}>
+                      {product.inStock ? (
+                        <span className={styles.inStock}>재고 있음</span>
+                      ) : (
+                        <span className={styles.outOfStock}>품절</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 상품 설명 */}
+            {product.description && (
+              <div className={styles.descriptionSection}>
+                <h3 className={styles.descriptionTitle}>상품 설명</h3>
+                <p className={styles.descriptionText}>{product.description}</p>
+              </div>
+            )}
+
+            {/* 추가 정보 */}
+            <div className={styles.additionalInfo}>
+              <div className={styles.infoCard}>
+                <div className={styles.infoIcon}>ℹ️</div>
+                <div className={styles.infoContent}>
+                  <h3 className={styles.infoTitle}>구매 안내</h3>
+                  <ul className={styles.infoList}>
+                    <li>실시간 가격은 브랜드 사이트에서 확인하세요</li>
+                    <li>재고 및 사이즈는 공식 사이트에서 확인 가능합니다</li>
+                    <li>할인율은 시간에 따라 변동될 수 있습니다</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* 조회수 & 좋아요 */}
+              {(product.viewCount > 0 || product.likeCount > 0) && (
+                <div className={styles.statsCard}>
+                  {product.viewCount > 0 && (
+                    <div className={styles.statItem}>
+                      <span className={styles.statIcon}>👀</span>
+                      <span className={styles.statLabel}>조회수</span>
+                      <span className={styles.statValue}>{product.viewCount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {product.likeCount > 0 && (
+                    <div className={styles.statItem}>
+                      <span className={styles.statIcon}>❤️</span>
+                      <span className={styles.statLabel}>좋아요</span>
+                      <span className={styles.statValue}>{product.likeCount.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}

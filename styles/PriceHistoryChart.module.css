@@ -1,0 +1,280 @@
+/**
+ * PriceHistoryChart.module.css
+ *
+ * 가격 히스토리 차트 스타일
+ */
+
+.container {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+}
+
+.header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.subtitle strong {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+/* 차트 래퍼 */
+.chartWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* 바 차트 */
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.barContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.barLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.labelText {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.labelPrice {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.salePriceText {
+  color: #dc2626;
+}
+
+.barWrapper {
+  position: relative;
+  width: 100%;
+  height: 50px;
+  background: rgba(148, 163, 184, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 1rem;
+  position: relative;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideIn 1s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    width: 0 !important;
+  }
+}
+
+.barOriginal {
+  background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 100%);
+}
+
+.barSale {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+}
+
+.barPercentage {
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 할인 정보 카드 */
+.discountInfo {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+  border-radius: 16px;
+  border: 2px solid rgba(220, 38, 38, 0.2);
+}
+
+.discountIcon {
+  font-size: 3rem;
+  line-height: 1;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.discountText {
+  flex: 1;
+}
+
+.discountAmount {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #dc2626;
+  margin-bottom: 0.25rem;
+}
+
+.discountLabel {
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+/* 가격 정보 상세 */
+.priceDetails {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.detailItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.detailItem:hover {
+  background: rgba(241, 245, 249, 1);
+  transform: translateY(-2px);
+}
+
+.detailIcon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.detailContent {
+  text-align: center;
+}
+
+.detailLabel {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.detailValue {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.saleValue {
+  color: #dc2626;
+}
+
+.discountValue {
+  color: #16a34a;
+}
+
+.detailDivider {
+  font-size: 1.5rem;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .barWrapper {
+    height: 40px;
+  }
+
+  .discountInfo {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .discountAmount {
+    font-size: 1.5rem;
+  }
+
+  .priceDetails {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .detailItem {
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  .detailContent {
+    text-align: left;
+  }
+
+  .detailDivider {
+    display: none;
+  }
+
+  .labelPrice {
+    font-size: 1rem;
+  }
+
+  .discountLabel {
+    font-size: 0.85rem;
+  }
+}

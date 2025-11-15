@@ -492,3 +492,82 @@ export async function fetchSaleProductCount() {
     return 0
   }
 }
+
+/**
+ * 상품 상세 정보를 조회하는 함수
+ *
+ * @param {string} productId - 상품 ID (MongoDB ObjectId)
+ * @returns {Promise<Object>} 상품 상세 정보 객체
+ *
+ * API 엔드포인트: GET /api/v1/products/{id}
+ *
+ * 응답 구조:
+ * {
+ *   success: true,
+ *   data: {
+ *     id: string,
+ *     brandType: string,
+ *     brandName: string,
+ *     productCode: string,
+ *     name: string,
+ *     description: string,
+ *     mainCategory: string,
+ *     subCategory: string,
+ *     gender: string,
+ *     originalPrice: number,
+ *     currentPrice: number,
+ *     discountRate: number,
+ *     onSale: boolean,
+ *     imageUrls: string[],
+ *     productUrl: string,
+ *     colors: string[],
+ *     sizes: string[],
+ *     inStock: boolean,
+ *     material: string,
+ *     tags: string[],
+ *     saleStartDate: string,
+ *     saleEndDate: string,
+ *     viewCount: number,
+ *     likeCount: number,
+ *     createdAt: string,
+ *     updatedAt: string
+ *   }
+ * }
+ */
+export async function fetchProductDetail(productId) {
+  try {
+    if (!productId) {
+      throw new Error('상품 ID가 필요합니다.')
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/products/${productId}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('상품을 찾을 수 없습니다.')
+      }
+      const text = await response.text()
+      throw new Error(`요청 실패 (${response.status}): ${text}`)
+    }
+
+    const payload = await response.json()
+
+    if (payload?.success === false) {
+      throw new Error(payload?.message || '응답이 성공 상태가 아닙니다.')
+    }
+
+    if (!payload?.data) {
+      throw new Error('상품 데이터가 없습니다.')
+    }
+
+    return payload.data
+  } catch (error) {
+    console.error('상품 상세 조회 실패:', error)
+    throw error
+  }
+}

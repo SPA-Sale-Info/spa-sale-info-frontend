@@ -93,39 +93,43 @@ export function useFavorites() {
       return
     }
 
-    setFavorites((prevFavorites) => {
-      // 이미 찜되어 있는지 확인
-      const existingIndex = prevFavorites.findIndex((fav) => fav.id === product.id)
+    // 현재 상태에서 이미 존재하는지 먼저 확인
+    const alreadyExists = favorites.some((fav) => fav.id === product.id)
 
-      if (existingIndex !== -1) {
-        // 이미 찜되어 있으면 제거
-        const newFavorites = [...prevFavorites]
-        newFavorites.splice(existingIndex, 1)
-        return newFavorites
-      } else {
-        // 찜되어 있지 않으면 추가
-        // 필요한 데이터만 저장하여 LocalStorage 용량 절약
-        const favoriteItem = {
-          id: product.id,
-          name: product.name,
-          brand: product.brand || product.brandCode,
-          brandCode: product.brandCode || product.brand,
-          brandName: product.brandName || product.brand,
-          price: product.price || product.salePrice,
-          salePrice: product.salePrice || product.price,
-          originalPrice: product.originalPrice,
-          discountRate: product.discountRate,
-          imageUrl: product.imageUrl,
-          productUrl: product.productUrl,
-          gender: product.gender,
-          mainCategory: product.mainCategory || product.category,
-          vibeTags: product.vibeTags || [],
-          addedAt: new Date().toISOString(), // 찜한 시간 기록
+    if (alreadyExists) {
+      // 이미 찜되어 있으면 제거
+      setFavorites((prevFavorites) => {
+        return prevFavorites.filter((fav) => fav.id !== product.id)
+      })
+    } else {
+      // 찜되어 있지 않으면 추가
+      // 필요한 데이터만 저장하여 LocalStorage 용량 절약
+      const favoriteItem = {
+        id: product.id,
+        name: product.name,
+        brand: product.brand || product.brandCode,
+        brandCode: product.brandCode || product.brand,
+        brandName: product.brandName || product.brand,
+        price: product.price || product.salePrice,
+        salePrice: product.salePrice || product.price,
+        originalPrice: product.originalPrice,
+        discountRate: product.discountRate,
+        imageUrl: product.imageUrl,
+        productUrl: product.productUrl,
+        gender: product.gender,
+        mainCategory: product.mainCategory || product.category,
+        vibeTags: product.vibeTags || [],
+        addedAt: new Date().toISOString(), // 찜한 시간 기록
+      }
+      setFavorites((prevFavorites) => {
+        // 추가하기 전에 한 번 더 체크 (race condition 방지)
+        if (prevFavorites.some((fav) => fav.id === product.id)) {
+          return prevFavorites
         }
         return [...prevFavorites, favoriteItem]
-      }
-    })
-  }, [])
+      })
+    }
+  }, [favorites])
 
   /**
    * isFavorite - 특정 상품이 찜되어 있는지 확인
