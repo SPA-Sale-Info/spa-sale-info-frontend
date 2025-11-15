@@ -13,6 +13,7 @@ import CategoryFilter from '../components/CategoryFilter'
 import ProductCard from '../components/ProductCard'
 import styles from '../styles/Home.module.css'
 import { fetchSaleProducts, fetchSaleProductCount } from '../utils/api'
+import useFavorites from '../hooks/useFavorites'
 
 /**
  * API에서 충분히 많은 상품을 받기 위해 한 번에 불러올 개수를 결정합니다.
@@ -348,16 +349,21 @@ const normalizeProduct = (product = {}) => {
   return {
     id: product.id || product.productCode || `${brand}-${product.name ?? 'unknown'}`,
     brand,
+    brandCode: brand, // 찜 기능을 위해 추가
+    brandName: product.brandName || brand, // 찜 기능을 위해 추가
     gender,
     category: categoryKey,
     categoryGroup,
+    mainCategory: categoryKey, // 찜 기능을 위해 추가
     name: product.name || '이름 미정',
     originalPrice,
     salePrice,
+    price: salePrice, // 찜 기능을 위해 추가 (salePrice와 동일)
     discountRate,
     imageUrl,
     productUrl: product.productUrl || '#',
     vibe: Array.isArray(product.tags) && product.tags.length > 0 ? product.tags[0] : null,
+    vibeTags: product.tags || [], // 찜 기능을 위해 추가
   }
 }
 
@@ -387,6 +393,9 @@ export default function Home() {
   const filterPanelRef = useRef(null)
   const sectionHeaderRef = useRef(null)
   const lastScrollY = useRef(0)
+
+  // 찜 기능 훅
+  const { toggleFavorite, isFavorite, getFavoriteCount } = useFavorites()
   const dailyMood = useMemo(() => {
     const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '')
     const index = Number(todayKey) % DAILY_MOODS.length
@@ -498,13 +507,22 @@ export default function Home() {
       setHasMore(!isLastPage)
     } catch (err) {
       console.error('상품 데이터를 불러오지 못했습니다.', err)
-      setError(replace
-        ? '상품 정보를 가져오는데 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'
-        : '추가 상품을 불러오는데 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
-      )
-      setHasMore(false)
-      if (replace) {
+      const message = typeof err?.message === 'string' ? err.message : ''
+      const isNotFoundError = message.includes('(404)') || /not\s+found/i.test(message)
+
+      if (replace && isNotFoundError) {
+        setError('NO_RESULTS')
+        setHasMore(false)
         setProducts([])
+      } else {
+        setError(replace
+          ? '상품 정보를 가져오는데 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+          : '추가 상품을 불러오는데 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+        )
+        setHasMore(false)
+        if (replace) {
+          setProducts([])
+        }
       }
     } finally {
       if (replace) {
@@ -661,6 +679,15 @@ export default function Home() {
   const avgDiscount = filteredProducts.length > 0
     ? Math.round(filteredProducts.reduce((sum, p) => sum + p.discountRate, 0) / filteredProducts.length)
     : 0
+  const isBrandFilterActive = selectedBrand !== 'all'
+  const isNoResultsError = error === 'NO_RESULTS'
+  const hasBlockingError = Boolean(error && !isNoResultsError)
+  const shouldShowEmptyState = !isInitialLoading && filteredProducts.length === 0 && !hasBlockingError
+  const emptyIcon = isBrandFilterActive ? '😔' : '🔍'
+  const emptyTitle = isBrandFilterActive ? '현재 할인 중인 옷이 없는 거 같아요' : '상품이 없습니다'
+  const emptyDescription = isBrandFilterActive
+    ? '다른 브랜드를 선택해 보세요.'
+    : '선택하신 조건에 맞는 상품이 아직 없습니다. 다른 필터를 선택해 보세요.'
 
   return (
     <div className={styles.container}>
@@ -669,21 +696,21 @@ export default function Home() {
       </div>
       <div className={styles.mainContent}>
         <Head>
-          <title>Sale Archive - H&M, ZARA, UNIQLO, MUJI 세일 정보 | 매일 업데이트</title>
-          <meta name="description" content="H&M, ZARA, UNIQLO, MUJI 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 합리적인 쇼핑을 즐기세요." />
+          <title>Sale Archive - H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 세일 정보 | 매일 업데이트</title>
+          <meta name="description" content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 합리적인 쇼핑을 즐기세요." />
           <meta name="google-site-verification" content="Jq8ncQ8slNfWXuqPL_ZZv8f10qrXEApKFkjkwDsy56k" />
           <link rel="canonical" href="https://mion-spa-info.vercel.app" />
 
           {/* Open Graph 메타 태그 */}
           <meta property="og:title" content="Sale Archive - SPA 브랜드 세일 정보 | 매일 업데이트" />
-          <meta property="og:description" content="H&M, ZARA, UNIQLO, MUJI 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요." />
+          <meta property="og:description" content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요." />
           <meta property="og:type" content="website" />
           <meta property="og:url" content="https://mion-spa-info.vercel.app" />
 
           {/* Twitter Card */}
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content="Sale Archive - SPA 브랜드 세일 정보" />
-          <meta name="twitter:description" content="H&M, ZARA, UNIQLO, MUJI 할인 상품을 한눈에 비교하세요." />
+          <meta name="twitter:description" content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 할인 상품을 한눈에 비교하세요." />
 
           {/* 구조화된 데이터 (JSON-LD) */}
           <script
@@ -710,7 +737,7 @@ export default function Home() {
                 '@context': 'https://schema.org',
                 '@type': 'ItemList',
                 name: '할인 중인 SPA 브랜드 상품',
-                description: 'H&M, ZARA, UNIQLO, MUJI 등의 세일 상품 모음',
+                description: 'H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등의 세일 상품 모음',
                 numberOfItems: totalSaleCount || 0,
                 itemListElement: filteredProducts.slice(0, 10).map((product, index) => ({
                   '@type': 'ListItem',
@@ -773,6 +800,13 @@ export default function Home() {
                 </span>
               </span>
             </div>
+            <Link href="/favorites" className={styles.favoritesLink}>
+              <span className={styles.heartIcon}>♥</span>
+              <span className={styles.favoritesText}>찜 목록</span>
+              {getFavoriteCount() > 0 && (
+                <span className={styles.favoritesBadge}>{getFavoriteCount()}</span>
+              )}
+            </Link>
           </div>
         </nav>
 
@@ -924,7 +958,7 @@ export default function Home() {
           )}
 
           {/* 에러 상태 */}
-          {!isInitialLoading && error && products.length === 0 && (
+          {!isInitialLoading && hasBlockingError && products.length === 0 && (
             <div className={styles.errorState} role="status">
               <h3 className={styles.errorTitle}>데이터를 가져오는 데 실패했어요</h3>
               <p className={styles.errorDescription}>
@@ -934,33 +968,28 @@ export default function Home() {
           )}
 
           {/* 상품 그리드 */}
-          {!isInitialLoading && !error && (
+          {!isInitialLoading && !hasBlockingError && (
             <>
               <div className={styles.productsGrid}>
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map(product => (
-                    <ProductCard
-                      key={product.id}
-                      {...product}
-                    />
-                  ))
-                ) : (
-                  <div className={styles.emptyState}>
-                    <div className={styles.emptyIcon}>
-                      {(selectedBrand === 'COS' || selectedBrand === 'ARKET') ? '😔' : '🔍'}
+                {shouldShowEmptyState
+                  ? (
+                    <div className={styles.emptyState}>
+                      <div className={styles.emptyIcon}>{emptyIcon}</div>
+                      <h3 className={styles.emptyTitle}>{emptyTitle}</h3>
+                      <p className={styles.emptyDescription}>{emptyDescription}</p>
                     </div>
-                    <h3 className={styles.emptyTitle}>
-                      {(selectedBrand === 'COS' || selectedBrand === 'ARKET')
-                        ? '현재 할인 중인 옷이 없는 거 같아요'
-                        : '상품이 없습니다'}
-                    </h3>
-                    <p className={styles.emptyDescription}>
-                      {(selectedBrand === 'COS' || selectedBrand === 'ARKET')
-                        ? '다른 브랜드를 선택해 보세요.'
-                        : '선택하신 조건에 맞는 상품이 아직 없습니다. 다른 필터를 선택해 보세요.'}
-                    </p>
-                  </div>
-                )}
+                  )
+                  : (
+                    filteredProducts.map(product => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        {...product}
+                        isFavorite={isFavorite(product.id)}
+                        onFavoriteToggle={toggleFavorite}
+                      />
+                    ))
+                  )}
               </div>
 
               {isFetchingMore && (
@@ -970,7 +999,7 @@ export default function Home() {
                 </div>
               )}
 
-              {!isInitialLoading && error && products.length > 0 && (
+              {!isInitialLoading && hasBlockingError && products.length > 0 && (
                 <div className={styles.errorState} role="status">
                   <h3 className={styles.errorTitle}>추가 데이터를 가져오지 못했습니다</h3>
                   <p className={styles.errorDescription}>
@@ -1063,7 +1092,7 @@ export default function Home() {
           <div className={styles.aboutContent}>
             <h2 className={styles.aboutTitle}>Sale Archive란?</h2>
             <p className={styles.aboutText}>
-              Sale Archive는 H&M, ZARA, UNIQLO, MUJI 등 인기 SPA 브랜드의 할인 상품 정보를
+              Sale Archive는 H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 인기 SPA 브랜드의 할인 상품 정보를
               한곳에 모아 제공하는 큐레이션 서비스입니다. 여러 사이트를 일일이 방문할 필요 없이,
               한 눈에 최신 세일 정보를 확인하고 합리적인 가격에 원하는 스타일을 찾아보세요.
             </p>
@@ -1105,7 +1134,7 @@ export default function Home() {
 
             <h3 className={styles.aboutSubtitle}>지원 브랜드</h3>
             <p className={styles.aboutText}>
-              현재 H&M, ZARA, UNIQLO, MUJI 브랜드의 세일 정보를 제공하고 있으며,
+              현재 H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 브랜드의 세일 정보를 제공하고 있으며,
               앞으로 Massimo Dutti, Mango, COS, ARKET, 에잇세컨즈, 미쏘, 무신사 스탠다드, 탑텐, 스파오, 지오다노 등
               더 많은 브랜드가 곧 추가될 예정입니다.
             </p>
@@ -1135,7 +1164,7 @@ export default function Home() {
             <div className={styles.footerSection}>
               <h4 className={styles.footerSubtitle}>서비스 소개</h4>
               <p className={styles.footerDescription}>
-                Sale Archive는 H&M, ZARA, UNIQLO, MUJI 등 주요 SPA 브랜드의
+                Sale Archive는 H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 주요 SPA 브랜드의
                 할인 상품 정보를 한곳에서 편리하게 비교하고 확인할 수 있는
                 큐레이션 플랫폼입니다. 매일 업데이트되는 세일 정보로
                 합리적인 쇼핑을 도와드립니다.

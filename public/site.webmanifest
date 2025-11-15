@@ -1,7 +1,7 @@
 {
   "name": "Sale Archive - SPA 브랜드 세일 정보",
   "short_name": "Sale Archive",
-  "description": "H&M, ZARA, UNIQLO, MUJI 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요",
+  "description": "H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

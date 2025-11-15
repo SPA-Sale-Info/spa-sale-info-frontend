@@ -57,6 +57,14 @@
   z-index: 2;
 }
 
+/* 찜 버튼 위치 */
+.favoriteButtonWrapper {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 3;
+}
+
 .info {
   padding: 1.5rem;
   display: flex;

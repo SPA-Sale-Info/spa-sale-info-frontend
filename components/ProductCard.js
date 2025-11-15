@@ -24,6 +24,7 @@ import { useMemo } from 'react'
 import Image from 'next/image'
 import styles from '../styles/ProductCard.module.css'
 import { getSafeExternalUrl } from '../utils/url'
+import FavoriteButton from './FavoriteButton'
 
 /**
  * 숫자를 한국 원화 형식으로 포맷하는 유틸리티 함수
@@ -60,6 +61,7 @@ function getBrandDisplayName(brandCode) {
     'ZARA': 'ZARA',
     'UNIQLO': 'UNIQLO',
     'MUJI': 'MUJI',
+    'CHARLESKEITH': 'Charles & Keith',
   }
 
   /**
@@ -92,6 +94,7 @@ function getGenderDisplayMeta(genderCode) {
  * 구조 분해 할당으로 props를 받습니다
  */
 function ProductCard({
+  product, // 찜 기능을 위해 전체 product 객체를 받습니다
   brand,
   gender,
   name,
@@ -100,6 +103,8 @@ function ProductCard({
   discountRate,
   imageUrl,
   productUrl,
+  isFavorite = false, // 현재 찜 상태
+  onFavoriteToggle, // 찜 토글 함수
 }) {
   // 사용자가 카드 전체를 클릭했을 때 이동할 수 있는 안전한 링크입니다.
   const safeProductUrl = useMemo(
@@ -209,6 +214,22 @@ function ProductCard({
           className={styles.image}
           sizes="(max-width: 768px) 90vw, 320px"
         />
+
+        {/**
+         * 찜 버튼
+         * - 이미지 위 우측 상단에 표시
+         * - onFavoriteToggle이 제공된 경우에만 렌더링
+         */}
+        {onFavoriteToggle && (
+          <div className={styles.favoriteButtonWrapper}>
+            <FavoriteButton
+              product={product}
+              isFavorite={isFavorite}
+              onToggle={onFavoriteToggle}
+              size="medium"
+            />
+          </div>
+        )}
       </div>
 
       {/**

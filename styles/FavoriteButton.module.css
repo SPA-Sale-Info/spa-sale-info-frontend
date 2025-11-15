@@ -1,0 +1,150 @@
+/**
+ * FavoriteButton.module.css
+ *
+ * 찜하기 버튼 스타일
+ * 하트 아이콘을 사용하여 직관적인 UI 제공
+ */
+
+.favoriteButton {
+  /* 위치 및 레이아웃 */
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 크기 (기본값은 medium) */
+  width: 36px;
+  height: 36px;
+
+  /* 배경 및 테두리 */
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+
+  /* 그림자 효과 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+  /* 커서 및 트랜지션 */
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  /* z-index로 다른 요소 위에 표시 */
+  z-index: 10;
+}
+
+.favoriteButton:hover {
+  /* 호버 시 배경색 변경 */
+  background-color: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  /* 살짝 확대 효과 */
+  transform: scale(1.1);
+}
+
+.favoriteButton:active {
+  /* 클릭 시 살짝 축소 효과 */
+  transform: scale(0.95);
+}
+
+/* 하트 아이콘 */
+.heartIcon {
+  width: 20px;
+  height: 20px;
+  color: #999;
+  transition: all 0.2s ease;
+}
+
+/* 찜된 상태 (active) */
+.favoriteButton.active {
+  background-color: rgba(255, 240, 245, 1);
+}
+
+.favoriteButton.active .heartIcon {
+  color: #ff4757;
+  /* 찜된 상태에서 하트 채우기 */
+  fill: #ff4757;
+}
+
+.favoriteButton.active:hover .heartIcon {
+  /* 호버 시 더 진한 색상 */
+  color: #ee2737;
+  fill: #ee2737;
+}
+
+/* 크기 변형 */
+.small {
+  width: 28px;
+  height: 28px;
+}
+
+.small .heartIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.medium {
+  width: 36px;
+  height: 36px;
+}
+
+.medium .heartIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.large {
+  width: 44px;
+  height: 44px;
+}
+
+.large .heartIcon {
+  width: 24px;
+  height: 24px;
+}
+
+/* 애니메이션 효과 */
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 찜 추가 시 애니메이션 */
+.favoriteButton.active .heartIcon {
+  animation: heartBeat 0.5s ease-in-out;
+}
+
+/* 모바일 터치 최적화 */
+@media (max-width: 768px) {
+  .favoriteButton {
+    /* 모바일에서 터치하기 쉽도록 크기 증가 */
+    width: 40px;
+    height: 40px;
+  }
+
+  .small {
+    width: 32px;
+    height: 32px;
+  }
+
+  .medium {
+    width: 40px;
+    height: 40px;
+  }
+
+  .large {
+    width: 48px;
+    height: 48px;
+  }
+}

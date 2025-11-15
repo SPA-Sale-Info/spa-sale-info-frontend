@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="40" viewBox="0 0 160 40">
+  <rect width="160" height="40" rx="6" fill="#111" />
+  <text
+    x="80"
+    y="25"
+    text-anchor="middle"
+    font-family="'Helvetica Neue', Arial, sans-serif"
+    font-size="14"
+    letter-spacing="2"
+    fill="#F7F4F0"
+  >CHARLES &amp; KEITH</text>
+</svg>

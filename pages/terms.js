@@ -79,7 +79,7 @@ export default function Terms() {
               <li>
                 서비스는 다음과 같은 업무를 수행합니다:
                 <ul className={styles.list}>
-                  <li>H&M, ZARA, UNIQLO, MUJI 등 SPA 브랜드의 할인 상품 정보 수집 및 제공</li>
+                  <li>H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 SPA 브랜드의 할인 상품 정보 수집 및 제공</li>
                   <li>브랜드별, 카테고리별, 성별 필터링 기능 제공</li>
                   <li>상품 검색 기능 제공</li>
                   <li>할인율 및 가격 정보 제공</li>

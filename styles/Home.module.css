@@ -73,6 +73,54 @@
   max-width: 6rem;
   opacity: 1;
 }
+
+/* 찜 목록 링크 */
+.favoritesLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 71, 87, 0.05));
+  border: 1px solid rgba(255, 71, 87, 0.2);
+  border-radius: 12px;
+  text-decoration: none;
+  color: #ff4757;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.favoritesLink:hover {
+  background: linear-gradient(135deg, rgba(255, 71, 87, 0.15), rgba(255, 71, 87, 0.08));
+  border-color: rgba(255, 71, 87, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.2);
+}
+
+.favoritesLink .heartIcon {
+  font-size: 1.2rem;
+  color: #ff4757;
+}
+
+.favoritesText {
+  color: #1e293b;
+}
+
+.favoritesBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.4rem;
+  background: #ff4757;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .hero {
   background: rgba(255, 255, 255, 0.98);
   border: 1px solid rgba(148, 163, 184, 0.15);
