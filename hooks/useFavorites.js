@@ -89,11 +89,9 @@ export function useFavorites() {
    */
   const toggleFavorite = useCallback((product) => {
     if (!product || !product.id) {
-      console.error('유효하지 않은 상품 데이터입니다.', product)
+      console.error('유효하지 않은 상품 데이터입니다.')
       return
     }
-
-    console.log('찜 토글 - 받은 상품 데이터:', product) // 디버깅용
 
     setFavorites((prevFavorites) => {
       // 이미 찜되어 있는지 확인
@@ -101,7 +99,6 @@ export function useFavorites() {
 
       if (existingIndex !== -1) {
         // 이미 찜되어 있으면 제거
-        console.log('찜 제거:', product.id)
         const newFavorites = [...prevFavorites]
         newFavorites.splice(existingIndex, 1)
         return newFavorites
@@ -111,11 +108,11 @@ export function useFavorites() {
         const favoriteItem = {
           id: product.id,
           name: product.name,
-          brand: product.brand || product.brandCode, // brand 필드 추가
+          brand: product.brand || product.brandCode,
           brandCode: product.brandCode || product.brand,
           brandName: product.brandName || product.brand,
-          price: product.price || product.salePrice, // salePrice도 허용
-          salePrice: product.salePrice || product.price, // salePrice 필드 추가
+          price: product.price || product.salePrice,
+          salePrice: product.salePrice || product.price,
           originalPrice: product.originalPrice,
           discountRate: product.discountRate,
           imageUrl: product.imageUrl,
@@ -125,7 +122,6 @@ export function useFavorites() {
           vibeTags: product.vibeTags || [],
           addedAt: new Date().toISOString(), // 찜한 시간 기록
         }
-        console.log('찜 추가:', favoriteItem)
         return [...prevFavorites, favoriteItem]
       }
     })
