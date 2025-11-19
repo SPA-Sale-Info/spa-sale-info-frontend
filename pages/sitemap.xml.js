@@ -1,0 +1,76 @@
+/**
+ * ============================================================================
+ * sitemap.xml.js - 동적 Sitemap 생성 (Next.js API Route)
+ * ============================================================================
+ *
+ * 🎯 왜 동적으로 생성하나요?
+ * - public/sitemap.xml은 정적 파일이라 Google이 캐시 문제를 겪을 수 있음
+ * - Next.js API Route로 생성하면 항상 최신 데이터 제공
+ * - Content-Type 헤더를 정확하게 설정 가능
+ *
+ * Spring Boot 비유:
+ * @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
+ * public String generateSitemap() {
+ *     return sitemapXml;
+ * }
+ */
+
+/**
+ * Sitemap 생성 함수
+ *
+ * @param {Object} req - HTTP 요청 객체
+ * @param {Object} res - HTTP 응답 객체
+ *
+ * Next.js에서 /sitemap.xml 요청이 오면 이 함수가 자동 실행됨
+ */
+function generateSiteMap() {
+  // 현재 날짜를 ISO 8601 형식으로 생성
+  const today = new Date().toISOString()
+
+  // 브랜드 목록 (BrandFilter.js와 동기화)
+  const brands = [
+    'HM',
+    'ZARA',
+    'UNIQLO',
+    'MUJI',
+    'CHARLESKEITH',
+    'COS',
+    'ARKET',
+    'MASSIMODUTTI',
+  ]
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- 메인 페이지 -->
+  <url>
+    <loc>https://mion-spa-info.vercel.app/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- 브랜드별 페이지 -->
+${brands
+  .map(
+    (brand) => `  <url>
+    <loc>https://mion-spa-info.vercel.app/?brand=${brand}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`
+  )
+  .join('\n')}
+</urlset>`
+}
+
+export default function handler(req, res) {
+  // sitemap XML 생성
+  const sitemap = generateSiteMap()
+
+  // HTTP 응답 헤더 설정
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate')
+
+  // XML 응답 전송
+  res.status(200).send(sitemap)
+}
