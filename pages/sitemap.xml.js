@@ -63,7 +63,13 @@ ${brands
 </urlset>`
 }
 
-export default function handler(req, res) {
+/**
+ * getServerSideProps를 사용한 동적 Sitemap 생성
+ *
+ * 이 방법은 /sitemap.xml 경로에서 XML을 직접 반환합니다.
+ * API Route가 아닌 페이지 방식으로 구현되어 빌드 시 정상 작동합니다.
+ */
+export async function getServerSideProps({ res }) {
   // sitemap XML 생성
   const sitemap = generateSiteMap()
 
@@ -72,5 +78,19 @@ export default function handler(req, res) {
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate')
 
   // XML 응답 전송
-  res.status(200).send(sitemap)
+  res.write(sitemap)
+  res.end()
+
+  // 빈 props 반환 (페이지 렌더링 없음)
+  return {
+    props: {},
+  }
+}
+
+/**
+ * 이 컴포넌트는 실제로 렌더링되지 않습니다.
+ * getServerSideProps에서 XML을 직접 응답하기 때문입니다.
+ */
+export default function Sitemap() {
+  return null
 }
