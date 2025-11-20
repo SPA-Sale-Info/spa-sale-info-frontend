@@ -106,6 +106,7 @@ const nextConfig = {
       // 📝 새로운 브랜드 추가 시 여기에 도메인 추가
       // 예: 'images.mango.com',
       //     'static.massimodutti.com',
+      'static.massimodutti.com',
     ],
   },
 
