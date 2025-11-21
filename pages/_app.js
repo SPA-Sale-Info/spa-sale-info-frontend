@@ -16,6 +16,7 @@
 // 전역 스타일을 import 합니다
 // '../styles/globals.css' 파일의 스타일이 모든 페이지에 적용됩니다
 import '../styles/globals.css'
+import { ThemeProvider } from 'next-themes'
 
 /**
  * MyApp 컴포넌트
@@ -35,7 +36,11 @@ function MyApp({ Component, pageProps }) {
    * pageProps = { title: "홈", data: [...] }
    * -> <Component title="홈" data={[...]} />와 같습니다
    */
-  return <Component {...pageProps} />
+  return (
+    <ThemeProvider attribute="data-theme">
+      <Component {...pageProps} />
+    </ThemeProvider>
+  )
 }
 
 /**

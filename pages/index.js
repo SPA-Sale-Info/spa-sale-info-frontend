@@ -10,6 +10,7 @@ import Link from 'next/link'
 import BrandFilter from '../components/BrandFilter'
 import GenderFilter from '../components/GenderFilter'
 import CategoryFilter from '../components/CategoryFilter'
+import ThemeToggle from '../components/ThemeToggle'
 import ProductCard from '../components/ProductCard'
 import styles from '../styles/Home.module.css'
 import { fetchSaleProducts, fetchSaleProductCount } from '../utils/api'
@@ -496,7 +497,7 @@ export default function Home() {
       const normalized = normalizeProducts(apiProducts)
 
       setProducts(prev => mergeUniqueProducts(prev, normalized, replace))
-     setPage(pageToLoad)
+      setPage(pageToLoad)
 
       const isLastPage = typeof response?.last === 'boolean'
         ? response.last
@@ -780,7 +781,7 @@ export default function Home() {
         {/* 네비게이션 */}
         <nav className={styles.navbar}>
           <div className={styles.navContent}>
-            <div className={styles.logo}>
+            <Link href="/" className={styles.logo}>
               <span className={styles.logoSegment}>
                 <span className={styles.logoChar}>S</span>
                 <span className={`${styles.logoWord} ${logoStep >= 1 ? styles.logoWordVisible : ''}`}>
@@ -799,14 +800,20 @@ export default function Home() {
                   rchive
                 </span>
               </span>
-            </div>
-            <Link href="/favorites" className={styles.favoritesLink}>
-              <span className={styles.heartIcon}>♥</span>
-              <span className={styles.favoritesText}>찜 목록</span>
-              {getFavoriteCount() > 0 && (
-                <span className={styles.favoritesBadge}>{getFavoriteCount()}</span>
-              )}
             </Link>
+
+            <div className={styles.navLinks}>
+              <Link href="/favorites" className={styles.favoritesLink}>
+                <span className={styles.heartIcon}>♥</span>
+                <span className={styles.favoritesText}>찜 목록</span>
+                {getFavoriteCount() > 0 && (
+                  <span className={styles.favoritesBadge}>{getFavoriteCount()}</span>
+                )}
+              </Link>
+            </div>
+          </div>
+          <div className={styles.themeToggleWrapper}>
+            <ThemeToggle />
           </div>
         </nav>
 
@@ -1206,20 +1213,22 @@ export default function Home() {
             </p>
           </div>
         </footer>
-      </div>
+      </div >
       <div className={styles.rightAd}>
         {/* 광고 영역 */}
       </div>
-      {showScrollTop && (
-        <button
-          type="button"
-          className={styles.scrollTopButton}
-          onClick={scrollToTop}
-          aria-label="맨 위로 이동"
-        >
-          ↑
-        </button>
-      )}
-    </div>
+      {
+        showScrollTop && (
+          <button
+            type="button"
+            className={styles.scrollTopButton}
+            onClick={scrollToTop}
+            aria-label="맨 위로 이동"
+          >
+            ↑
+          </button>
+        )
+      }
+    </div >
   )
 }

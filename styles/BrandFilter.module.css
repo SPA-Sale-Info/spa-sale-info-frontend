@@ -22,10 +22,10 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-text);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--color-bg);
   border-radius: 100px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--color-bg-tertiary);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
   flex: 0 0 auto;
   white-space: nowrap;
@@ -104,13 +104,14 @@
   bottom: calc(100% + 0.75rem);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.95);
-  color: #fff;
+  transform: translateX(-50%);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
   padding: 0.5rem 0.875rem;
   border-radius: 8px;
   font-size: 0.8rem;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+  box-shadow: var(--shadow-md);
   text-align: center;
   pointer-events: none;
   z-index: 30;
@@ -136,7 +137,7 @@
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid rgba(15, 23, 42, 0.95);
+  border-top: 6px solid var(--color-bg-secondary);
 }
 
 @media (max-width: 768px) {

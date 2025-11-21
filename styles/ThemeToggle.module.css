@@ -1,0 +1,28 @@
+.toggleButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--color-bg-tertiary);
+    color: var(--color-text);
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.toggleButton:hover {
+    background: var(--color-bg-secondary);
+    color: var(--color-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.toggleButton:active {
+    transform: translateY(0);
+}
+
+.icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}

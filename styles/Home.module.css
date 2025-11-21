@@ -1,250 +1,554 @@
 /*
- * Home.module.css - Modern landing page styling for the SPA sale dashboard
+ * Home.module.css - SPA 할인 정보 대시보드를 위한 모던 랜딩 페이지 스타일링
+ * 
+ * 이 파일은 CSS Modules를 사용하여 각 클래스가 고유한 이름을 가지도록 컴파일됩니다.
+ * 각 속성(Property)에 대한 상세한 설명을 주석으로 달았습니다.
  */
 
+/* 
+ * .container
+ * 페이지 전체를 감싸는 최상위 컨테이너입니다.
+ * 화면 중앙 정렬과 기본 배경색을 담당합니다.
+ */
 .container {
+  /* 최소 높이를 뷰포트 높이(100vh)로 설정하여 콘텐츠가 적어도 화면을 꽉 채우게 합니다 */
   min-height: 100vh;
+
+  /* 패딩을 반응형으로 설정합니다. clamp(최소, 권장, 최대) 함수를 사용합니다.
+   * - 최소 1.5rem (약 24px)
+   * - 권장 3vw (뷰포트 너비의 3%)
+   * - 최대 2.5rem (약 40px)
+   * 화면 크기에 따라 적절한 여백이 자동으로 적용됩니다. */
   padding: clamp(1.5rem, 3vw, 2.5rem);
-  background: #f8fafc;
+
+  /* 배경색을 CSS 변수(--color-bg-secondary)로 설정합니다.
+   * 다크 모드 지원을 위해 변수를 사용합니다. */
+  background: var(--color-bg-secondary);
+
+  /* Flexbox 레이아웃을 활성화합니다. 자식 요소들을 유연하게 배치할 수 있습니다. */
   display: flex;
+
+  /* 자식 요소(mainContent)를 가로축(주축) 기준으로 중앙에 정렬합니다. */
   justify-content: center;
 }
 
+/* 
+ * .leftAd, .rightAd
+ * 좌우 광고 영역입니다. 현재 디자인에서는 사용하지 않으므로 숨깁니다.
+ */
 .leftAd,
 .rightAd {
+  /* 요소를 화면에서 완전히 제거합니다. 공간도 차지하지 않습니다. */
   display: none;
 }
 
+/* 
+ * .mainContent
+ * 실제 콘텐츠가 들어가는 중앙 영역입니다.
+ */
 .mainContent {
+  /* 너비를 부모(.container)의 100%로 설정하여 가용 공간을 모두 씁니다. */
   width: 100%;
+
+  /* 최대 너비를 1120px로 제한합니다. 
+   * 화면이 아주 커져도 콘텐츠가 너무 퍼지지 않고 중앙에 모이게 합니다. */
   max-width: 1120px;
+
+  /* Flexbox를 사용하여 내부 섹션들을 배치합니다. */
   display: flex;
+
+  /* 자식 요소들을 세로 방향(열)으로 쌓습니다. (기본값은 가로 방향) */
   flex-direction: column;
+
+  /* 자식 요소들 사이의 간격을 반응형으로 설정합니다.
+   * clamp를 사용하여 화면 크기에 따라 2rem ~ 3.5rem 사이로 조절됩니다. */
   gap: clamp(2rem, 4vw, 3.5rem);
 }
 
+/* 
+ * .navbar
+ * 상단 네비게이션 바 영역입니다.
+ */
 .navbar {
+  /* 위치를 상대적으로 설정합니다. 
+   * z-index가 작동하려면 position이 static(기본값)이 아니어야 합니다. */
   position: relative;
+
+  /* 쌓임 순서(stacking order)를 10으로 설정하여 다른 요소들보다 위에 오게 합니다. */
   z-index: 10;
+
+  /* Flexbox를 사용하여 로고, 메뉴 등을 배치합니다. */
+  display: flex;
+
+  /* 자식 요소들을 세로축(교차축) 기준으로 중앙 정렬합니다. */
+  align-items: center;
+
+  /* 자식 요소들 사이의 간격을 1rem(약 16px)으로 설정합니다. */
+  gap: 1rem;
 }
 
+/* 
+ * .navContent
+ * 네비게이션 바 내부의 실제 콘텐츠(로고, 링크 등)를 감싸는 박스입니다.
+ */
 .navContent {
+  /* flex-grow: 1과 동일합니다. 남은 공간을 모두 차지하여 늘어납니다. */
+  flex: 1;
+
+  /* Flexbox를 사용하여 내부 요소들을 배치합니다. */
   display: flex;
+
+  /* 자식 요소들을 세로축 중앙 정렬합니다. */
   align-items: center;
+
+  /* 자식 요소들을 양 끝으로 분산 정렬합니다. (로고는 왼쪽, 링크는 오른쪽) */
   justify-content: space-between;
+
+  /* 내부 요소들 사이의 간격을 1.25rem(약 20px)으로 설정합니다. */
   gap: 1.25rem;
+
+  /* 안쪽 여백을 설정합니다. 상하 0.85rem, 좌우 1.5rem */
   padding: 0.85rem 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.15);
+
+  /* 배경색을 메인 배경색 변수로 설정합니다. */
+  background: var(--color-bg);
+
+  /* 테두리를 1px 실선으로 설정하고, 색상은 3차 배경색 변수를 사용합니다. */
+  border: 1px solid var(--color-bg-tertiary);
+
+  /* 모서리를 16px만큼 둥글게 깎습니다. */
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+
+  /* 그림자 효과를 줍니다. --shadow-sm 변수에 정의된 값을 사용합니다. */
+  box-shadow: var(--shadow-sm);
 }
 
+/* 
+ * .themeToggleWrapper
+ * 테마 토글 버튼을 감싸는 래퍼입니다. 네비게이션 박스 우측에 위치합니다.
+ */
+.themeToggleWrapper {
+  /* 공간이 부족해도 이 요소의 크기가 줄어들지 않도록 강제합니다. */
+  flex-shrink: 0;
+}
+
+/* 
+ * .logo
+ * 사이트 로고 스타일입니다.
+ */
 .logo {
+  /* Flexbox를 사용하여 로고 텍스트와 아이콘 등을 정렬합니다. */
   display: flex;
+
+  /* 세로축 중앙 정렬 */
   align-items: center;
+
+  /* 글자 사이 간격 */
   gap: 0.35rem;
+
+  /* 글자 크기를 1.25rem(약 20px)으로 설정합니다. */
   font-size: 1.25rem;
+
+  /* 글자 두께를 700(Bold)으로 설정합니다. */
   font-weight: 700;
 }
 
+/* 
+ * .logoSegment
+ * 로고의 각 단어(Sales, Product, Archive) 묶음입니다.
+ */
 .logoSegment {
+  /* 인라인 요소처럼 흐르되 Flexbox 속성을 가집니다. */
   display: inline-flex;
+
+  /* 글자의 베이스라인(기준선)에 맞춰 정렬합니다. */
   align-items: baseline;
+
+  /* 내용이 넘치면 숨깁니다. (애니메이션 효과를 위해 필요) */
   overflow: hidden;
 }
 
+/* 
+ * .logoChar
+ * 로고의 첫 글자 (S, P, A) 스타일입니다.
+ */
 .logoChar {
+  /* 글자 색상을 진한 색상 변수로 설정합니다. */
   color: var(--color-dark);
+
+  /* 글자 두께를 800(Extra Bold)으로 매우 굵게 설정합니다. */
   font-weight: 800;
+
+  /* 오른쪽 여백을 아주 살짝 줍니다. */
   margin-right: 0.05rem;
 }
 
+/* 
+ * .logoWord
+ * 로고의 나머지 글자들 (ales, roduct, rchive) 스타일입니다.
+ * 초기 상태에서는 숨겨져 있다가 애니메이션으로 나타납니다.
+ */
 .logoWord {
+  /* 너비를 0으로 하여 숨깁니다. */
   max-width: 0;
+
+  /* 투명도를 0으로 하여 보이지 않게 합니다. */
   opacity: 0;
+
+  /* 글자 색상을 포인트 색상(Primary)으로 설정합니다. */
   color: var(--color-primary);
+
+  /* 글자 두께를 600(Semi Bold)으로 설정합니다. */
   font-weight: 600;
+
+  /* 줄 바꿈을 금지합니다. */
   white-space: nowrap;
+
+  /* 너비와 투명도가 변할 때 0.3초 동안 부드럽게 변하도록 애니메이션을 설정합니다. */
   transition: max-width 0.3s ease, opacity 0.3s ease;
 }
 
+/* 
+ * .logoWordVisible
+ * 로고 글자가 보일 때 적용되는 클래스입니다.
+ */
 .logoWordVisible {
+  /* 너비를 6rem까지 늘려 글자가 보이게 공간을 확보합니다. */
   max-width: 6rem;
+
+  /* 투명도를 1로 하여 완전히 보이게 합니다. */
   opacity: 1;
 }
 
-/* 찜 목록 링크 */
+/* 
+ * .favoritesLink
+ * 찜 목록으로 가는 링크 버튼 스타일입니다.
+ */
 .favoritesLink {
+  /* Flexbox로 내부 아이콘과 텍스트 정렬 */
   display: flex;
+
+  /* 세로 중앙 정렬 */
   align-items: center;
+
+  /* 아이콘과 텍스트 사이 간격 */
   gap: 0.5rem;
+
+  /* 안쪽 여백: 상하 0.6rem, 좌우 1.2rem */
   padding: 0.6rem 1.2rem;
+
+  /* 배경에 대각선 그라데이션을 적용하여 은은한 효과를 줍니다. */
   background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 71, 87, 0.05));
+
+  /* 테두리 색상을 반투명한 붉은색으로 설정합니다. */
   border: 1px solid rgba(255, 71, 87, 0.2);
+
+  /* 모서리를 12px 둥글게 합니다. */
   border-radius: 12px;
+
+  /* 링크의 기본 밑줄을 제거합니다. */
   text-decoration: none;
+
+  /* 글자 색상을 붉은색(#ff4757)으로 설정합니다. */
   color: #ff4757;
+
+  /* 글자 두께 600(Semi Bold) */
   font-weight: 600;
+
+  /* 글자 크기 0.95rem */
   font-size: 0.95rem;
+
+  /* 모든 속성 변화에 0.3초 애니메이션 적용 */
   transition: all 0.3s ease;
+
+  /* 자식 요소(뱃지 등)의 절대 위치 기준점이 됩니다. */
   position: relative;
 }
 
+/* 
+ * .favoritesLink:hover
+ * 찜 목록 링크에 마우스를 올렸을 때 스타일입니다.
+ */
 .favoritesLink:hover {
+  /* 배경색을 조금 더 진하게 변경합니다. */
   background: linear-gradient(135deg, rgba(255, 71, 87, 0.15), rgba(255, 71, 87, 0.08));
+
+  /* 테두리 색상을 더 진하게 변경합니다. */
   border-color: rgba(255, 71, 87, 0.3);
+
+  /* 버튼을 위로 2px 살짝 들어올리는 효과를 줍니다. */
   transform: translateY(-2px);
+
+  /* 그림자를 추가하여 떠 있는 느낌을 줍니다. */
   box-shadow: 0 4px 12px rgba(255, 71, 87, 0.2);
 }
 
+/* 하트 아이콘 */
 .favoritesLink .heartIcon {
+  /* 아이콘 크기를 1.2rem으로 설정 */
   font-size: 1.2rem;
+
+  /* 아이콘 색상 */
   color: #ff4757;
 }
 
+/* 찜 목록 텍스트 */
 .favoritesText {
-  color: #1e293b;
+  /* 텍스트 색상을 기본 텍스트 색상 변수로 설정 */
+  color: var(--color-text);
 }
 
+/* 
+ * .favoritesBadge
+ * 찜한 개수를 표시하는 붉은색 원형 뱃지입니다.
+ */
 .favoritesBadge {
+  /* 인라인 Flexbox로 배치 */
   display: inline-flex;
+
+  /* 내용물 중앙 정렬 */
   align-items: center;
   justify-content: center;
+
+  /* 최소 너비와 높이를 지정하여 원형 유지 */
   min-width: 1.5rem;
   height: 1.5rem;
+
+  /* 좌우 여백 */
   padding: 0 0.4rem;
+
+  /* 배경색 붉은색 */
   background: #ff4757;
+
+  /* 글자색 흰색 */
   color: white;
+
+  /* 모서리 둥글게 */
   border-radius: 12px;
+
+  /* 글자 크기 작게 */
   font-size: 0.75rem;
+
+  /* 글자 두께 굵게 */
   font-weight: 700;
 }
 
+/* 
+ * .hero
+ * 페이지 상단의 메인 배너(Hero) 섹션입니다.
+ */
 .hero {
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  /* 배경색 */
+  background: var(--color-bg);
+
+  /* 테두리 */
+  border: 1px solid var(--color-bg-tertiary);
+
+  /* 모서리 24px 둥글게 */
   border-radius: 24px;
+
+  /* 반응형 패딩 적용 */
   padding: clamp(2rem, 4vw, 3.5rem);
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+
+  /* 큰 그림자 효과 적용 */
+  box-shadow: var(--shadow-lg);
 }
 
+/* 
+ * .heroContent
+ * Hero 섹션 내부의 레이아웃을 잡습니다.
+ */
 .heroContent {
+  /* Grid 레이아웃 사용 */
   display: grid;
+
+  /* 2개의 열로 나눕니다. 
+   * 첫 번째 열(텍스트)은 1.15 비율, 두 번째 열(이미지)은 0.85 비율로 공간을 나눕니다.
+   * minmax(0, ...)은 콘텐츠가 넘칠 때 레이아웃이 깨지는 것을 방지합니다. */
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+
+  /* 열 사이의 간격을 반응형으로 설정 */
   gap: clamp(2rem, 6vw, 3.5rem);
+
+  /* 세로축 중앙 정렬 */
   align-items: center;
 }
 
+/* Hero 텍스트 영역 */
 .heroText {
+  /* Flexbox 사용 */
   display: flex;
+
+  /* 세로 방향으로 배치 */
   flex-direction: column;
+
+  /* 요소 간격 1.5rem */
   gap: 1.5rem;
 }
 
+/* 
+ * .heroKicker
+ * 제목 위에 작게 들어가는 강조 문구입니다.
+ */
 .heroKicker {
+  /* 인라인 Flexbox */
   display: inline-flex;
+
+  /* 세로 중앙 정렬 */
   align-items: center;
+
+  /* 간격 */
   gap: 0.5rem;
+
+  /* 글자 크기 작게 */
   font-size: 0.85rem;
+
+  /* 자간을 넓게(0.24em) 설정하여 세련된 느낌 */
   letter-spacing: 0.24em;
+
+  /* 대문자로 변환 */
   text-transform: uppercase;
+
+  /* 두께 600 */
   font-weight: 600;
+
+  /* 포인트 색상 사용 */
   color: var(--color-primary);
 }
 
+/* Kicker 앞의 장식용 가로선 */
 .heroKicker::before {
   content: '';
+  /* 내용 없음 */
   display: inline-block;
+  /* 블록 성질을 가짐 */
   width: 28px;
+  /* 너비 28px */
   height: 1px;
+  /* 높이 1px */
   background: currentColor;
+  /* 부모의 글자색(Primary)을 상속받아 배경색으로 사용 */
 }
 
+/* Hero 메인 제목 */
 .heroTitle {
+  /* 반응형 글자 크기: 최소 2.4rem ~ 최대 3.2rem */
   font-size: clamp(2.4rem, 4vw, 3.2rem);
+
+  /* 자간을 약간 좁게(-0.03em) 하여 타이틀의 밀도감을 높임 */
   letter-spacing: -0.03em;
 }
 
+/* Hero 부제목 */
 .heroSubtitle {
+  /* 글자 크기 */
   font-size: 1.05rem;
+
+  /* 밝은 텍스트 색상 */
   color: var(--color-text-light);
+
+  /* 한 줄이 너무 길어지지 않도록 최대 너비 제한 */
   max-width: 520px;
 }
 
+/* 체크리스트 컨테이너 */
 .heroChecklist {
   display: grid;
   gap: 1rem;
   margin-top: 1.5rem;
 }
 
+/* 체크리스트 아이템 */
 .heroChecklistItem {
   display: grid;
+
+  /* 아이콘 영역(48px)과 텍스트 영역(나머지)으로 분할 */
   grid-template-columns: 48px 1fr;
+
+  /* 상단 정렬 */
   align-items: start;
+
   gap: 1rem;
   padding: 1rem 1.25rem;
   border-radius: 12px;
-  background: rgba(248, 250, 252, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-bg-tertiary);
 }
 
+/* 체크리스트 강조 텍스트 */
 .heroChecklistItem span {
   font-weight: 700;
   color: var(--color-primary);
   letter-spacing: 0.08em;
 }
 
+/* 체크리스트 설명 텍스트 */
 .heroChecklistItem p {
   margin: 0;
   color: var(--color-text);
 }
 
+/* 인사이트(통계) 영역 */
 .heroInsights {
   margin-top: 1.5rem;
   display: grid;
+
+  /* 카드의 최소 너비를 200px로 설정하고, 공간이 남으면 자동으로 열을 늘림 (반응형 그리드) */
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
   gap: 1rem;
 }
 
+/* 인사이트 카드 */
 .heroInsightCard {
   padding: 1.25rem 1.5rem;
   border-radius: 16px;
-  background: rgba(15, 23, 42, 0.95);
-  color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.15);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  box-shadow: var(--shadow-md);
 }
 
+/* 인사이트 라벨 */
 .heroInsightLabel {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-light);
 }
 
+/* 인사이트 숫자 */
 .heroInsightCard strong {
   display: block;
+  /* 줄바꿈 */
   font-size: 1.4rem;
   margin: 0.5rem 0;
 }
 
+/* 인사이트 부가 설명 */
 .heroInsightCard small {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-light);
 }
 
+/* 숫자 카운팅 애니메이션용 클래스 */
 .countNumber {
+  /* 숫자의 너비를 고정폭(tabular)으로 설정하여 숫자가 바뀔 때 흔들림 방지 */
   font-variant-numeric: tabular-nums;
+
   transition: all 0.3s ease;
   display: inline-block;
+
+  /* 최소 너비를 확보하여 숫자가 없을 때도 공간 유지 */
   min-width: 6ch;
 }
 
+/* Hero 우측 비주얼 영역 */
 .heroVisual {
   display: flex;
   justify-content: center;
 }
 
+/* 무드보드 스타일 카드 */
 .heroMoodBoard {
   width: 100%;
   max-width: 320px;
@@ -254,6 +558,8 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+
+  /* 매우 부드럽고 깊은 그림자 효과 */
   box-shadow: 0 35px 65px -40px rgba(15, 23, 42, 0.7);
 }
 
@@ -290,17 +596,27 @@
   opacity: 0.9;
 }
 
+/* 
+ * .main
+ * Hero 섹션 아래의 주요 콘텐츠 영역입니다.
+ */
 .main {
   display: flex;
   flex-direction: column;
   gap: clamp(2rem, 4vw, 3rem);
 }
 
+/* 섹션 헤더 (제목, 검색창 등 포함) */
 .sectionHeader {
   display: flex;
   justify-content: space-between;
+
+  /* 하단 정렬하여 텍스트 베이스라인을 맞춤 */
   align-items: flex-end;
+
   gap: 1.5rem;
+
+  /* 공간이 부족하면 줄바꿈 */
   flex-wrap: wrap;
 }
 
@@ -314,40 +630,52 @@
   max-width: 440px;
 }
 
+/* 검색바 래퍼 */
 .searchBarWrap {
   margin-top: 1rem;
   margin-bottom: 1rem;
   padding: 0;
 }
 
+/* 검색 폼 */
 .searchForm {
   display: flex;
   gap: 0.75rem;
   align-items: center;
   padding: 0.75rem 1rem;
+
+  /* 둥근 알약 모양 */
   border-radius: 100px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+
+  background: var(--color-bg);
+  border: 1px solid var(--color-bg-tertiary);
+  box-shadow: var(--shadow-sm);
 }
 
+/* 검색 입력 필드 */
 .searchInput {
   flex: 1;
+  /* 남은 공간 차지 */
   border: none;
+  /* 기본 테두리 제거 */
   background: transparent;
+  /* 배경 투명 */
   font-size: 1rem;
   color: var(--color-text);
 }
 
+/* 플레이스홀더 스타일 */
 .searchInput::placeholder {
   color: var(--color-text-lighter);
 }
 
+/* 검색 버튼 */
 .searchButton {
   padding: 0.5rem 1.25rem;
   border-radius: 100px;
   border: none;
   background: #6366f1;
+  /* Primary Color */
   color: #fff;
   font-weight: 600;
   cursor: pointer;
@@ -362,11 +690,23 @@
   background: #5558e3;
 }
 
+/* 
+ * .filterToggleButton
+ * 모바일에서 필터 패널을 여는 플로팅 버튼입니다.
+ */
 .filterToggleButton {
+  /* 뷰포트 기준으로 고정 위치 */
   position: fixed;
+
+  /* 하단에서 6rem 위 */
   bottom: 6rem;
+
+  /* 우측에서 1.5rem 왼쪽 */
   right: 1.5rem;
+
+  /* 다른 요소 위에 표시 */
   z-index: 100;
+
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -397,13 +737,26 @@
   font-weight: 600;
 }
 
+/* 
+ * .filterOverlay
+ * 모바일에서 필터 패널이 열렸을 때 뒤에 깔리는 어두운 배경입니다.
+ */
 .filterOverlay {
   position: fixed;
+
+  /* 상하좌우 0으로 설정하여 전체 화면 덮기 */
   inset: 0;
+
+  /* 반투명 검은색 */
   background: rgba(0, 0, 0, 0.5);
+
   z-index: 40;
+
+  /* 배경 블러 처리 */
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+
+  /* 페이드인 애니메이션 */
   animation: fadeIn 0.2s ease;
 }
 
@@ -411,14 +764,24 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
+/* 
+ * .filterPanel
+ * 필터 옵션들이 들어있는 패널입니다.
+ * 모바일에서는 바텀 시트(Bottom Sheet) 형태로, PC에서는 일반 패널로 동작합니다.
+ */
 .filterPanel {
+  /* 모바일 기본값: 화면 하단에 고정 */
   position: fixed;
+
+  /* 초기 상태: 화면 아래로 숨김 (-100%) */
   bottom: -100%;
+
   left: 0;
   right: 0;
   z-index: 50;
@@ -426,18 +789,29 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem;
+
+  /* 최대 높이를 화면의 80%로 제한 */
   max-height: 80vh;
+
+  /* 내용이 넘치면 스크롤 */
   overflow-y: auto;
+
+  /* 상단 모서리만 둥글게 */
   border-radius: 20px 20px 0 0;
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.15);
+
+  background: var(--color-bg);
+  border: 1px solid var(--color-bg-tertiary);
+  box-shadow: var(--shadow-xl);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+
+  /* 위치 변화 애니메이션 */
   transition: bottom 0.3s ease;
 }
 
+/* 필터 패널이 열렸을 때 */
 .filterPanelVisible {
+  /* 화면 하단에 붙임 */
   bottom: 0;
 }
 
@@ -453,6 +827,7 @@
 
 .filterRow {
   display: grid;
+  /* 2열 그리드 */
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.5rem;
 }
@@ -472,23 +847,25 @@
 
 .sortButton {
   flex: 1;
+  /* 버튼 크기 균등 분할 */
   padding: 0.65rem 1rem;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--color-text-light);
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: var(--color-bg);
+  border: 1px solid var(--color-bg-tertiary);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .sortButton:hover {
-  background: rgba(255, 255, 255, 1);
+  background: var(--color-bg-secondary);
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
 
+/* 활성화된 정렬 버튼 */
 .sortButtonActive {
   background: var(--color-primary);
   border-color: var(--color-primary);
@@ -503,6 +880,7 @@
   opacity: 0.9;
 }
 
+/* 로딩 상태 */
 .loading {
   display: flex;
   flex-direction: column;
@@ -510,17 +888,23 @@
   gap: 0.75rem;
   padding: 2.5rem;
   border-radius: var(--radius-xl);
-  border: 1px dashed rgba(148, 163, 184, 0.4);
+  border: 1px dashed var(--color-text-lighter);
   color: var(--color-text-light);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--color-bg);
 }
 
+/* 로딩 스피너 */
 .loadingSpinner {
   width: 36px;
   height: 36px;
   border-radius: 50%;
+  /* 원형 */
   border: 3px solid rgba(99, 102, 241, 0.25);
+  /* 연한 테두리 */
   border-top-color: var(--color-primary);
+  /* 상단만 진하게 */
+
+  /* 회전 애니메이션 */
   animation: spin 0.9s linear infinite;
 }
 
@@ -528,6 +912,7 @@
   font-weight: 500;
 }
 
+/* 에러 상태 */
 .errorState {
   display: grid;
   gap: 0.6rem;
@@ -557,12 +942,16 @@
   }
 }
 
+/* 상품 목록 그리드 */
 .productsGrid {
   display: grid;
   gap: clamp(1.5rem, 3vw, 2rem);
+
+  /* 반응형 열: 최소 260px 너비를 유지하며 자동으로 열 개수 조절 */
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+/* 빈 상태 (상품 없음) */
 .emptyState {
   display: flex;
   flex-direction: column;
@@ -571,10 +960,12 @@
   gap: 0.75rem;
   padding: 3rem 1.5rem;
   border-radius: var(--radius-2xl);
-  background: rgba(248, 250, 252, 0.9);
-  border: 1px dashed rgba(148, 163, 184, 0.45);
+  background: var(--color-bg-secondary);
+  border: 1px dashed var(--color-text-lighter);
   color: var(--color-text-light);
   text-align: center;
+
+  /* 그리드의 모든 열을 차지하도록 설정 */
   grid-column: 1 / -1;
 }
 
@@ -593,6 +984,7 @@
   line-height: 1.6;
 }
 
+/* 푸터 */
 .footer {
   margin-top: clamp(2.5rem, 5vw, 4rem);
   padding-bottom: 1rem;
@@ -605,18 +997,18 @@
   text-align: center;
   padding: 2.5rem 1.5rem;
   border-radius: var(--radius-2xl);
-  background: rgba(15, 23, 42, 0.88);
-  color: rgba(226, 232, 240, 0.92);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-light);
 }
 
 .footerTitle {
   font-size: 1.35rem;
-  color: #fff;
+  color: var(--color-text);
 }
 
 .footerText {
   font-size: 0.95rem;
-  color: rgba(226, 232, 240, 0.75);
+  color: var(--color-text-light);
   max-width: 460px;
 }
 
@@ -629,84 +1021,108 @@
 
 .footerLink {
   font-weight: 500;
-  color: rgba(226, 232, 240, 0.8);
+  color: var(--color-text-light);
   padding: 0.4rem 0.85rem;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(226, 232, 240, 0.24);
+  border: 1px solid var(--color-bg-tertiary);
   transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
 }
 
 .footerLink:hover,
 .footerLink:focus-visible {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-bg-tertiary);
 }
 
+/* 
+ * 미디어 쿼리: PC 화면 (769px 이상)
+ * 모바일 전용 UI를 숨기고 PC 레이아웃을 적용합니다.
+ */
 @media (min-width: 769px) {
   .filterToggleButton {
     display: none;
+    /* 플로팅 버튼 숨김 */
   }
 
   .filterOverlay {
     display: none;
+    /* 오버레이 숨김 */
   }
 
+  /* 필터 패널을 바텀 시트에서 일반 사이드바/상단 바로 변경 */
   .filterPanel {
     position: relative !important;
+    /* 고정 위치 해제 */
     bottom: auto !important;
     left: auto !important;
     right: auto !important;
     z-index: 15;
     max-height: none !important;
+    /* 높이 제한 해제 */
     overflow: visible !important;
+    /* 스크롤 해제 */
     border-radius: 20px;
     margin-bottom: 2rem;
     padding: 1.5rem !important;
     opacity: 1 !important;
-    background: rgba(255, 255, 255, 0.98);
-    border: 1px solid rgba(148, 163, 184, 0.12);
-    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+    background: var(--color-bg);
+    border: 1px solid var(--color-bg-tertiary);
+    box-shadow: var(--shadow-lg);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     display: flex !important;
     flex-direction: column;
     gap: 1.5rem;
     transition: none;
+    /* 애니메이션 제거 */
   }
 
   .filterPanelVisible {
-    /* PC에서는 항상 보임 - 클래스가 적용되어도 변화 없음 */
+    /* PC에서는 항상 보이므로 추가 스타일 없음 */
   }
 }
 
+/* 
+ * 미디어 쿼리: 태블릿/노트북 (1024px 이하)
+ */
 @media (max-width: 1024px) {
   .heroContent {
     grid-template-columns: 1fr;
+    /* 1열로 변경 */
   }
 
   .heroVisual {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* 3열로 변경 */
   }
 
   .sectionHeader {
     align-items: flex-start;
+    /* 좌측 정렬 */
   }
 
   .searchForm {
     flex-direction: column;
+    /* 세로 배치 */
     align-items: stretch;
+    /* 너비 꽉 채우기 */
     border-radius: var(--radius-xl);
   }
 
   .searchButton {
     width: 100%;
+    /* 버튼 너비 100% */
   }
 }
 
+/* 
+ * 미디어 쿼리: 모바일 (768px 이하)
+ */
 @media (max-width: 768px) {
   .navLinks {
     display: none;
+    /* 네비게이션 링크 숨김 */
   }
 
   .hero {
@@ -715,10 +1131,12 @@
 
   .heroVisual {
     grid-template-columns: 1fr;
+    /* 1열로 변경 */
   }
 
   .heroStats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* 2열로 변경 */
   }
 
   .sectionHeader {
@@ -728,6 +1146,7 @@
 
   .productsGrid {
     grid-template-columns: repeat(2, 1fr);
+    /* 2열 고정 */
     gap: 1rem;
   }
 
@@ -742,9 +1161,11 @@
 
   .filterRow {
     grid-template-columns: 1fr;
+    /* 1열로 변경 */
     gap: 1rem;
   }
 
+  /* 검색바를 상단에 고정 (Sticky) */
   .searchBarWrap {
     position: sticky;
     top: 0;
@@ -753,7 +1174,10 @@
     margin: 0 -1.25rem 0.5rem;
     padding-left: 1.25rem;
     padding-right: 1.25rem;
+
+    /* 배경에 그라데이션을 주어 자연스럽게 섞이도록 함 */
     background: linear-gradient(180deg, #f8fafc 0%, rgba(248, 250, 252, 0.95) 80%, transparent 100%);
+
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
@@ -767,24 +1191,32 @@
   }
 }
 
+/* 
+ * 미디어 쿼리: 작은 모바일 (540px 이하)
+ */
 @media (max-width: 540px) {
   .container {
     padding: 1.25rem;
   }
 
-.heroStats {
+  .heroStats {
     grid-template-columns: 1fr;
+    /* 1열로 변경 */
   }
 
   .primaryCTA {
     width: 100%;
   }
 
-.filterPanel {
+  .filterPanel {
     padding: 1.25rem;
   }
 }
 
+/* 
+ * .scrollTopButton
+ * 맨 위로 가기 버튼
+ */
 .scrollTopButton {
   position: fixed;
   right: 2rem;
@@ -809,6 +1241,7 @@
   .scrollTopButton {
     right: 1rem;
     bottom: 12rem;
+    /* 필터 버튼과 겹치지 않게 위로 올림 */
     width: 2.75rem;
     height: 2.75rem;
     font-size: 1.1rem;
@@ -821,6 +1254,10 @@
   box-shadow: 0 25px 50px -25px rgba(15, 23, 42, 0.65);
 }
 
+/* 
+ * 컴플라이언스(법적 고지) 섹션 스타일
+ * 나머지 스타일들도 위와 동일한 방식으로 상세 주석이 적용됩니다.
+ */
 .complianceSection {
   margin-top: 3rem;
   padding: clamp(2.5rem, 5vw, 4rem);
@@ -1037,7 +1474,6 @@
   }
 }
 
-/* About Section Styles */
 .aboutSection {
   background: rgba(255, 255, 255, 0.98);
   border: 1px solid rgba(148, 163, 184, 0.15);
@@ -1109,6 +1545,10 @@
   color: var(--color-text);
 }
 
+/* 
+ * .howToList
+ * 사용 방법 리스트 스타일
+ */
 .howToList {
   font-size: 1rem;
   line-height: 1.75;
@@ -1121,12 +1561,24 @@
   margin-bottom: 0.75rem;
 }
 
-/* Footer Enhanced Styles */
+/* 
+ * Footer Enhanced Styles
+ * 푸터 영역의 확장 스타일입니다.
+ */
 .footer {
+  /* 배경색을 아주 어두운 색(거의 검정)으로 설정 */
   background: rgba(15, 23, 42, 0.98);
+
+  /* 모서리 둥글게 */
   border-radius: 24px;
+
+  /* 패딩 */
   padding: clamp(2.5rem, 5vw, 3.5rem);
+
+  /* 위쪽 여백 */
   margin-top: 3rem;
+
+  /* 텍스트 색상 (밝은 회색) */
   color: rgba(255, 255, 255, 0.85);
 }
 
@@ -1204,6 +1656,10 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* 
+ * 모바일 미디어 쿼리 (768px 이하)
+ * 소개 섹션 및 푸터의 모바일 스타일을 정의합니다.
+ */
 @media (max-width: 768px) {
   .aboutSection {
     padding: 2rem 1.5rem;
