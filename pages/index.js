@@ -962,7 +962,11 @@ export default function Home() {
             />
           )}
 
-          {/* 필터 패널 */}
+          {/* 
+            필터 패널 
+            [수정됨] 이전에는 여기에 불필요한 중첩 div(filterPanel 클래스)가 하나 더 있어 
+            모바일 스크롤이 갇히는 문제가 있었습니다. 해당 중첩을 제거하여 해결했습니다.
+          */}
           <div
             className={`${styles.filterPanel} ${showFilters ? styles.filterPanelVisible : ''}`}
             ref={filterPanelRef}
