@@ -419,6 +419,8 @@ export default function Home() {
     return () => clearInterval(timer)
   }, [])
 
+
+
   // 총 할인 상품 개수 가져오기
   useEffect(() => {
     const loadSaleCount = async () => {
@@ -965,18 +967,16 @@ export default function Home() {
             className={`${styles.filterPanel} ${showFilters ? styles.filterPanelVisible : ''}`}
             ref={filterPanelRef}
           >
-            <div className={`${styles.filterPanel} ${showFilters ? styles.filterPanelVisible : ''}`} ref={filterPanelRef}>
-              <BrandFilter
-                selectedBrand={selectedBrand}
-                onBrandChange={handleBrandChange}
-              />
-              <DetailedFilters
-                selectedDiscount={selectedDiscount}
-                onDiscountChange={handleDiscountChange}
-                selectedPrice={selectedPrice}
-                onPriceChange={handlePriceChange}
-              />
-            </div>
+            <BrandFilter
+              selectedBrand={selectedBrand}
+              onBrandChange={handleBrandChange}
+            />
+            <DetailedFilters
+              selectedDiscount={selectedDiscount}
+              onDiscountChange={handleDiscountChange}
+              selectedPrice={selectedPrice}
+              onPriceChange={handlePriceChange}
+            />
             <div className={styles.filterRow}>
               <div className={styles.filterGroup}>
                 <div className={styles.filterLabel}>성별</div>
