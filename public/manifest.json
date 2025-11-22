@@ -1,0 +1,21 @@
+{
+    "name": "Sale Archive - SPA 브랜드 세일 정보",
+    "short_name": "Sale Archive",
+    "description": "H&M, ZARA, UNIQLO 등 인기 SPA 브랜드의 실시간 세일 정보를 확인하세요.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ffffff",
+    "icons": [
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

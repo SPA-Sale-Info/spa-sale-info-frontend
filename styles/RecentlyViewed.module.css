@@ -1,0 +1,141 @@
+.container {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-bg-tertiary);
+}
+
+.title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-dark);
+    margin-bottom: 1.5rem;
+}
+
+/* 
+ * 가로 스크롤 영역
+ * 모바일 사용자 경험을 위해 가로 스크롤을 허용합니다.
+ */
+.scrollArea {
+    overflow-x: auto;
+    /* 가로 스크롤 활성화 */
+    margin: 0 -1.5rem;
+    /* 모바일에서 좌우 여백 무시하고 화면 꽉 차게 */
+    padding: 0 1.5rem 1.5rem;
+    /* 스크롤바 공간 확보 및 패딩 */
+    -webkit-overflow-scrolling: touch;
+    /* iOS 부드러운 스크롤 */
+    scrollbar-width: none;
+    /* Firefox 스크롤바 숨김 */
+}
+
+/* Chrome/Safari 스크롤바 숨김 */
+.scrollArea::-webkit-scrollbar {
+    display: none;
+}
+
+/* 
+ * 상품 리스트 컨테이너
+ * 내용물만큼 너비를 확보하여 스크롤이 자연스럽게 동작하도록 합니다.
+ */
+.list {
+    display: flex;
+    gap: 1rem;
+    width: max-content;
+    /* 자식 요소들의 너비 합만큼 늘어남 */
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    width: 140px;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+}
+
+.imageWrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3/4;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--color-bg-secondary);
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--color-bg-tertiary);
+}
+
+.image {
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.card:hover .image {
+    transform: scale(1.05);
+}
+
+.discountBadge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: #ff4757;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.brand {
+    font-size: 0.75rem;
+    color: var(--color-text-light);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 
+ * 상품명 스타일
+ * 긴 상품명은 2줄까지만 표시하고 말줄임표(...) 처리합니다.
+ */
+.name {
+    font-size: 0.85rem;
+    color: var(--color-text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    /* 2줄까지만 표시 */
+    line-clamp: 2;
+    /* 표준 속성 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 2.4em;
+    /* 2줄 높이 고정 (레이아웃 틀어짐 방지) */
+}
+
+.price {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-dark);
+    margin-top: 0.25rem;
+}
+
+@media (min-width: 768px) {
+    .scrollArea {
+        margin: 0;
+        padding: 0 0 1rem;
+    }
+
+    .card {
+        width: 160px;
+    }
+}

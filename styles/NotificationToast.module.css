@@ -1,0 +1,64 @@
+/* 
+ * 토스트 컨테이너
+ * 화면 하단 중앙에 고정(fixed)되며, 처음에는 화면 아래쪽에 숨겨져 있습니다.
+ */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    /* 화면 아래로 숨김 */
+    background: rgba(15, 23, 42, 0.95);
+    /* 반투명한 어두운 배경 */
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    /* 깊이감 있는 그림자 */
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    z-index: 1000;
+    /* 다른 요소들보다 위에 표시 */
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    /* 부드러운 등장 애니메이션 */
+    min-width: 300px;
+    max-width: 90vw;
+    backdrop-filter: blur(8px);
+    /* 배경 블러 효과 (Glassmorphism) */
+}
+
+/* 
+ * 표시 상태
+ * 화면 안으로 올라오며 투명도가 1이 됩니다.
+ */
+.toast.visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.icon {
+    font-size: 1.5rem;
+}
+
+.content {
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close:hover {
+    color: white;
+}

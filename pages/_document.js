@@ -47,7 +47,12 @@ export default function Document() {
         <meta name="description" content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 스마트한 쇼핑을 경험하세요." />
         <meta name="keywords" content="SPA 브랜드, 할인, 세일, H&M, ZARA, UNIQLO, MUJI, 찰스앤키스, Charles & Keith, 패션, 쇼핑, 가격비교, 세일정보, 온라인쇼핑, 세일모음, 패션할인, 의류세일" />
         <meta name="author" content="Sale Archive" />
-        <meta name="theme-color" content="#FF6B6B" />
+
+        {/* PWA 설정: 모바일 앱처럼 보이게 하기 위한 메타 태그들 */}
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Sale Archive" />
 
         {/* 추가 SEO 메타 태그 */}
         <meta name="language" content="Korean" />
@@ -85,8 +90,8 @@ export default function Document() {
         {/* 파비콘 설정 */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/favicon.svg" />
-        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="manifest" href="/manifest.json" />
         <link rel="canonical" href="https://mion-spa-info.vercel.app" />
       </Head>
 

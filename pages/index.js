@@ -10,6 +10,7 @@ import Link from 'next/link'
 import BrandFilter from '../components/BrandFilter'
 import GenderFilter from '../components/GenderFilter'
 import CategoryFilter from '../components/CategoryFilter'
+import DetailedFilters from '../components/DetailedFilters'
 import ThemeToggle from '../components/ThemeToggle'
 import ProductCard from '../components/ProductCard'
 import styles from '../styles/Home.module.css'
@@ -377,6 +378,8 @@ export default function Home() {
   const [selectedBrand, setSelectedBrand] = useState('all')
   const [selectedGender, setSelectedGender] = useState('all')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedDiscount, setSelectedDiscount] = useState(0)
+  const [selectedPrice, setSelectedPrice] = useState(Infinity)
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [isFetchingMore, setIsFetchingMore] = useState(false)
   const [error, setError] = useState(null)
@@ -491,6 +494,8 @@ export default function Home() {
         gender: selectedGender !== 'all' ? selectedGender : undefined,
         mainCategory: selectedCategory !== 'all' ? selectedCategory : undefined,
         keyword: searchKeyword || undefined,
+        minDiscount: selectedDiscount > 0 ? selectedDiscount : undefined,
+        maxPrice: selectedPrice !== Infinity ? selectedPrice : undefined,
       })
 
       const apiProducts = response?.content ?? []
@@ -532,7 +537,7 @@ export default function Home() {
         setIsFetchingMore(false)
       }
     }
-  }, [mergeUniqueProducts, normalizeProducts, searchKeyword, selectedBrand, selectedCategory, selectedGender])
+  }, [mergeUniqueProducts, normalizeProducts, searchKeyword, selectedBrand, selectedCategory, selectedGender, selectedDiscount, selectedPrice])
 
   /**
    * 선택한 브랜드가 바뀌면
@@ -544,32 +549,53 @@ export default function Home() {
     setPage(0)
     setHasMore(true)
     loadProducts({ pageToLoad: 0, replace: true })
-  }, [selectedBrand, selectedGender, selectedCategory, searchKeyword, loadProducts])
+  }, [selectedBrand, selectedGender, selectedCategory, selectedDiscount, selectedPrice, searchKeyword, loadProducts])
 
-  // 상품 필터링 (성별은 아직 프론트에서 처리)
+  /**
+   * 클라이언트 사이드 필터링 로직
+   * 
+   * API에서 1차적으로 필터링된 데이터를 받아오지만,
+   * 할인율(minDiscount)이나 가격대(maxPrice) 같은 세부 조건은
+   * 현재 로드된 상품 목록 내에서 즉각적으로 반응하도록 클라이언트에서도 한 번 더 검사합니다.
+   * 이를 통해 사용자가 필터를 조작할 때 서버 요청 없이도 빠른 피드백을 줄 수 있습니다.
+   */
   const filteredProducts = useMemo(() => {
-    const normalizedQuery = searchKeyword.trim().toLowerCase()
-
     return products.filter((product) => {
-      // 이미지가 없는 상품(플레이스홀더)은 제외
-      const hasValidImage = product.imageUrl !== FALLBACK_IMAGE
+      // 이미지 유효성 검사
+      const hasValidImage = product.imageUrl && !product.imageUrl.includes('undefined') && !product.imageUrl.includes('null')
 
-      const matchesBrand = selectedBrand === 'all' || product.brand === selectedBrand
+      // 브랜드 필터
+      const matchesBrand =
+        selectedBrand === 'all' ||
+        product.brandName === selectedBrand ||
+        product.brand === selectedBrand
+
+      // 성별 필터
       const matchesGender =
         selectedGender === 'all' ||
         product.gender === selectedGender ||
-        product.gender === 'unisex'
+        (product.gender === 'COMMON' && selectedGender !== 'KIDS') // 공용은 키즈 제외하고 다 포함
+
+      // 카테고리 필터
       const matchesCategory =
         selectedCategory === 'all' ||
         product.categoryGroup === selectedCategory
 
+      // 할인율 필터 (선택된 할인율 이상인지)
+      const matchesDiscount = product.discountRate >= selectedDiscount
+
+      // 가격대 필터 (선택된 가격 이하인지)
+      const matchesPrice = product.salePrice <= selectedPrice
+
+      // 검색어 필터
+      const normalizedQuery = searchKeyword.toLowerCase().trim()
       const matchesSearch = normalizedQuery === ''
         || product.name.toLowerCase().includes(normalizedQuery)
         || (product.brand && product.brand.toLowerCase().includes(normalizedQuery))
 
-      return hasValidImage && matchesBrand && matchesGender && matchesCategory && matchesSearch
+      return hasValidImage && matchesBrand && matchesGender && matchesCategory && matchesDiscount && matchesPrice && matchesSearch
     })
-  }, [products, selectedBrand, selectedGender, selectedCategory, searchKeyword])
+  }, [products, selectedBrand, selectedGender, selectedCategory, selectedDiscount, selectedPrice, searchKeyword])
 
   const filteredCountRef = useRef(0)
   useEffect(() => {
@@ -637,6 +663,14 @@ export default function Home() {
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category)
+  }
+
+  const handleDiscountChange = (discount) => {
+    setSelectedDiscount(discount)
+  }
+
+  const handlePriceChange = (price) => {
+    setSelectedPrice(price)
   }
 
   const handleSearchSubmit = (event) => {
@@ -931,11 +965,16 @@ export default function Home() {
             className={`${styles.filterPanel} ${showFilters ? styles.filterPanelVisible : ''}`}
             ref={filterPanelRef}
           >
-            <div className={`${styles.filterGroup} ${styles.brandFilterGroup}`}>
-              <div className={styles.filterLabel}>브랜드</div>
+            <div className={`${styles.filterPanel} ${showFilters ? styles.filterPanelVisible : ''}`} ref={filterPanelRef}>
               <BrandFilter
                 selectedBrand={selectedBrand}
                 onBrandChange={handleBrandChange}
+              />
+              <DetailedFilters
+                selectedDiscount={selectedDiscount}
+                onDiscountChange={handleDiscountChange}
+                selectedPrice={selectedPrice}
+                onPriceChange={handlePriceChange}
               />
             </div>
             <div className={styles.filterRow}>

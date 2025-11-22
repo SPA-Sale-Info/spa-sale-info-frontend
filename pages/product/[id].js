@@ -12,6 +12,7 @@
  * - 구매 링크
  */
 
+// 컴포넌트 및 훅 임포트
 import { useRouter } from 'next/router'
 import { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
@@ -21,6 +22,9 @@ import PriceHistoryChart from '../../components/PriceHistoryChart'
 import FavoriteButton from '../../components/FavoriteButton'
 import useFavorites from '../../hooks/useFavorites'
 import { fetchProductDetail } from '../../utils/api'
+import RecentlyViewed from '../../components/RecentlyViewed'
+import useRecentlyViewed from '../../hooks/useRecentlyViewed'
+import ShareButton from '../../components/ShareButton'
 import styles from '../../styles/ProductDetail.module.css'
 
 /**
@@ -63,15 +67,28 @@ function getCategoryDisplayName(category) {
   return categoryNames[category] || category
 }
 
+/**
+ * 상품 상세 페이지 컴포넌트
+ * 
+ * @description
+ * 개별 상품의 상세 정보를 보여주는 페이지입니다.
+ * - 상품 이미지, 가격, 상세 설명 표시
+ * - 가격 변동 그래프 제공
+ * - 찜하기, 공유하기 기능
+ * - 최근 본 상품 목록 표시
+ * - 동적 SEO 메타 태그 생성 (Open Graph)
+ */
 export default function ProductDetail() {
   const router = useRouter()
   const { id } = router.query
 
   const [product, setProduct] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const { toggleFavorite, isFavorite } = useFavorites()
+  // 커스텀 훅 사용
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const { addRecentItem, recentItems } = useRecentlyViewed()
 
   // API 호출 중복 방지를 위한 ref (상품 ID별로 관리)
   const lastFetchedIdRef = useRef(null)
@@ -90,7 +107,7 @@ export default function ProductDetail() {
 
     const loadProduct = async () => {
       try {
-        setIsLoading(true)
+        setLoading(true)
         setError(null)
 
         // API를 통해 상품 정보 가져오기
@@ -135,21 +152,30 @@ export default function ProductDetail() {
         }
 
         setProduct(normalizedProduct)
+
       } catch (err) {
         console.error('상품 로드 중 오류:', err)
         setError(err.message || '상품 정보를 불러오는 중 오류가 발생했습니다.')
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
     loadProduct()
   }, [id])
 
+  // 최근 본 상품 추가 효과
+  // 상품 데이터가 로드되면 addRecentItem을 호출하여 로컬 스토리지에 저장합니다.
+  useEffect(() => {
+    if (product) {
+      addRecentItem(product)
+    }
+  }, [product, addRecentItem])
+
   /**
    * 로딩 상태
    */
-  if (isLoading) {
+  if (loading) {
     return (
       <div className={styles.container}>
         <div className={styles.loadingContainer}>
@@ -182,12 +208,19 @@ export default function ProductDetail() {
 
   return (
     <>
+      {/* 
+        동적 SEO 메타 태그 설정 
+        상품 정보를 기반으로 Open Graph 태그를 생성하여 SNS 공유 시 미리보기를 최적화합니다.
+      */}
       <Head>
-        <title>{`${product.name} - ${brandName} | Sale Archive`}</title>
-        <meta
-          name="description"
-          content={`${product.name} - ${brandName}에서 ${product.discountRate}% 할인된 가격으로 만나보세요.`}
-        />
+        <title>{product ? `${product.brand} ${product.name} - Sale Archive` : '상품 상세 - Sale Archive'}</title>
+        <meta name="description" content={product ? `${product.brand} ${product.name} ${product.discountRate}% 할인 중! 현재 가격: ${product.salePrice.toLocaleString()}원` : 'SPA 브랜드 세일 정보'} />
+
+        {/* Open Graph (Facebook, KakaoTalk 등) */}
+        <meta property="og:title" content={product ? `${product.brand} ${product.name} (${product.discountRate}% 할인)` : 'Sale Archive'} />
+        <meta property="og:description" content={product ? `정가 ${product.originalPrice.toLocaleString()}원 → 할인가 ${product.salePrice.toLocaleString()}원` : 'SPA 브랜드 세일 정보를 확인하세요.'} />
+        <meta property="og:image" content={product?.imageUrl} />
+        <meta property="og:url" content={`https://mion-spa-info.vercel.app/product/${id}`} />
       </Head>
 
       <div className={styles.container}>
@@ -197,6 +230,10 @@ export default function ProductDetail() {
             ← 목록으로
           </Link>
           <div className={styles.headerActions}>
+            <ShareButton
+              title={`${product.name} - ${brandName}`}
+              text={`${product.discountRate}% 할인! ${product.name} 확인해보세요.`}
+            />
             <FavoriteButton
               product={product}
               isFavorite={isFavorite(product.id)}
@@ -383,6 +420,8 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        <RecentlyViewed products={recentItems} />
       </div>
     </>
   )

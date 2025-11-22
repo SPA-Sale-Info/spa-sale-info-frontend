@@ -571,9 +571,11 @@ export async function fetchSaleProducts({
   size = 12,       // 기본값 12
   brandType,       // 선택사항 (undefined일 수 있음)
   gender,          // 선택사항
-  mainCategory,    // 선택사항
-  keyword,         // 선택사항
-} = {}) {          // = {} → 인자를 안 넘겨도 에러 안 남 (기본값 빈 객체)
+  mainCategory,    // 선택사항: 카테고리 필터 (TOP, BOTTOM 등)
+  keyword,         // 선택사항: 검색어
+  minDiscount,     // 선택사항: 최소 할인율 (30, 50, 70 등)
+  maxPrice,        // 선택사항: 최대 가격 (30000, 50000 등)
+} = {}) {          // = {} : 인자가 없어도 에러가 나지 않도록 빈 객체를 기본값으로 설정
 
   /**
    * ============================================================================
@@ -647,8 +649,17 @@ export async function fetchSaleProducts({
    * - 'MEN' → true
    *
    * || 연산자: OR 연산 (하나라도 true면 true)
+   *
+   * minDiscount나 maxPrice가 있으면 검색 API를 사용해야 합니다.
+   * (기본 목록 API는 단순 페이지네이션만 지원하는 경우가 많기 때문)
    */
-  const requiresSearch = Boolean(normalizedGender || normalizedCategory || trimmedKeyword)
+  const requiresSearch = Boolean(
+    normalizedGender ||
+    normalizedCategory ||
+    trimmedKeyword ||
+    minDiscount ||
+    maxPrice
+  )
 
   /**
    * ============================================================================
@@ -810,6 +821,8 @@ export async function fetchSaleProducts({
     if (normalizedGender) searchParams.gender = normalizedGender
     if (normalizedCategory) searchParams.mainCategory = normalizedCategory
     if (trimmedKeyword) searchParams.keyword = trimmedKeyword
+    if (minDiscount) searchParams.minDiscount = String(minDiscount)
+    if (maxPrice) searchParams.maxPrice = String(maxPrice)
     searchParams.onSale = 'true'           // 세일 상품만
     searchParams.sortBy = 'discount'       // 할인율 순 정렬
     searchParams.sortDirection = 'desc'    // 내림차순 (높은 순)

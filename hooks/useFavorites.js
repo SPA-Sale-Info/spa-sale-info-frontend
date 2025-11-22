@@ -169,14 +169,37 @@ export function useFavorites() {
     return favorites.length
   }, [favorites])
 
+  /**
+   * 가격 인하 알림 체크 함수 (시뮬레이션)
+   * 
+   * 실제 서비스에서는 백엔드에서 푸시 알림을 보내겠지만,
+   * 여기서는 데모를 위해 클라이언트 사이드에서 확률적으로 가격 인하 이벤트를 발생시킵니다.
+   * 
+   * @returns {Object} { hasDrop: boolean, product: Object, message: string }
+   */
+  const checkPriceDrops = useCallback(() => {
+    // 찜한 상품이 있고, 10% 확률(Math.random() > 0.9)로 이벤트 발생
+    if (favorites.length > 0 && Math.random() > 0.9) {
+      // 랜덤하게 상품 하나 선택
+      const randomProduct = favorites[Math.floor(Math.random() * favorites.length)]
+      return {
+        hasDrop: true,
+        product: randomProduct,
+        message: `${randomProduct.brand} ${randomProduct.name} 상품 가격이 인하되었습니다!`
+      }
+    }
+    return { hasDrop: false }
+  }, [favorites])
+
   return {
     favorites,
     toggleFavorite,
     isFavorite,
-    getFavoriteProducts,
-    clearFavorites,
     getFavoriteCount,
+    checkPriceDrops,
+    isInitialized,
   }
 }
 
 export default useFavorites
+

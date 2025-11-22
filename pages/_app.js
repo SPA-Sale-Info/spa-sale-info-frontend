@@ -17,6 +17,7 @@
 // '../styles/globals.css' 파일의 스타일이 모든 페이지에 적용됩니다
 import '../styles/globals.css'
 import { ThemeProvider } from 'next-themes'
+import { useEffect } from 'react'
 
 /**
  * MyApp 컴포넌트
@@ -27,6 +28,23 @@ import { ThemeProvider } from 'next-themes'
  * @returns {JSX.Element} 렌더링될 컴포넌트
  */
 function MyApp({ Component, pageProps }) {
+  // PWA 서비스 워커 등록
+  // 브라우저가 서비스 워커를 지원하는 경우에만 등록을 시도합니다.
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(
+          (registration) => {
+            console.log('Service Worker registration successful with scope: ', registration.scope)
+          },
+          (err) => {
+            console.log('Service Worker registration failed: ', err)
+          }
+        )
+      })
+    }
+  }, [])
+
   /**
    * JSX 문법 설명:
    * - <Component {...pageProps} />는 현재 페이지 컴포넌트를 렌더링합니다
