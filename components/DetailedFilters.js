@@ -32,8 +32,8 @@ export default function DetailedFilters({
 }) {
     return (
         <div className={styles.container}>
-            {/* 할인율 필터 그룹 */}
-            <div className={styles.group}>
+            {/* 할인율 필터 그룹 - 주석처리됨 */}
+            {/* <div className={styles.group}>
                 <span className={styles.label}>할인율</span>
                 <div className={styles.options}>
                     <button
@@ -52,10 +52,10 @@ export default function DetailedFilters({
                         </button>
                     ))}
                 </div>
-            </div>
+            </div> */}
 
-            {/* 가격대 필터 그룹 */}
-            <div className={styles.group}>
+            {/* 가격대 필터 그룹 - 주석처리됨 */}
+            {/* <div className={styles.group}>
                 <span className={styles.label}>가격대</span>
                 <div className={styles.options}>
                     <button
@@ -74,7 +74,7 @@ export default function DetailedFilters({
                         </button>
                     ))}
                 </div>
-            </div>
+            </div> */}
         </div>
     )
 }
