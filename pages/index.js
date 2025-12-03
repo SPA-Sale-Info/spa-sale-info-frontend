@@ -839,6 +839,21 @@ export default function Home() {
             </Link>
 
             <div className={styles.navLinks}>
+              <Link href="/about" className={styles.navLink}>
+                소개
+              </Link>
+              <Link href="/style-guide" className={styles.navLink}>
+                스타일 가이드
+              </Link>
+              <Link href="/contact" className={styles.navLink}>
+                문의
+              </Link>
+              <Link href="/privacy" className={styles.navLink}>
+                개인정보
+              </Link>
+              <Link href="/terms" className={styles.navLink}>
+                이용약관
+              </Link>
               <Link href="/favorites" className={styles.favoritesLink}>
                 <span className={styles.heartIcon}>♥</span>
                 <span className={styles.favoritesText}>찜 목록</span>
@@ -1203,6 +1218,51 @@ export default function Home() {
               합리적인 가격에 원하는 스타일을 완성해보세요. 매일 방문하여
               새로운 할인 상품을 발견하는 즐거움을 느껴보시기 바랍니다.
             </p>
+
+            <h3 className={styles.aboutSubtitle}>큐레이션과 검증 기준</h3>
+            <div className={styles.featureGrid}>
+              <div className={styles.featureItem}>
+                <h4 className={styles.featureTitle}>데이터 출처 투명성</h4>
+                <p className={styles.featureDescription}>
+                  각 브랜드의 공개 API와 공식 상품 페이지만을 수집 대상으로 삼고, 크롤링한 원문 링크를 함께 제공합니다.
+                  가격·재고·할인율은 수집 시각을 명시해 최신성을 보장하고, 원문과 차이가 발생하면 즉시 숨김 처리합니다.
+                </p>
+              </div>
+              <div className={styles.featureItem}>
+                <h4 className={styles.featureTitle}>품질 필터</h4>
+                <p className={styles.featureDescription}>
+                  노출 전 3단계 필터(이미지 유효성, 카테고리 매핑, 할인율·가격 검증)를 거칩니다.
+                  할인율은 원가 대비 계산값을 다시 확인하고, 노출 가치가 낮은 중복 상품은 제거합니다.
+                </p>
+              </div>
+              <div className={styles.featureItem}>
+                <h4 className={styles.featureTitle}>콘텐츠 맥락</h4>
+                <p className={styles.featureDescription}>
+                  단순 리스트 대신 스타일링 제안과 소재·체형별 추천을 함께 제공합니다.
+                  코디 팁은 내부 에디토리얼 가이드에 따라 매일 갱신하며, 실제 시즌 트렌드를 반영합니다.
+                </p>
+              </div>
+            </div>
+
+            <p className={styles.aboutText}>
+              수집 로직은 매일 2회 이상 실행되며, 실패 로그와 누락 브랜드를 수동으로 점검합니다.
+              상품은 카테고리/성별/브랜드 기준으로 재정렬하고, 유사 상품은 대표컷만 노출해 중복을 줄였습니다.
+              사용자가 저장한 찜 데이터는 로컬 스토리지에만 보관하며, 서버로 전송하지 않습니다.
+            </p>
+
+            <h3 className={styles.aboutSubtitle}>운영 원칙과 광고 고지</h3>
+            <ul className={styles.howToList}>
+              <li>광고와 에디토리얼 콘텐츠를 명확히 구분합니다. 광고는 “스폰서드” 라벨을 표시합니다.</li>
+              <li>브랜드와 제휴 여부와 관계없이 동일한 노출 기준을 적용하고, 리뷰는 대가성 없이 작성합니다.</li>
+              <li>사용자 문의(오류 제보, 제휴 요청)는 contact@salearchive.com으로 24시간 접수하며, 48시간 내 답변을 목표로 합니다.</li>
+              <li>가격 변동·품절이 확인되면 해당 상품은 즉시 비노출 처리하고, 대체 상품을 제안합니다.</li>
+            </ul>
+
+            <p className={styles.aboutText}>
+              Sale Archive는 단순한 상품 모음이 아니라, 시즌별 쇼핑 전략과 예산·체형에 맞춘 조합을 제안하는
+              에디토리얼 서비스로 발전시키고 있습니다. 매달 인기 검색어와 클릭 데이터를 분석해 필터 옵션을 개선하고,
+              더 나은 사용자 경험을 위해 로딩 속도와 접근성을 꾸준히 점검합니다.
+            </p>
           </div>
         </section>
 
@@ -1245,6 +1305,7 @@ export default function Home() {
 
             <div className={styles.footerLinks}>
               <a href="mailto:contact@salearchive.com" className={styles.footerLink}>Contact</a>
+              <Link href="/about" className={styles.footerLink}>서비스 소개</Link>
               <Link href="/privacy" className={styles.footerLink}>개인정보처리방침</Link>
               <Link href="/terms" className={styles.footerLink}>이용약관</Link>
             </div>

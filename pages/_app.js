@@ -18,6 +18,7 @@
 import '../styles/globals.css'
 import { ThemeProvider } from 'next-themes'
 import { useEffect } from 'react'
+import Footer from '../components/Footer'
 
 /**
  * MyApp 컴포넌트
@@ -49,6 +50,7 @@ function MyApp({ Component, pageProps }) {
    * JSX 문법 설명:
    * - <Component {...pageProps} />는 현재 페이지 컴포넌트를 렌더링합니다
    * - {...pageProps}는 스프레드 연산자로, pageProps의 모든 속성을 Component에 전달합니다
+   * - Footer 컴포넌트를 모든 페이지 하단에 표시합니다 (구글 애드센스 승인 요구사항)
    *
    * 예시:
    * pageProps = { title: "홈", data: [...] }
@@ -57,6 +59,7 @@ function MyApp({ Component, pageProps }) {
   return (
     <ThemeProvider attribute="data-theme">
       <Component {...pageProps} />
+      <Footer />
     </ThemeProvider>
   )
 }

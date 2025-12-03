@@ -1,0 +1,216 @@
+/**
+ * Contact.module.css - 문의하기 페이지 전용 스타일
+ */
+
+/* 문의 양식 스타일 */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 2rem;
+  background: rgba(248, 250, 252, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-dark, #0f172a);
+}
+
+.required {
+  color: #ef4444;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+  color: var(--color-text, #334155);
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.submitButton {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--color-primary, #3b82f6);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover {
+  background: var(--color-primary-dark, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.submitButton:active {
+  transform: translateY(0);
+}
+
+/* 성공 메시지 */
+.successMessage {
+  padding: 1rem 1.5rem;
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+/* FAQ 스타일 */
+.faqItem {
+  padding: 1.5rem;
+  background: rgba(248, 250, 252, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.faqQuestion {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-dark, #0f172a);
+  margin: 0 0 0.75rem 0;
+}
+
+.faqItem p {
+  margin: 0;
+}
+
+/* 소셜 미디어 링크 */
+.socialLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  color: var(--color-text, #334155);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.socialLink:hover {
+  background: rgba(248, 250, 252, 1);
+  border-color: var(--color-primary, #3b82f6);
+  color: var(--color-primary, #3b82f6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* 다크 모드 지원 */
+:global(.dark) .form,
+:global(.dark) .faqItem {
+  background: rgba(15, 23, 42, 0.4);
+  border-color: rgba(71, 85, 105, 0.3);
+}
+
+:global(.dark) .input,
+:global(.dark) .textarea {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(71, 85, 105, 0.4);
+  color: #e2e8f0;
+}
+
+:global(.dark) .input:focus,
+:global(.dark) .textarea:focus {
+  border-color: var(--color-primary, #3b82f6);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+:global(.dark) .label {
+  color: #e2e8f0;
+}
+
+:global(.dark) .faqQuestion {
+  color: #f1f5f9;
+}
+
+:global(.dark) .socialLink {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(71, 85, 105, 0.4);
+  color: #e2e8f0;
+}
+
+:global(.dark) .socialLink:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: var(--color-primary, #3b82f6);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .form {
+    padding: 1.5rem;
+  }
+
+  .input,
+  .textarea {
+    padding: 0.75rem;
+    font-size: 0.9375rem;
+  }
+
+  .submitButton {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9375rem;
+  }
+
+  .faqItem {
+    padding: 1.25rem;
+  }
+
+  .faqQuestion {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form {
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+
+  .faqItem {
+    padding: 1rem;
+  }
+}
