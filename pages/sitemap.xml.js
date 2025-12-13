@@ -2,7 +2,7 @@ import { fetchSaleProducts } from '../utils/api';
 
 const SITE_URL = 'https://mion-spa-info.vercel.app';
 
-// BrandFilter.js와 동일한 브랜드 목록 상수. API 호출 대신 사용.
+// BrandFilter.js와 동일한 브랜드 목록 상수
 const BRANDS = [
   { code: 'all', name: '전체' },
   { code: 'HM', name: 'H&M' },
@@ -13,29 +13,39 @@ const BRANDS = [
   { code: 'COS', name: 'COS' },
   { code: 'ARKET', name: 'ARKET' },
   { code: 'MASSIMODUTTI', name: 'Massimo Dutti' },
-  // 'comingSoon: true'인 브랜드는 사이트맵에 포함하지 않음
 ];
 
-
 /**
- * SIMPLIFIED FOR DEBUGGING: Fetches only the first page of sale products.
- * @returns {Promise<Array>} A single page of products, or an empty array on failure.
+ * 모든 세일 상품을 페이지네이션을 통해 안전하게 가져오는 함수
+ * @returns {Promise<Array>} 전체 상품 목록
  */
-async function getFirstPageOfProducts() {
-  console.log('Sitemap(Debug): Starting to fetch FIRST PAGE of sale products...');
-  try {
-    const response = await fetchSaleProducts({ page: 0, size: 100 });
-    if (response && response.content) {
-      console.log(`Sitemap(Debug): Fetched ${response.content.length} products from page 0.`);
-      return response.content;
-    } else {
-      console.error('Sitemap(Debug): Invalid response structure from fetchSaleProducts.');
-      return [];
+async function getAllSaleProducts() {
+  let allProducts = [];
+  let page = 0;
+  const size = 100;
+  let hasMore = true;
+
+  while (hasMore) {
+    try {
+      const response = await fetchSaleProducts({ page, size });
+
+      if (response && response.content && response.content.length > 0) {
+        allProducts = allProducts.concat(response.content);
+        page++;
+        // 마지막 페이지이거나, 더 이상 콘텐츠가 없으면 중단
+        if (response.last || response.content.length < size) {
+          hasMore = false;
+        }
+      } else {
+        // 응답이 없거나, content가 비어있으면 중단 (안전장치)
+        hasMore = false;
+      }
+    } catch (error) {
+      console.error(`Sitemap: Product fetch failed on page ${page}. Stopping.`, error);
+      hasMore = false; // 에러 발생 시 중단
     }
-  } catch (error) {
-    console.error(`Sitemap(Debug): CRITICAL - Failed to fetch products on page 0.`, error);
-    return []; // Return empty array on error to prevent crash
   }
+  return allProducts;
 }
 
 /**
@@ -81,11 +91,10 @@ ${BRANDS
   </url>`
   ).join('\n')}
 
-  <!-- 개별 상품 페이지 (첫 페이지만) -->
+  <!-- 개별 상품 페이지 -->
 ${products
   .map((product) => {
     if (!product || !product.id) {
-      console.warn('Sitemap(Debug): Skipping invalid product item.', product);
       return ''; // 유효하지 않은 상품 데이터는 건너뛰기
     }
     const lastMod = product.updatedAt ? new Date(product.updatedAt).toISOString() : today;
@@ -100,26 +109,17 @@ ${products
 }
 
 export async function getServerSideProps({ res }) {
-  console.log("Sitemap(Debug): getServerSideProps execution started (SIMPLIFIED).");
-  
-  const products = await getFirstPageOfProducts();
-  console.log(`Sitemap(Debug): Product fetching complete. Found ${products.length} products.`);
-  
+  const products = await getAllSaleProducts();
   const sitemap = generateSiteMap(products);
-  console.log("Sitemap(Debug): Sitemap XML string generated.");
-  
+
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.setHeader(
     'Cache-Control',
-    'public, s-maxage=600, stale-while-revalidate=86400'
+    'public, s-maxage=3600, stale-while-revalidate=86400' // 1시간 캐시, 24시간 재검증
   );
-  console.log("Sitemap(Debug): Response headers have been set.");
-  
+
   res.write(sitemap);
-  console.log("Sitemap(Debug): Sitemap XML written to response.");
-  
   res.end();
-  console.log("Sitemap(Debug): Response has been ended.");
 
   return {
     props: {},
