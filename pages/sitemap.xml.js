@@ -17,7 +17,13 @@ const BRANDS = [
 
 /**
  * 모든 세일 상품을 페이지네이션을 통해 안전하게 가져오는 함수
- * @returns {Promise<Array>} 전체 상품 목록
+ *
+ * Google 크롤러 타임아웃을 방지하기 위해:
+ * - 최대 상품 수 제한 (1000개)
+ * - 최대 페이지 수 제한 (10페이지)
+ * - 전체 타임아웃 설정 (10초)
+ *
+ * @returns {Promise<Array>} 전체 상품 목록 (최대 1000개)
  */
 async function getAllSaleProducts() {
   let allProducts = [];
@@ -25,26 +31,45 @@ async function getAllSaleProducts() {
   const size = 100;
   let hasMore = true;
 
-  while (hasMore) {
+  // 안전장치: 최대 페이지 수 제한 (10페이지 = 1000개)
+  const MAX_PAGES = 10;
+  const MAX_PRODUCTS = 1000;
+
+  // 타임아웃 설정 (10초)
+  const TIMEOUT = 10000;
+  const startTime = Date.now();
+
+  while (hasMore && page < MAX_PAGES && allProducts.length < MAX_PRODUCTS) {
     try {
+      // 타임아웃 체크
+      if (Date.now() - startTime > TIMEOUT) {
+        console.warn(`Sitemap: 타임아웃 도달 (${TIMEOUT}ms). 현재까지 ${allProducts.length}개 상품 수집.`);
+        break;
+      }
+
       const response = await fetchSaleProducts({ page, size });
 
       if (response && response.content && response.content.length > 0) {
         allProducts = allProducts.concat(response.content);
+        console.log(`Sitemap: 페이지 ${page} 완료 (${response.content.length}개 상품, 누적: ${allProducts.length}개)`);
         page++;
+
         // 마지막 페이지이거나, 더 이상 콘텐츠가 없으면 중단
         if (response.last || response.content.length < size) {
           hasMore = false;
         }
       } else {
         // 응답이 없거나, content가 비어있으면 중단 (안전장치)
+        console.warn(`Sitemap: 페이지 ${page}에서 빈 응답 받음. 중단.`);
         hasMore = false;
       }
     } catch (error) {
-      console.error(`Sitemap: Product fetch failed on page ${page}. Stopping.`, error);
+      console.error(`Sitemap: 페이지 ${page} 조회 실패. 현재까지 ${allProducts.length}개 상품으로 계속 진행.`, error);
       hasMore = false; // 에러 발생 시 중단
     }
   }
+
+  console.log(`Sitemap: 총 ${allProducts.length}개 상품 수집 완료`);
   return allProducts;
 }
 
@@ -108,16 +133,62 @@ ${products
 </urlset>`;
 }
 
+/**
+ * Next.js 서버사이드 렌더링 함수
+ *
+ * 중요: 이 함수는 매 요청마다 실행됩니다.
+ * - Google 크롤러가 /sitemap.xml을 요청하면 이 함수가 실행됨
+ * - API 호출이 실패해도 최소한의 sitemap은 반환해야 함 (정적 페이지)
+ * - 에러가 발생해도 500 에러를 내지 않고 빈 sitemap이라도 반환
+ *
+ * @param {Object} context - Next.js context 객체
+ * @param {Object} context.res - HTTP 응답 객체
+ * @returns {Object} Next.js props 객체
+ */
 export async function getServerSideProps({ res }) {
-  const products = await getAllSaleProducts();
-  const sitemap = generateSiteMap(products);
+  let products = [];
+  let sitemap = '';
 
+  try {
+    console.log('Sitemap: 생성 시작');
+
+    // 상품 데이터 조회 (타임아웃 및 에러 처리 포함)
+    try {
+      products = await getAllSaleProducts();
+      console.log(`Sitemap: ${products.length}개 상품으로 sitemap 생성`);
+    } catch (error) {
+      console.error('Sitemap: 상품 조회 실패. 정적 페이지만으로 sitemap 생성.', error);
+      // products는 빈 배열로 유지 - 정적 페이지만 포함
+    }
+
+    // sitemap 생성 (상품이 없어도 정적 페이지는 포함됨)
+    sitemap = generateSiteMap(products);
+    console.log('Sitemap: 생성 완료');
+
+  } catch (error) {
+    // 최악의 경우: sitemap 생성 자체가 실패
+    console.error('Sitemap: 생성 중 치명적 오류 발생. 최소 sitemap 반환.', error);
+
+    // 최소한의 sitemap이라도 반환 (홈페이지만)
+    sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${SITE_URL}</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+  }
+
+  // HTTP 응답 헤더 설정
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.setHeader(
     'Cache-Control',
     'public, s-maxage=3600, stale-while-revalidate=86400' // 1시간 캐시, 24시간 재검증
   );
 
+  // sitemap XML 반환
   res.write(sitemap);
   res.end();
 
