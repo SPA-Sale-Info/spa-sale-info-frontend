@@ -1,5 +1,5 @@
 /**
- * index.js - 완전히 새로운 프리미엄 메인 페이지
+ * index.tsx - 완전히 새로운 프리미엄 메인 페이지 (TypeScript)
  *
  * 포트폴리오용 전문적인 레이아웃
  */
@@ -16,6 +16,20 @@ import ProductCard from '../components/ProductCard'
 import styles from '../styles/Home.module.css'
 import { fetchSaleProducts, fetchSaleProductCount } from '../utils/api'
 import useFavorites from '../hooks/useFavorites'
+import type { Product, Brand, Gender, Category } from '../types'
+
+/**
+ * 확장된 제품 타입 (프론트엔드용)
+ */
+interface NormalizedProduct extends Product {
+  brandCode: Brand;
+  brandName: string;
+  mainCategory: Category;
+  categoryGroup: string;
+  price: number;
+  vibe: string | null;
+  vibeTags: string[];
+}
 
 /**
  * API에서 충분히 많은 상품을 받기 위해 한 번에 불러올 개수를 결정합니다.
@@ -23,7 +37,7 @@ import useFavorites from '../hooks/useFavorites'
  */
 const PAGE_SIZE = 12
 const FALLBACK_IMAGE = '/placeholder-product.svg'
-const CATEGORY_GROUPS = {
+const CATEGORY_GROUPS: Record<string, string[]> = {
   TOP: ['SHIRT', 'T_SHIRT', 'KNIT', 'SWEATSHIRT', 'DRESS', 'BLOUSE'],
   BOTTOM: ['PANTS', 'JEANS', 'SHORTS', 'SKIRT'],
   OUTER: ['JACKET', 'COAT', 'PADDING'],
@@ -277,7 +291,7 @@ const REVIEW_CHECKLIST = [
   },
 ]
 
-const resolveImageUrl = (rawUrl) => {
+const resolveImageUrl = (rawUrl: any): string => {
   if (typeof rawUrl !== 'string' || rawUrl.trim() === '') {
     return FALLBACK_IMAGE
   }
@@ -299,7 +313,7 @@ const resolveImageUrl = (rawUrl) => {
   return FALLBACK_IMAGE
 }
 
-const coerceNumber = (value) => {
+const coerceNumber = (value: any): number => {
   if (typeof value === 'number' && !Number.isNaN(value)) {
     return value
   }
@@ -312,7 +326,7 @@ const coerceNumber = (value) => {
   return 0
 }
 
-const normalizeProduct = (product = {}) => {
+const normalizeProduct = (product: any = {}): NormalizedProduct => {
   const originalPrice = coerceNumber(product.originalPrice)
   const salePriceSource = product.currentPrice !== undefined ? product.currentPrice : product.salePrice
   const salePrice = coerceNumber(salePriceSource)
@@ -330,8 +344,8 @@ const normalizeProduct = (product = {}) => {
   const imageUrl = resolveImageUrl(rawImageUrl)
 
   const gender = typeof product.gender === 'string'
-    ? product.gender.toLowerCase()
-    : 'unisex'
+    ? product.gender.toUpperCase()
+    : 'UNISEX'
 
   const brand = (product.brandType || product.brandName || 'UNKNOWN').toUpperCase()
   const rawMainCategory = (product.mainCategory || '').toUpperCase()
@@ -374,29 +388,29 @@ export default function Home() {
   // ▶ products: 화면에 보여줄 전체 상품 목록
   // ▶ selectedBrand / selectedGender: 사용자가 선택한 필터
   // ▶ isInitialLoading / isFetchingMore: 처음 로딩과 추가 로딩을 구분해 UI를 부드럽게 합니다.
-  const [products, setProducts] = useState([])
-  const [selectedBrand, setSelectedBrand] = useState('all')
-  const [selectedGender, setSelectedGender] = useState('all')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedDiscount, setSelectedDiscount] = useState(0)
-  const [selectedPrice, setSelectedPrice] = useState(Infinity)
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
-  const [isFetchingMore, setIsFetchingMore] = useState(false)
-  const [error, setError] = useState(null)
-  const [hasMore, setHasMore] = useState(true)
-  const [page, setPage] = useState(0)
-  const [searchInput, setSearchInput] = useState('')
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [showScrollTop, setShowScrollTop] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
-  const [logoStep, setLogoStep] = useState(0)
-  const [totalSaleCount, setTotalSaleCount] = useState(0)
-  const [animatedCount, setAnimatedCount] = useState(0)
-  const [isComplianceOpen, setIsComplianceOpen] = useState(false)
-  const loadMoreRef = useRef(null)
-  const filterPanelRef = useRef(null)
-  const sectionHeaderRef = useRef(null)
-  const lastScrollY = useRef(0)
+  const [products, setProducts] = useState<NormalizedProduct[]>([])
+  const [selectedBrand, setSelectedBrand] = useState<Brand | 'all'>('all')
+  const [selectedGender, setSelectedGender] = useState<Gender | 'all'>('all')
+  const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all')
+  const [selectedDiscount, setSelectedDiscount] = useState<number>(0)
+  const [selectedPrice, setSelectedPrice] = useState<number>(Infinity)
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true)
+  const [isFetchingMore, setIsFetchingMore] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState<boolean>(true)
+  const [page, setPage] = useState<number>(0)
+  const [searchInput, setSearchInput] = useState<string>('')
+  const [searchKeyword, setSearchKeyword] = useState<string>('')
+  const [showScrollTop, setShowScrollTop] = useState<boolean>(false)
+  const [showFilters, setShowFilters] = useState<boolean>(false)
+  const [logoStep, setLogoStep] = useState<number>(0)
+  const [totalSaleCount, setTotalSaleCount] = useState<number>(0)
+  const [animatedCount, setAnimatedCount] = useState<number>(0)
+  const [isComplianceOpen, setIsComplianceOpen] = useState<boolean>(false)
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const filterPanelRef = useRef<HTMLDivElement | null>(null)
+  const sectionHeaderRef = useRef<HTMLDivElement | null>(null)
+  const lastScrollY = useRef<number>(0)
 
   // 찜 기능 훅
   const { toggleFavorite, isFavorite, getFavoriteCount } = useFavorites()
@@ -453,11 +467,11 @@ export default function Home() {
   }, [totalSaleCount])
 
   // API에서 받은 원본 데이터를 화면에서 쓰기 좋은 형태로 바꿉니다.
-  const normalizeProducts = useCallback((apiProducts = []) => (
+  const normalizeProducts = useCallback((apiProducts: any[] = []) => (
     apiProducts.map(normalizeProduct)
   ), [])
 
-  const mergeUniqueProducts = useCallback((prevProducts, incomingProducts, replace) => {
+  const mergeUniqueProducts = useCallback((prevProducts: NormalizedProduct[], incomingProducts: NormalizedProduct[], replace: boolean) => {
     if (replace) {
       return incomingProducts
     }
@@ -480,7 +494,7 @@ export default function Home() {
    * - replace가 true면 기존 목록을 갈아끼우고(브랜드 변경 등),
    * - false면 무한 스크롤처럼 목록 뒤에 이어 붙입니다.
    */
-  const loadProducts = useCallback(async ({ pageToLoad, replace }) => {
+  const loadProducts = useCallback(async ({ pageToLoad, replace }: { pageToLoad: number; replace: boolean }) => {
     if (replace) {
       setIsInitialLoading(true)
       setError(null)
@@ -492,30 +506,23 @@ export default function Home() {
       const response = await fetchSaleProducts({
         page: pageToLoad,
         size: PAGE_SIZE,
-        brandType: selectedBrand !== 'all' ? selectedBrand : undefined,
-        gender: selectedGender !== 'all' ? selectedGender : undefined,
-        mainCategory: selectedCategory !== 'all' ? selectedCategory : undefined,
+        brands: selectedBrand !== 'all' ? [selectedBrand] : undefined,
+        genders: selectedGender !== 'all' ? [selectedGender] : undefined,
+        categories: selectedCategory !== 'all' ? [selectedCategory] : undefined,
         keyword: searchKeyword || undefined,
-        minDiscount: selectedDiscount > 0 ? selectedDiscount : undefined,
-        maxPrice: selectedPrice !== Infinity ? selectedPrice : undefined,
       })
 
-      const apiProducts = response?.content ?? []
+      const apiProducts = response ?? []
       const normalized = normalizeProducts(apiProducts)
 
       setProducts(prev => mergeUniqueProducts(prev, normalized, replace))
       setPage(pageToLoad)
 
-      const isLastPage = typeof response?.last === 'boolean'
-        ? response.last
-        : (response?.totalPages
-          ? pageToLoad + 1 >= response.totalPages
-          : normalized.length < PAGE_SIZE)
-
+      const isLastPage = normalized.length < PAGE_SIZE
       setHasMore(!isLastPage)
     } catch (err) {
       console.error('상품 데이터를 불러오지 못했습니다.', err)
-      const message = typeof err?.message === 'string' ? err.message : ''
+      const message = (err as Error)?.message || ''
       const isNotFoundError = message.includes('(404)') || /not\s+found/i.test(message)
 
       if (replace && isNotFoundError) {
@@ -576,7 +583,7 @@ export default function Home() {
       const matchesGender =
         selectedGender === 'all' ||
         product.gender === selectedGender ||
-        (product.gender === 'COMMON' && selectedGender !== 'KIDS') // 공용은 키즈 제외하고 다 포함
+        product.gender === 'UNISEX' // 공용은 모두 포함
 
       // 카테고리 필터
       const matchesCategory =
@@ -655,34 +662,34 @@ export default function Home() {
   }, [filteredProducts.length, hasMore, isFetchingMore, isInitialLoading, loadProducts, page, products.length])
 
   // 브랜드, 성별, 검색어 변경 핸들러
-  const handleBrandChange = (brand) => {
+  const handleBrandChange = (brand: Brand | 'all') => {
     setSelectedBrand(brand)
   }
 
-  const handleGenderChange = (gender) => {
+  const handleGenderChange = (gender: Gender | 'all') => {
     setSelectedGender(gender)
   }
 
-  const handleCategoryChange = (category) => {
+  const handleCategoryChange = (category: Category | 'all') => {
     setSelectedCategory(category)
   }
 
-  const handleDiscountChange = (discount) => {
+  const handleDiscountChange = (discount: number) => {
     setSelectedDiscount(discount)
   }
 
-  const handlePriceChange = (price) => {
+  const handlePriceChange = (price: number) => {
     setSelectedPrice(price)
   }
 
-  const handleSearchSubmit = (event) => {
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const trimmed = searchInput.trim()
     setSearchKeyword(trimmed)
     setSearchInput(trimmed)
   }
 
-  const handleSearchInputChange = (event) => {
+  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(event.target.value)
   }
 
@@ -712,10 +719,6 @@ export default function Home() {
   }
 
   // 통계 계산
-  const totalBrandLabels = new Set(products.map(p => p.brand)).size
-  const avgDiscount = filteredProducts.length > 0
-    ? Math.round(filteredProducts.reduce((sum, p) => sum + p.discountRate, 0) / filteredProducts.length)
-    : 0
   const isBrandFilterActive = selectedBrand !== 'all'
   const isNoResultsError = error === 'NO_RESULTS'
   const hasBlockingError = Boolean(error && !isNoResultsError)

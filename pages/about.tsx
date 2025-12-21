@@ -1,10 +1,10 @@
 /**
- * about.js - 서비스 소개 페이지
+ * about.tsx - 서비스 소개 페이지 (TypeScript 버전)
  */
 
-import Head from 'next/head'
-import Link from 'next/link'
-import styles from '../styles/Legal.module.css'
+import Head from 'next/head';
+import Link from 'next/link';
+import styles from '../styles/Legal.module.css';
 
 export default function About() {
   return (
@@ -32,13 +32,14 @@ export default function About() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>서비스 미션</h2>
             <p className={styles.text}>
-              Sale Archive는 H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 주요 SPA 브랜드의 할인 상품을
-              한곳에서 비교할 수 있게 설계된 큐레이션 서비스입니다. 단순 나열이 아닌, 시즌별 스타일링 팁과
-              소재·체형·예산을 고려한 추천을 제공해 사용자가 빠르게 “지금 사도 되는 상품”을 찾도록 돕습니다.
+              Sale Archive는 H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 주요 SPA 브랜드의 할인 상품을 한곳에서
+              비교할 수 있게 설계된 큐레이션 서비스입니다. 단순 나열이 아닌, 시즌별 스타일링 팁과 소재·체형·예산을
+              고려한 추천을 제공해 사용자가 빠르게 "지금 사도 되는 상품"을 찾도록 돕습니다.
             </p>
             <p className={styles.text}>
-              매일 2회 이상 데이터를 갱신하며, 가격·할인율·이미지 오류가 확인되면 비노출 처리 후 대체 상품을 제안합니다.
-              광고나 제휴 여부와 관계없이 동일한 노출 기준을 적용하고, 광고 위치는 라벨을 붙여 명확히 구분합니다.
+              매일 2회 이상 데이터를 갱신하며, 가격·할인율·이미지 오류가 확인되면 비노출 처리 후 대체 상품을
+              제안합니다. 광고나 제휴 여부와 관계없이 동일한 노출 기준을 적용하고, 광고 위치는 라벨을 붙여 명확히
+              구분합니다.
             </p>
           </section>
 
@@ -60,8 +61,9 @@ export default function About() {
               <li>매일 2회 이상 배치 실행 후 실패 로그 수동 점검, 중복 상품 정리</li>
             </ol>
             <p className={styles.text}>
-              수집된 데이터는 사용자 로컬 저장소(찜 기능)와 읽기 전용 DB에만 저장되며, 별도의 회원 정보를 요구하지 않습니다.
-              가격 변동과 품절이 감지되면 즉시 목록에서 제외하고, 대체 가능한 유사 아이템을 추천 리스트에 연결합니다.
+              수집된 데이터는 사용자 로컬 저장소(찜 기능)와 읽기 전용 DB에만 저장되며, 별도의 회원 정보를 요구하지
+              않습니다. 가격 변동과 품절이 감지되면 즉시 목록에서 제외하고, 대체 가능한 유사 아이템을 추천 리스트에
+              연결합니다.
             </p>
           </section>
 
@@ -78,25 +80,8 @@ export default function About() {
               AI 자동 생성 문구는 사용하지 않으며, 검수된 문장만 게재합니다.
             </p>
           </section>
-
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>광고·수익 고지</h2>
-            <p className={styles.text}>
-              Sale Archive의 수익 모델은 디스플레이 광고(AdSense)와 향후 제휴 링크로 구성될 수 있습니다.
-              광고 영역은 “스폰서드” 라벨로 명확히 구분하며, 제휴 여부와 상관없이 동일한 상품 노출·필터 기준을 적용합니다.
-              사용자가 광고를 클릭하더라도 추가 비용이 발생하지 않으며, 서비스 품질에 영향을 주지 않습니다.
-            </p>
-          </section>
-
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>피드백 요청</h2>
-            <p className={styles.text}>
-              누락된 브랜드, 잘못된 정보, 접근성 개선 제안 등 언제든 의견을 보내주세요.
-              확인 즉시 수정하고, 중요 변경 사항은 공지 섹션과 SNS에 함께 안내하겠습니다.
-            </p>
-          </section>
         </main>
       </div>
     </div>
-  )
+  );
 }

@@ -5,41 +5,31 @@
  * 사용자가 서비스 운영자에게 연락할 수 있는 정보를 제공합니다.
  */
 
-import { useState } from 'react'
-import Head from 'next/head'
-import Link from 'next/link'
-import styles from '../styles/Legal.module.css'
-import contactStyles from '../styles/Contact.module.css'
+import { useState } from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
+import styles from '../styles/Legal.module.css';
+import contactStyles from '../styles/Contact.module.css';
 
 export default function Contact() {
-  // 문의 양식 상태 관리
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
-    message: ''
-  })
+    message: '',
+  });
 
-  // 제출 상태 관리
-  const [submitStatus, setSubmitStatus] = useState(null) // null | 'success' | 'error'
+  const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
 
-  /**
-   * 입력 필드 변경 핸들러
-   * 사용자가 입력할 때마다 상태를 업데이트합니다.
-   */
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
-  /**
-   * 폼 제출 핸들러
-   * 실제 백엔드가 없으므로 시뮬레이션만 수행합니다.
-   */
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     // 간단한 유효성 검사
