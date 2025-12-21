@@ -69,7 +69,9 @@ ${brands
  * 이 방법은 /sitemap.xml 경로에서 XML을 직접 반환합니다.
  * API Route가 아닌 페이지 방식으로 구현되어 빌드 시 정상 작동합니다.
  */
-export async function getServerSideProps({ res }) {
+import type { GetServerSideProps } from 'next';
+
+export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   // sitemap XML 생성
   const sitemap = generateSiteMap()
 

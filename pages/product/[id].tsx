@@ -1,5 +1,5 @@
 /**
- * [id].js - 동적 상품 상세 페이지
+ * [id].tsx - 동적 상품 상세 페이지 (TypeScript)
  *
  * Next.js 동적 라우팅을 사용한 상품 상세 페이지
  * URL: /product/{productId}
@@ -26,12 +26,51 @@ import RecentlyViewed from '../../components/RecentlyViewed'
 import useRecentlyViewed from '../../hooks/useRecentlyViewed'
 import ShareButton from '../../components/ShareButton'
 import styles from '../../styles/ProductDetail.module.css'
+import type { Brand, Category, Gender, Product } from '../../types'
+
+/**
+ * 성별 메타 정보
+ */
+interface GenderMeta {
+  label: string;
+  emoji: string;
+}
+
+/**
+ * 확장된 상품 정보 (상세 페이지용)
+ */
+interface ProductDetail extends Product {
+  brandCode: Brand;
+  brandName: string;
+  productCode: string;
+  description?: string;
+  mainCategory: Category;
+  categoryGroup: Category;
+  subCategory?: string;
+  price: number;
+  currentPrice: number;
+  onSale: boolean;
+  imageUrls: string[];
+  colors?: string[];
+  sizes?: string[];
+  inStock?: boolean;
+  material?: string;
+  tags?: string[];
+  vibeTags?: string[];
+  vibe?: string | null;
+  saleStartDate?: string;
+  saleEndDate?: string;
+  viewCount?: number;
+  likeCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 /**
  * 브랜드 코드를 표시용 이름으로 변환
  */
-function getBrandDisplayName(brandCode) {
-  const brandNames = {
+function getBrandDisplayName(brandCode: Brand): string {
+  const brandNames: Record<Brand, string> = {
     HM: 'H&M',
     ZARA: 'ZARA',
     UNIQLO: 'UNIQLO',
@@ -44,11 +83,11 @@ function getBrandDisplayName(brandCode) {
 /**
  * 성별 표시 메타 정보
  */
-function getGenderDisplayMeta(genderCode) {
-  const genderMap = {
-    men: { label: '남성', emoji: '👔' },
-    women: { label: '여성', emoji: '👗' },
-    unisex: { label: '공용', emoji: '🧥' },
+function getGenderDisplayMeta(genderCode: Gender): GenderMeta | null {
+  const genderMap: Record<Gender, GenderMeta> = {
+    MAN: { label: '남성', emoji: '👔' },
+    WOMAN: { label: '여성', emoji: '👗' },
+    UNISEX: { label: '공용', emoji: '🧥' },
   }
   return genderMap[genderCode] || null
 }
@@ -56,8 +95,8 @@ function getGenderDisplayMeta(genderCode) {
 /**
  * 카테고리 표시 이름
  */
-function getCategoryDisplayName(category) {
-  const categoryNames = {
+function getCategoryDisplayName(category: Category): string {
+  const categoryNames: Record<Category, string> = {
     TOP: '상의',
     BOTTOM: '하의',
     OUTER: '아우터',
@@ -82,23 +121,23 @@ export default function ProductDetail() {
   const router = useRouter()
   const { id } = router.query
 
-  const [product, setProduct] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [product, setProduct] = useState<ProductDetail | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
   // 커스텀 훅 사용
   const { isFavorite, toggleFavorite } = useFavorites()
   const { addRecentItem, recentItems } = useRecentlyViewed()
 
   // API 호출 중복 방지를 위한 ref (상품 ID별로 관리)
-  const lastFetchedIdRef = useRef(null)
+  const lastFetchedIdRef = useRef<string | string[] | null>(null)
 
   /**
    * 상품 정보 로드
    * API를 통해 상품 상세 정보를 가져옵니다
    */
   useEffect(() => {
-    if (!id) return
+    if (!id || typeof id !== 'string') return
 
     // React Strict Mode의 이중 실행 방지
     // 같은 ID로 이미 호출했으면 스킵
@@ -111,51 +150,57 @@ export default function ProductDetail() {
         setError(null)
 
         // API를 통해 상품 정보 가져오기
-        const productData = await fetchProductDetail(id)
+        const productData = await fetchProductDetail(Number(id))
+
+        if (!productData) {
+          throw new Error('상품 정보를 불러올 수 없습니다.')
+        }
+
+        const product = productData.product
 
         // API 응답을 프론트엔드 형식으로 변환
-        const normalizedProduct = {
-          id: productData.id,
-          brand: productData.brandType,
-          brandCode: productData.brandType,
-          brandName: productData.brandName,
-          productCode: productData.productCode,
-          name: productData.name,
-          description: productData.description,
-          gender: productData.gender?.toLowerCase() || 'unisex',
-          mainCategory: productData.mainCategory,
-          category: productData.mainCategory,
-          categoryGroup: productData.mainCategory,
-          subCategory: productData.subCategory,
-          originalPrice: productData.originalPrice,
-          salePrice: productData.currentPrice,
-          price: productData.currentPrice,
-          currentPrice: productData.currentPrice,
-          discountRate: productData.discountRate,
-          onSale: productData.onSale,
-          imageUrl: productData.imageUrls?.[0] || '/placeholder-product.svg',
-          imageUrls: productData.imageUrls || [],
-          productUrl: productData.productUrl,
-          colors: productData.colors || [],
-          sizes: productData.sizes || [],
-          inStock: productData.inStock,
-          material: productData.material,
-          tags: productData.tags || [],
-          vibeTags: productData.tags || [],
-          vibe: productData.tags?.[0] || null,
-          saleStartDate: productData.saleStartDate,
-          saleEndDate: productData.saleEndDate,
-          viewCount: productData.viewCount,
-          likeCount: productData.likeCount,
-          createdAt: productData.createdAt,
-          updatedAt: productData.updatedAt,
+        const normalizedProduct: ProductDetail = {
+          id: product.id,
+          brand: product.brand,
+          brandCode: product.brand,
+          brandName: product.brand,
+          productCode: String(product.id),
+          name: product.name,
+          description: undefined,
+          gender: product.gender,
+          mainCategory: product.category,
+          category: product.category,
+          categoryGroup: product.category,
+          subCategory: undefined,
+          originalPrice: product.originalPrice,
+          salePrice: product.salePrice,
+          price: product.salePrice,
+          currentPrice: product.salePrice,
+          discountRate: product.discountRate,
+          onSale: product.discountRate > 0,
+          imageUrl: product.imageUrl || '/placeholder-product.svg',
+          imageUrls: [product.imageUrl],
+          productUrl: product.productUrl,
+          colors: [],
+          sizes: [],
+          inStock: undefined,
+          material: undefined,
+          tags: [],
+          vibeTags: [],
+          vibe: null,
+          saleStartDate: undefined,
+          saleEndDate: undefined,
+          viewCount: 0,
+          likeCount: 0,
+          createdAt: undefined,
+          updatedAt: undefined,
         }
 
         setProduct(normalizedProduct)
 
       } catch (err) {
         console.error('상품 로드 중 오류:', err)
-        setError(err.message || '상품 정보를 불러오는 중 오류가 발생했습니다.')
+        setError((err as Error).message || '상품 정보를 불러오는 중 오류가 발생했습니다.')
       } finally {
         setLoading(false)
       }
@@ -330,24 +375,24 @@ export default function ProductDetail() {
             )}
 
             {/* 상품 상세 정보 */}
-            {(product.colors?.length > 0 || product.sizes?.length > 0 || product.material) && (
+            {((product.colors?.length ?? 0) > 0 || (product.sizes?.length ?? 0) > 0 || product.material) && (
               <div className={styles.productSpecs}>
                 <h3 className={styles.specsTitle}>상품 정보</h3>
 
-                {product.colors?.length > 0 && (
+                {(product.colors?.length ?? 0) > 0 && (
                   <div className={styles.specItem}>
                     <div className={styles.specLabel}>🎨 색상</div>
                     <div className={styles.specValue}>
-                      {product.colors.join(', ')}
+                      {product.colors?.join(', ')}
                     </div>
                   </div>
                 )}
 
-                {product.sizes?.length > 0 && (
+                {(product.sizes?.length ?? 0) > 0 && (
                   <div className={styles.specItem}>
                     <div className={styles.specLabel}>📏 사이즈</div>
                     <div className={styles.specValue}>
-                      {product.sizes.join(', ')}
+                      {product.sizes?.join(', ')}
                     </div>
                   </div>
                 )}
@@ -399,20 +444,20 @@ export default function ProductDetail() {
               </div>
 
               {/* 조회수 & 좋아요 */}
-              {(product.viewCount > 0 || product.likeCount > 0) && (
+              {((product.viewCount ?? 0) > 0 || (product.likeCount ?? 0) > 0) && (
                 <div className={styles.statsCard}>
-                  {product.viewCount > 0 && (
+                  {(product.viewCount ?? 0) > 0 && (
                     <div className={styles.statItem}>
                       <span className={styles.statIcon}>👀</span>
                       <span className={styles.statLabel}>조회수</span>
-                      <span className={styles.statValue}>{product.viewCount.toLocaleString()}</span>
+                      <span className={styles.statValue}>{(product.viewCount ?? 0).toLocaleString()}</span>
                     </div>
                   )}
-                  {product.likeCount > 0 && (
+                  {(product.likeCount ?? 0) > 0 && (
                     <div className={styles.statItem}>
                       <span className={styles.statIcon}>❤️</span>
                       <span className={styles.statLabel}>좋아요</span>
-                      <span className={styles.statValue}>{product.likeCount.toLocaleString()}</span>
+                      <span className={styles.statValue}>{(product.likeCount ?? 0).toLocaleString()}</span>
                     </div>
                   )}
                 </div>

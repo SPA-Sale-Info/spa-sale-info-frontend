@@ -1,59 +1,39 @@
 /**
- * favorites.js - 찜한 상품 목록 페이지
- *
- * 사용자가 찜한 상품들을 모아서 보여주는 페이지입니다.
- *
- * 주요 기능:
- * - LocalStorage에 저장된 찜 목록 표시
- * - 찜 목록이 비어있을 때 안내 메시지
- * - 찜 해제 기능
- * - 메인 페이지로 돌아가기
+ * favorites.tsx - 찜한 상품 목록 페이지 (TypeScript 버전)
  */
 
-import { useState, useEffect } from 'react'
-import Head from 'next/head'
-import Link from 'next/link'
-import ProductCard from '../components/ProductCard'
-import useFavorites from '../hooks/useFavorites'
-import styles from '../styles/Favorites.module.css'
+import { useState } from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
+import ProductCard from '../components/ProductCard';
+import useFavorites from '../hooks/useFavorites';
+import styles from '../styles/Favorites.module.css';
 
 export default function Favorites() {
-  const { favorites, toggleFavorite, isFavorite, getFavoriteCount, clearFavorites } = useFavorites()
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const { favorites, toggleFavorite, isFavorite, getFavoriteCount } = useFavorites();
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  /**
-   * 페이지 제목 설정
-   * 찜한 상품 개수를 제목에 포함
-   */
-  const pageTitle = `찜한 상품 (${getFavoriteCount()}개) | 맛 프로젝트`
+  const pageTitle = `찜한 상품 (${getFavoriteCount()}개) | 맛 프로젝트`;
 
-  /**
-   * 전체 삭제 확인 핸들러
-   */
   const handleClearAll = () => {
     if (showClearConfirm) {
-      clearFavorites()
-      setShowClearConfirm(false)
+      // clearFavorites 함수가 useFavorites 훅에 없으므로 모든 항목을 개별적으로 제거
+      favorites.forEach((product) => toggleFavorite(product));
+      setShowClearConfirm(false);
     } else {
-      setShowClearConfirm(true)
+      setShowClearConfirm(true);
     }
-  }
+  };
 
-  /**
-   * 전체 삭제 취소
-   */
   const handleCancelClear = () => {
-    setShowClearConfirm(false)
-  }
+    setShowClearConfirm(false);
+  };
 
   return (
     <>
       <Head>
         <title>{pageTitle}</title>
-        <meta
-          name="description"
-          content="찜한 상품을 모아보고 저렴한 가격에 구매하세요."
-        />
+        <meta name="description" content="찜한 상품을 모아보고 저렴한 가격에 구매하세요." />
       </Head>
 
       <div className={styles.container}>
@@ -87,10 +67,7 @@ export default function Favorites() {
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={handleClearAll}
-                    className={`${styles.actionButton} ${styles.clearButton}`}
-                  >
+                  <button onClick={handleClearAll} className={`${styles.actionButton} ${styles.clearButton}`}>
                     전체 삭제
                   </button>
                 )}
@@ -106,9 +83,7 @@ export default function Favorites() {
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}>♡</div>
               <h2 className={styles.emptyTitle}>아직 찜한 상품이 없어요</h2>
-              <p className={styles.emptyDescription}>
-                마음에 드는 상품을 찜하고 나중에 다시 확인해보세요.
-              </p>
+              <p className={styles.emptyDescription}>마음에 드는 상품을 찜하고 나중에 다시 확인해보세요.</p>
               <Link href="/" className={styles.emptyButton}>
                 상품 둘러보기
               </Link>
@@ -126,10 +101,15 @@ export default function Favorites() {
                 {favorites.map((product) => (
                   <ProductCard
                     key={product.id}
-                    product={product}
-                    {...product}
+                    product={product as any}
+                    brand={product.brand as any}
+                    name={product.name}
+                    salePrice={product.salePrice}
+                    originalPrice={product.originalPrice}
+                    discountRate={product.discountRate}
+                    imageUrl={product.imageUrl}
                     isFavorite={isFavorite(product.id)}
-                    onFavoriteToggle={toggleFavorite}
+                    onFavoriteToggle={toggleFavorite as any}
                   />
                 ))}
               </div>
@@ -145,5 +125,5 @@ export default function Favorites() {
         </footer>
       </div>
     </>
-  )
+  );
 }

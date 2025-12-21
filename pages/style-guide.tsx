@@ -1,5 +1,5 @@
 /**
- * style-guide.js - 스타일 가이드 페이지
+ * style-guide.tsx - 스타일 가이드 페이지 (TypeScript)
  *
  * 구글 애드센스 승인을 위한 고유 콘텐츠 제공 페이지
  * 100개의 스타일 팁과 코디 제안을 체계적으로 제공합니다.
@@ -11,10 +11,49 @@ import Link from 'next/link'
 import styles from '../styles/StyleGuide.module.css'
 
 /**
+ * 스타일 카테고리 타입
+ */
+type Category = 'minimal' | 'casual' | 'office' | 'street' | 'vintage' | 'sporty' | 'international' | 'outdoor' | 'seasonal' | 'date' | 'advanced';
+type CategoryOrAll = Category | 'all';
+
+/**
+ * 난이도 타입
+ */
+type Difficulty = 'easy' | 'medium' | 'hard';
+type DifficultyOrAll = Difficulty | 'all';
+
+/**
+ * 스타일 가이드 인터페이스
+ */
+interface StyleGuide {
+  id: number;
+  theme: string;
+  tip: string;
+  category: Category;
+  difficulty: Difficulty;
+}
+
+/**
+ * 카테고리 정보 인터페이스
+ */
+interface CategoryInfo {
+  label: string;
+  emoji: string;
+}
+
+/**
+ * 난이도 정보 인터페이스
+ */
+interface DifficultyInfo {
+  label: string;
+  color: string;
+}
+
+/**
  * 100가지 스타일 가이드 데이터
  * 다양한 패션 스타일과 코디 팁을 제공합니다.
  */
-const STYLE_GUIDES = [
+const STYLE_GUIDES: StyleGuide[] = [
   { id: 1, theme: '레이어드로 완성하는 가을 무드', tip: '긴 셔츠 위에 짧은 니트를 매치하세요', category: 'seasonal', difficulty: 'medium' },
   { id: 2, theme: '미니멀한 하루를 위한 베이직', tip: '화이트 티 · 데님 · 로퍼 조합', category: 'minimal', difficulty: 'easy' },
   { id: 3, theme: '캐주얼한 주말 스타일링', tip: '오버핏 후디와 슬랙스의 편안한 균형', category: 'casual', difficulty: 'easy' },
@@ -120,7 +159,7 @@ const STYLE_GUIDES = [
 /**
  * 카테고리 정보
  */
-const CATEGORIES = {
+const CATEGORIES: Record<CategoryOrAll, CategoryInfo> = {
   all: { label: '전체', emoji: '🎨' },
   minimal: { label: '미니멀', emoji: '⚪' },
   casual: { label: '캐주얼', emoji: '👕' },
@@ -138,7 +177,7 @@ const CATEGORIES = {
 /**
  * 난이도 정보
  */
-const DIFFICULTY_INFO = {
+const DIFFICULTY_INFO: Record<DifficultyOrAll, DifficultyInfo> = {
   all: { label: '전체', color: '#94a3b8' },
   easy: { label: '쉬움', color: '#10b981' },
   medium: { label: '보통', color: '#f59e0b' },
@@ -146,9 +185,9 @@ const DIFFICULTY_INFO = {
 }
 
 export default function StyleGuide() {
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedDifficulty, setSelectedDifficulty] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<CategoryOrAll>('all')
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyOrAll>('all')
+  const [searchQuery, setSearchQuery] = useState<string>('')
 
   /**
    * 필터링된 스타일 가이드
@@ -215,7 +254,7 @@ export default function StyleGuide() {
               {Object.entries(CATEGORIES).map(([key, { label, emoji }]) => (
                 <button
                   key={key}
-                  onClick={() => setSelectedCategory(key)}
+                  onClick={() => setSelectedCategory(key as CategoryOrAll)}
                   className={`${styles.filterButton} ${selectedCategory === key ? styles.active : ''}`}
                 >
                   <span className={styles.emoji}>{emoji}</span>
@@ -232,7 +271,7 @@ export default function StyleGuide() {
               {Object.entries(DIFFICULTY_INFO).map(([key, { label }]) => (
                 <button
                   key={key}
-                  onClick={() => setSelectedDifficulty(key)}
+                  onClick={() => setSelectedDifficulty(key as DifficultyOrAll)}
                   className={`${styles.filterButton} ${selectedDifficulty === key ? styles.active : ''}`}
                 >
                   {label}
