@@ -2,19 +2,28 @@ import { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import styles from '../styles/ThemeToggle.module.css';
 
+/**
+ * ThemeToggle
+ * - 다크/라이트 테마를 토글하는 버튼입니다.
+ * - next-themes 라이브러리를 사용합니다.
+ */
+
 export default function ThemeToggle() {
+  // mounted는 "클라이언트에서만 렌더"를 보장하기 위한 상태입니다.
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
-  // useEffect only runs on the client, so now we can safely show the UI
+  // useEffect는 클라이언트에서만 실행되므로, SSR과의 불일치를 방지합니다.
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // 서버 렌더링 단계에서는 아무것도 렌더하지 않음
   if (!mounted) {
     return null;
   }
 
+  // 클릭 시 현재 테마를 반대로 토글
   return (
     <button
       className={styles.toggleButton}

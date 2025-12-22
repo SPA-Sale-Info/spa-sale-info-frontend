@@ -1,9 +1,15 @@
 /**
  * SEO.tsx - 검색 엔진 최적화 컴포넌트 (TypeScript 버전)
+ *
+ * <Head> 태그 안에 메타 정보를 넣어 검색 노출과 공유 미리보기를 개선합니다.
+ * TypeScript 문법 포인트:
+ * - props에 기본값을 지정하여 "값이 없을 때 기본값"을 사용합니다.
+ * - Record<string, any>는 "키가 문자열이고 값이 어떤 타입이든" 가능한 객체입니다.
  */
 
 import Head from 'next/head';
 
+// 컴포넌트가 받을 수 있는 props 타입
 interface SEOProps {
   title?: string;
   description?: string;
@@ -24,6 +30,7 @@ export default function SEO({
   ogType = 'website',
   structuredData = null,
 }: SEOProps) {
+  // 기본 구조화 데이터(JSON-LD)
   const defaultStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -48,6 +55,7 @@ export default function SEO({
     },
   };
 
+  // 외부에서 structuredData가 들어오면 그것을 우선 사용
   const finalStructuredData = structuredData || defaultStructuredData;
 
   return (

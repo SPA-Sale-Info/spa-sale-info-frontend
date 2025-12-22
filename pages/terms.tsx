@@ -1,5 +1,7 @@
 /**
- * terms.js - 이용약관 페이지
+ * terms.tsx - 이용약관 페이지
+ *
+ * 서비스 이용약관을 정적 문서 형태로 제공합니다.
  */
 
 import Head from 'next/head'
@@ -7,6 +9,7 @@ import Link from 'next/link'
 import styles from '../styles/Legal.module.css'
 
 export default function Terms() {
+  // 별도 로직 없이 콘텐츠만 렌더링
   return (
     <div className={styles.container}>
       <Head>

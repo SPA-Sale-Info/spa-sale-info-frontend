@@ -3,6 +3,10 @@
  *
  * 구글 애드센스 승인을 위한 고유 콘텐츠 제공 페이지
  * 100개의 스타일 팁과 코디 제안을 체계적으로 제공합니다.
+ *
+ * TypeScript 문법 포인트:
+ * - type alias로 허용 값 목록을 제한합니다.
+ * - useState/useMemo에 타입을 붙여 안정성을 높입니다.
  */
 
 import { useState, useMemo } from 'react'
@@ -12,6 +16,7 @@ import styles from '../styles/StyleGuide.module.css'
 
 /**
  * 스타일 카테고리 타입
+ * - 문자열 리터럴 유니온으로 "허용 가능한 값"을 제한합니다.
  */
 type Category = 'minimal' | 'casual' | 'office' | 'street' | 'vintage' | 'sporty' | 'international' | 'outdoor' | 'seasonal' | 'date' | 'advanced';
 type CategoryOrAll = Category | 'all';
@@ -24,6 +29,7 @@ type DifficultyOrAll = Difficulty | 'all';
 
 /**
  * 스타일 가이드 인터페이스
+ * - 데이터 한 건의 형태를 정의합니다.
  */
 interface StyleGuide {
   id: number;
@@ -35,6 +41,7 @@ interface StyleGuide {
 
 /**
  * 카테고리 정보 인터페이스
+ * - 버튼 UI를 만들 때 사용하는 라벨/이모지 정보
  */
 interface CategoryInfo {
   label: string;
@@ -43,6 +50,7 @@ interface CategoryInfo {
 
 /**
  * 난이도 정보 인터페이스
+ * - UI 색상 및 라벨 정보를 포함합니다.
  */
 interface DifficultyInfo {
   label: string;
@@ -185,6 +193,7 @@ const DIFFICULTY_INFO: Record<DifficultyOrAll, DifficultyInfo> = {
 }
 
 export default function StyleGuide() {
+  // 카테고리/난이도/검색어 상태를 관리합니다.
   const [selectedCategory, setSelectedCategory] = useState<CategoryOrAll>('all')
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyOrAll>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -192,14 +201,17 @@ export default function StyleGuide() {
   /**
    * 필터링된 스타일 가이드
    */
+  // 필터 조건이 바뀔 때만 다시 계산하도록 useMemo 사용
   const filteredGuides = useMemo(() => {
     return STYLE_GUIDES.filter(guide => {
+      // 선택된 필터와 검색어에 맞는지 확인
       const matchesCategory = selectedCategory === 'all' || guide.category === selectedCategory
       const matchesDifficulty = selectedDifficulty === 'all' || guide.difficulty === selectedDifficulty
       const matchesSearch = searchQuery === '' ||
         guide.theme.toLowerCase().includes(searchQuery.toLowerCase()) ||
         guide.tip.toLowerCase().includes(searchQuery.toLowerCase())
 
+      // 모든 조건을 만족해야 포함
       return matchesCategory && matchesDifficulty && matchesSearch
     })
   }, [selectedCategory, selectedDifficulty, searchQuery])

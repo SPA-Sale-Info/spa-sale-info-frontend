@@ -13,6 +13,11 @@ interface ShareButtonProps {
 export default function ShareButton({ title, text, url }: ShareButtonProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
+  /**
+   * 공유 버튼 클릭 시 실행되는 함수
+   * - Web Share API 지원 시: 네이티브 공유 시트 사용
+   * - 미지원 시: 클립보드 복사로 대체
+   */
   const handleShare = async () => {
     const shareData = {
       title: title || document.title,

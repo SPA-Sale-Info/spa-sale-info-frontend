@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import styles from '../styles/RecentlyViewed.module.css';
 
+// 최근 본 상품 카드에서 필요한 데이터 구조
 interface RecentlyViewedProduct {
   id: number;
   name: string;
@@ -11,6 +12,7 @@ interface RecentlyViewedProduct {
   discountRate?: number;
 }
 
+// 컴포넌트에 전달되는 props 타입
 interface RecentlyViewedProps {
   products: RecentlyViewedProduct[];
 }
@@ -21,6 +23,7 @@ interface RecentlyViewedProps {
 export default function RecentlyViewed({ products }: RecentlyViewedProps) {
   if (!products || products.length === 0) return null;
 
+  // 가격 표시는 숫자 유효성을 검사한 뒤 출력
   const formatPrice = (price: number | null | undefined) => {
     if (typeof price !== 'number' || Number.isNaN(price)) {
       return '가격 정보 없음';

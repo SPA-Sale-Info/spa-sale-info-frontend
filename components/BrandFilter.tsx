@@ -1,11 +1,17 @@
 /**
  * BrandFilter.tsx - 브랜드 필터 컴포넌트 (TypeScript 버전)
+ *
+ * 화면에서 브랜드 버튼을 선택/해제하는 UI를 렌더링합니다.
+ * TypeScript 문법 포인트:
+ * - interface는 객체 구조를 정의합니다.
+ * - `Brand | 'all'` 처럼 유니온(|)으로 "여러 값 중 하나"를 표현합니다.
  */
 
 import Image from 'next/image';
 import styles from '../styles/BrandFilter.module.css';
 import type { Brand } from '../types';
 
+// 각 브랜드 버튼이 가져야 할 데이터 구조
 interface BrandItem {
   code: string;
   name: string;
@@ -16,11 +22,13 @@ interface BrandItem {
   bubblePosition?: string;
 }
 
+// 컴포넌트에 전달되는 props 타입
 interface BrandFilterProps {
   selectedBrand: Brand | 'all';
   onBrandChange: (brandCode: Brand | 'all') => void;
 }
 
+// 브랜드 버튼 목록 (정적 데이터)
 const BRANDS: BrandItem[] = [
   { code: 'all', name: '전체', logo: null, emoji: '🛍️' },
   { code: 'HM', name: 'H&M', logo: '/logos/hm.svg' },
@@ -41,6 +49,11 @@ const BRANDS: BrandItem[] = [
 ];
 
 function BrandFilter({ selectedBrand, onBrandChange }: BrandFilterProps) {
+  /**
+   * 브랜드 버튼 클릭 핸들러
+   * - comingSoon인 경우 클릭 무시
+   * - 그렇지 않으면 부모 컴포넌트에 선택 변경 전달
+   */
   const handleBrandClick = (brandCode: Brand | 'all', isDisabled?: boolean) => {
     if (isDisabled) {
       return;
@@ -52,6 +65,7 @@ function BrandFilter({ selectedBrand, onBrandChange }: BrandFilterProps) {
     <div className={styles.filterContainer}>
       <div className={styles.buttonGroup}>
         {BRANDS.map((brand) => {
+          // 선택 상태에 따라 스타일을 다르게 적용
           const isSelected = selectedBrand === brand.code;
           const buttonClassName = [
             styles.button,
@@ -61,6 +75,7 @@ function BrandFilter({ selectedBrand, onBrandChange }: BrandFilterProps) {
             .filter(Boolean)
             .join(' ');
 
+          // 버튼 내부 UI: 로고가 있으면 이미지, 없으면 이모지
           const buttonContent = (
             <>
               {brand.logo ? (
@@ -81,6 +96,7 @@ function BrandFilter({ selectedBrand, onBrandChange }: BrandFilterProps) {
             </>
           );
 
+          // 접근성: aria-pressed, aria-label 등을 통해 상태를 전달
           const button = (
             <button
               className={buttonClassName}
@@ -96,6 +112,7 @@ function BrandFilter({ selectedBrand, onBrandChange }: BrandFilterProps) {
             </button>
           );
 
+          // comingSoon 상태면 툴팁이 들어갈 wrapper를 사용
           const wrapperClass = brand.comingSoon ? styles.comingSoonWrapper : styles.buttonWrapper;
 
           return (

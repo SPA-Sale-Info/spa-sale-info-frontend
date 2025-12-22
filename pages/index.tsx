@@ -1,7 +1,11 @@
 /**
  * index.tsx - 완전히 새로운 프리미엄 메인 페이지 (TypeScript)
  *
- * 포트폴리오용 전문적인 레이아웃
+ * 이 페이지는 상품 리스트/필터/무한 스크롤을 모두 담당합니다.
+ * TypeScript 문법 포인트:
+ * - interface: 객체 구조 정의
+ * - useState<타입>: 상태 타입 명시
+ * - useMemo/useCallback: 계산 결과/함수를 메모이제이션하여 성능 개선
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
@@ -20,6 +24,7 @@ import type { Product, Brand, Gender, Category } from '../types'
 
 /**
  * 확장된 제품 타입 (프론트엔드용)
+ * - 백엔드 Product 타입에 화면 표시용 필드를 추가합니다.
  */
 interface NormalizedProduct extends Product {
   brandCode: Brand;
@@ -35,8 +40,11 @@ interface NormalizedProduct extends Product {
  * API에서 충분히 많은 상품을 받기 위해 한 번에 불러올 개수를 결정합니다.
  * 값이 너무 작으면 스크롤을 조금만 내려도 계속 네트워크 요청을 하게 됩니다.
  */
+// 페이지네이션 기본 크기
 const PAGE_SIZE = 12
+// 이미지가 없거나 잘못된 경우 사용할 기본 이미지
 const FALLBACK_IMAGE = '/placeholder-product.svg'
+// API에서 오는 카테고리를 우리 기준 카테고리로 묶기 위한 매핑
 const CATEGORY_GROUPS: Record<string, string[]> = {
   TOP: ['SHIRT', 'T_SHIRT', 'KNIT', 'SWEATSHIRT', 'DRESS', 'BLOUSE'],
   BOTTOM: ['PANTS', 'JEANS', 'SHORTS', 'SKIRT'],
@@ -291,6 +299,8 @@ const REVIEW_CHECKLIST = [
   },
 ]
 
+// 이미지 URL을 안전하게 보정하는 함수
+// - rawUrl 타입을 any로 받지만, 내부에서 문자열인지 확인합니다.
 const resolveImageUrl = (rawUrl: any): string => {
   if (typeof rawUrl !== 'string' || rawUrl.trim() === '') {
     return FALLBACK_IMAGE
@@ -313,6 +323,8 @@ const resolveImageUrl = (rawUrl: any): string => {
   return FALLBACK_IMAGE
 }
 
+// 숫자 형태로 바꿔주는 유틸 함수
+// - 숫자가 아니면 0으로 반환
 const coerceNumber = (value: any): number => {
   if (typeof value === 'number' && !Number.isNaN(value)) {
     return value
@@ -326,6 +338,8 @@ const coerceNumber = (value: any): number => {
   return 0
 }
 
+// API에서 받은 상품 객체를 화면에서 쓰기 좋은 형태로 변환
+// - 반환 타입을 NormalizedProduct로 명시합니다.
 const normalizeProduct = (product: any = {}): NormalizedProduct => {
   const originalPrice = coerceNumber(product.originalPrice)
   const salePriceSource = product.currentPrice !== undefined ? product.currentPrice : product.salePrice
@@ -390,6 +404,7 @@ export default function Home() {
   // ▶ products: 화면에 보여줄 전체 상품 목록
   // ▶ selectedBrand / selectedGender: 사용자가 선택한 필터
   // ▶ isInitialLoading / isFetchingMore: 처음 로딩과 추가 로딩을 구분해 UI를 부드럽게 합니다.
+  // useState<타입>으로 상태가 어떤 배열/값인지 명확히 선언합니다.
   const [products, setProducts] = useState<NormalizedProduct[]>([])
   const [selectedBrand, setSelectedBrand] = useState<Brand | 'all'>('all')
   const [selectedGender, setSelectedGender] = useState<Gender | 'all'>('all')
@@ -409,6 +424,7 @@ export default function Home() {
   const [totalSaleCount, setTotalSaleCount] = useState<number>(0)
   const [animatedCount, setAnimatedCount] = useState<number>(0)
   const [isComplianceOpen, setIsComplianceOpen] = useState<boolean>(false)
+  // useRef는 값이 변경되어도 렌더링을 다시 하지 않는 "mutable 참조"입니다.
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const filterPanelRef = useRef<HTMLDivElement | null>(null)
   const sectionHeaderRef = useRef<HTMLDivElement | null>(null)
@@ -435,7 +451,7 @@ export default function Home() {
     return () => clearInterval(timer)
   }, [])
 
-  // 총 할인 상품 개수 가져오기
+  // 총 할인 상품 개수 가져오기 (헤더에 표시되는 숫자용)
   useEffect(() => {
     const loadSaleCount = async () => {
       const count = await fetchSaleProductCount()
@@ -444,7 +460,7 @@ export default function Home() {
     loadSaleCount()
   }, [])
 
-  // 카운트 애니메이션
+  // 카운트 애니메이션: totalSaleCount가 바뀌면 숫자를 서서히 증가시킵니다.
   useEffect(() => {
     if (totalSaleCount === 0) return undefined
 
@@ -494,6 +510,7 @@ export default function Home() {
    * - replace가 true면 기존 목록을 갈아끼우고(브랜드 변경 등),
    * - false면 무한 스크롤처럼 목록 뒤에 이어 붙입니다.
    */
+  // useCallback의 인자에 타입을 직접 지정해, 함수가 받는 값의 구조를 명확히 합니다.
   const loadProducts = useCallback(async ({ pageToLoad, replace }: { pageToLoad: number; replace: boolean }) => {
     if (replace) {
       setIsInitialLoading(true)
@@ -570,6 +587,7 @@ export default function Home() {
    * 현재 로드된 상품 목록 내에서 즉각적으로 반응하도록 클라이언트에서도 한 번 더 검사합니다.
    * 이를 통해 사용자가 필터를 조작할 때 서버 요청 없이도 빠른 피드백을 줄 수 있습니다.
    */
+  // useMemo: products/필터 상태가 바뀔 때만 필터링 계산을 다시 실행
   const filteredProducts = useMemo(() => {
     const filtered = products.filter((product) => {
       // 이미지 유효성 검사
@@ -619,6 +637,7 @@ export default function Home() {
    * IntersectionObserver를 사용해 화면 하단에 숨겨둔 loadMoreRef 요소가 보이면
    * 다음 페이지를 불러옵니다. (무한 스크롤)
    */
+  // 다음 페이지 로드 조건을 체크한 뒤 loadProducts를 호출합니다.
   const loadNextPage = useCallback(() => {
     if (
       isInitialLoading ||
@@ -633,10 +652,12 @@ export default function Home() {
   }, [hasMore, isFetchingMore, isInitialLoading, loadProducts, page])
 
   useEffect(() => {
+    // 관찰 대상이 없으면 아무 것도 하지 않음
     if (!loadMoreRef.current) {
       return undefined
     }
 
+    // 뷰포트 근처에 도달하면 다음 페이지 요청
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries
@@ -686,6 +707,7 @@ export default function Home() {
     setSelectedPrice(price)
   }
 
+  // 검색 폼 제출: 입력값을 공백 제거 후 검색어로 적용
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const trimmed = searchInput.trim()

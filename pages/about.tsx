@@ -1,5 +1,8 @@
 /**
  * about.tsx - 서비스 소개 페이지 (TypeScript 버전)
+ *
+ * 정적인 설명 텍스트를 렌더링하는 페이지입니다.
+ * Next.js의 <Head>를 이용해 SEO 메타를 설정합니다.
  */
 
 import Head from 'next/head';
@@ -7,6 +10,7 @@ import Link from 'next/link';
 import styles from '../styles/Legal.module.css';
 
 export default function About() {
+  // JSX를 반환하는 함수형 컴포넌트
   return (
     <div className={styles.container}>
       <Head>

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * sitemap.xml.js - 동적 Sitemap 생성 (Next.js API Route)
+ * sitemap.xml.ts - 동적 Sitemap 생성 (Next.js)
  * ============================================================================
  *
  * 🎯 왜 동적으로 생성하나요?
@@ -70,6 +70,9 @@ ${brands
  * API Route가 아닌 페이지 방식으로 구현되어 빌드 시 정상 작동합니다.
  */
 import type { GetServerSideProps } from 'next';
+
+// TypeScript 문법 포인트:
+// - `GetServerSideProps` 타입으로 서버사이드 함수의 형태를 고정합니다.
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   // sitemap XML 생성

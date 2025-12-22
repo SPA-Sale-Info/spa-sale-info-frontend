@@ -1,5 +1,9 @@
 /**
  * favorites.tsx - 찜한 상품 목록 페이지 (TypeScript 버전)
+ *
+ * 로컬 저장된 찜 목록을 보여주고, 전체 삭제 기능을 제공합니다.
+ * TypeScript 문법 포인트:
+ * - useState<boolean>으로 상태 타입을 명시할 수 있습니다.
  */
 
 import { useState } from 'react';
@@ -10,11 +14,15 @@ import useFavorites from '../hooks/useFavorites';
 import styles from '../styles/Favorites.module.css';
 
 export default function Favorites() {
+  // 커스텀 훅에서 찜 데이터와 함수들을 가져옵니다.
   const { favorites, toggleFavorite, isFavorite, getFavoriteCount } = useFavorites();
+  // "전체 삭제 확인" UI를 보여줄지 여부
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
+  // 페이지 타이틀은 찜 개수에 따라 동적으로 표시
   const pageTitle = `찜한 상품 (${getFavoriteCount()}개) | 맛 프로젝트`;
 
+  // 전체 삭제 버튼 클릭 시 동작
   const handleClearAll = () => {
     if (showClearConfirm) {
       // clearFavorites 함수가 useFavorites 훅에 없으므로 모든 항목을 개별적으로 제거
@@ -25,6 +33,7 @@ export default function Favorites() {
     }
   };
 
+  // 삭제 취소 버튼
   const handleCancelClear = () => {
     setShowClearConfirm(false);
   };

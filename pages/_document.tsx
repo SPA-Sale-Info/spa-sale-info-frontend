@@ -1,5 +1,8 @@
 /**
  * _document.tsx - HTML 문서의 구조를 정의하는 파일 (TypeScript 버전)
+ *
+ * Next.js에서 <html>, <head>, <body> 구조를 커스터마이징할 때 사용합니다.
+ * 일반 페이지 컴포넌트와 달리 서버에서 한 번 렌더됩니다.
  */
 
 import { Html, Head, Main, NextScript } from 'next/document';

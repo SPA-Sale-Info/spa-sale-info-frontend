@@ -1,8 +1,12 @@
 /**
- * contact.js - 연락처 페이지
+ * contact.tsx - 연락처 페이지
  *
  * 구글 애드센스 승인을 위한 필수 페이지
  * 사용자가 서비스 운영자에게 연락할 수 있는 정보를 제공합니다.
+ *
+ * TypeScript 문법 포인트:
+ * - useState의 제네릭으로 상태 타입을 명확히 지정합니다.
+ * - 이벤트 타입(React.ChangeEvent, React.FormEvent)으로 핸들러 안정성 확보
  */
 
 import { useState } from 'react';
@@ -12,6 +16,7 @@ import styles from '../styles/Legal.module.css';
 import contactStyles from '../styles/Contact.module.css';
 
 export default function Contact() {
+  // 폼 입력값 상태
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,8 +24,10 @@ export default function Contact() {
     message: '',
   });
 
+  // 전송 결과 상태 (성공/실패/없음)
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
 
+  // 입력값 변경 핸들러: name 속성을 기준으로 상태 업데이트
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -29,6 +36,7 @@ export default function Contact() {
     }));
   };
 
+  // 폼 제출 핸들러: 기본 submit 동작을 막고 유효성 검사 후 처리
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 

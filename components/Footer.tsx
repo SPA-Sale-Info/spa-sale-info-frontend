@@ -1,11 +1,17 @@
 /**
  * Footer.tsx - 사이트 하단 푸터 컴포넌트 (TypeScript 버전)
+ *
+ * 사이트 하단의 링크/저작권/안내문을 표시합니다.
+ * 문법 포인트:
+ * - 함수형 컴포넌트는 JSX를 반환합니다.
+ * - `new Date()`로 현재 연도를 계산합니다.
  */
 
 import Link from 'next/link';
 import styles from '../styles/Footer.module.css';
 
 export default function Footer() {
+  // 현재 연도 계산 (저작권 표시에 사용)
   const currentYear = new Date().getFullYear();
 
   return (

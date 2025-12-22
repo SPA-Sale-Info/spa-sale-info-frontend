@@ -2,14 +2,21 @@
  * FavoriteButton.tsx
  *
  * 찜하기 버튼 컴포넌트 (TypeScript 버전)
+ * 사용자 클릭으로 찜 상태를 토글합니다.
+ *
+ * TypeScript 문법 포인트:
+ * - type 별칭으로 제한된 문자열 값만 허용합니다.
+ * - interface로 props 구조를 정의합니다.
  */
 
 import React from 'react';
 import styles from '../styles/FavoriteButton.module.css';
 import type { Product } from '../types';
 
+// 버튼 크기 타입 (허용되는 값만 지정)
 type ButtonSize = 'small' | 'medium' | 'large';
 
+// 컴포넌트가 받는 props 타입
 interface FavoriteButtonProps {
   product: Product;
   isFavorite: boolean;
@@ -22,6 +29,7 @@ function FavoriteButton({ product, isFavorite, onToggle, size = 'medium' }: Favo
    * 클릭 이벤트 핸들러
    */
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // 카드 전체 클릭 이벤트와 충돌하지 않도록 버블링을 막습니다.
     e.preventDefault();
     e.stopPropagation();
     onToggle(product);

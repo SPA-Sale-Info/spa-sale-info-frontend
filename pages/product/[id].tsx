@@ -10,6 +10,11 @@
  * - 상품 정보 표시
  * - 찜하기 기능
  * - 구매 링크
+ *
+ * TypeScript 문법 포인트:
+ * - interface로 데이터 구조를 선언합니다.
+ * - useState<타입>으로 상태 타입을 명시합니다.
+ * - union 타입(예: string | null)로 "없을 수도 있음"을 표현합니다.
  */
 
 // 컴포넌트 및 훅 임포트
@@ -38,6 +43,7 @@ interface GenderMeta {
 
 /**
  * 확장된 상품 정보 (상세 페이지용)
+ * - 기본 Product 타입에 상세 페이지에서 필요한 필드를 추가합니다.
  */
 interface ProductDetail extends Product {
   brandCode: Brand;
@@ -106,6 +112,7 @@ function getCategoryDisplayName(category: Category): string {
   return categoryNames[category] || category
 }
 
+// 값이 문자열/숫자일 수 있을 때 안전하게 숫자로 변환
 function coerceNumber(value: unknown): number {
   if (typeof value === 'number' && !Number.isNaN(value)) {
     return value
@@ -119,6 +126,7 @@ function coerceNumber(value: unknown): number {
   return 0
 }
 
+// 숫자 값을 "1,000원" 형태의 문자열로 변환
 function formatPriceValue(value: number | null | undefined): string {
   if (typeof value !== 'number' || Number.isNaN(value)) {
     return '가격 정보 없음'
@@ -142,15 +150,17 @@ export default function ProductDetail() {
   const router = useRouter()
   const { id } = router.query
 
+  // 상태: 상품 정보, 로딩, 에러 메시지
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
-  // 커스텀 훅 사용
+  // 커스텀 훅 사용 (찜/최근 본 상품)
   const { isFavorite, toggleFavorite } = useFavorites()
   const { addRecentItem, recentItems } = useRecentlyViewed()
 
   // API 호출 중복 방지를 위한 ref (상품 ID별로 관리)
+  // useRef는 값이 바뀌어도 리렌더가 발생하지 않습니다.
   const lastFetchedIdRef = useRef<string | string[] | null>(null)
 
   /**
@@ -158,6 +168,7 @@ export default function ProductDetail() {
    * API를 통해 상품 상세 정보를 가져옵니다
    */
   useEffect(() => {
+    // id가 준비되지 않았거나 문자열이 아니면 요청하지 않습니다.
     if (!id || typeof id !== 'string') return
 
     // React Strict Mode의 이중 실행 방지
@@ -193,6 +204,7 @@ export default function ProductDetail() {
           : [imageUrl]
 
         // API 응답을 프론트엔드 형식으로 변환
+        // - 숫자/문자 타입을 정리하고, 없는 값은 기본값으로 채웁니다.
         const normalizedProduct: ProductDetail = {
           id: product.id,
           brand: product.brand,

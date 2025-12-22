@@ -1,5 +1,8 @@
 /**
- * privacy.js - 개인정보처리방침 페이지
+ * privacy.tsx - 개인정보처리방침 페이지
+ *
+ * 정적인 정책 문서를 렌더링합니다.
+ * Head 태그로 검색 엔진용 메타를 설정합니다.
  */
 
 import Head from 'next/head'
@@ -7,6 +10,7 @@ import Link from 'next/link'
 import styles from '../styles/Legal.module.css'
 
 export default function Privacy() {
+  // 정적 콘텐츠이므로 별도 상태 없이 JSX만 반환
   return (
     <div className={styles.container}>
       <Head>
