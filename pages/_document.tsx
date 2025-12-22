@@ -23,6 +23,10 @@ export default function Document() {
           content="SPA 브랜드, 할인, 세일, H&M, ZARA, UNIQLO, MUJI, 찰스앤키스, Charles & Keith, 패션, 쇼핑, 가격비교, 세일정보, 온라인쇼핑, 세일모음, 패션할인, 의류세일"
         />
         <meta name="author" content="Sale Archive" />
+        <meta
+          name="google-site-verification"
+          content="_KMcFZsQnyR0XLtsW2dKq3pk7zUzyWhA9ocxFf5TYHY"
+        />
 
         {/* PWA 설정 */}
         <meta name="theme-color" content="#ffffff" />
