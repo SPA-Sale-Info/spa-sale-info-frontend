@@ -304,60 +304,60 @@
 }
 
 /* 다크 모드 지원 */
-:global(.dark) .container {
+:global([data-theme='dark']) .container {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
-:global(.dark) .intro,
-:global(.dark) .filters {
+:global([data-theme='dark']) .intro,
+:global([data-theme='dark']) .filters {
   background: rgba(15, 23, 42, 0.8);
   border: 1px solid rgba(71, 85, 105, 0.3);
 }
 
-:global(.dark) .introText,
-:global(.dark) .resultCount {
+:global([data-theme='dark']) .introText,
+:global([data-theme='dark']) .resultCount {
   color: #cbd5e1;
 }
 
-:global(.dark) .searchInput {
+:global([data-theme='dark']) .searchInput {
   background: rgba(15, 23, 42, 0.6);
   border-color: rgba(71, 85, 105, 0.4);
   color: #e2e8f0;
 }
 
-:global(.dark) .searchInput:focus {
+:global([data-theme='dark']) .searchInput:focus {
   background: rgba(15, 23, 42, 0.8);
 }
 
-:global(.dark) .filterTitle {
+:global([data-theme='dark']) .filterTitle {
   color: #f1f5f9;
 }
 
-:global(.dark) .filterButton {
+:global([data-theme='dark']) .filterButton {
   background: rgba(15, 23, 42, 0.6);
   border-color: rgba(71, 85, 105, 0.4);
   color: #e2e8f0;
 }
 
-:global(.dark) .filterButton:hover {
+:global([data-theme='dark']) .filterButton:hover {
   border-color: var(--color-primary, #3b82f6);
   background: rgba(59, 130, 246, 0.1);
 }
 
-:global(.dark) .card {
+:global([data-theme='dark']) .card {
   background: rgba(15, 23, 42, 0.8);
   border-color: rgba(71, 85, 105, 0.3);
 }
 
-:global(.dark) .cardTheme {
+:global([data-theme='dark']) .cardTheme {
   color: #f1f5f9;
 }
 
-:global(.dark) .cardTip {
+:global([data-theme='dark']) .cardTip {
   color: #cbd5e1;
 }
 
-:global(.dark) .categoryTag {
+:global([data-theme='dark']) .categoryTag {
   background: rgba(15, 23, 42, 0.6);
   color: #94a3b8;
 }

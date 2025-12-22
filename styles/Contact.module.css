@@ -140,40 +140,40 @@
 }
 
 /* 다크 모드 지원 */
-:global(.dark) .form,
-:global(.dark) .faqItem {
+:global([data-theme='dark']) .form,
+:global([data-theme='dark']) .faqItem {
   background: rgba(15, 23, 42, 0.4);
   border-color: rgba(71, 85, 105, 0.3);
 }
 
-:global(.dark) .input,
-:global(.dark) .textarea {
+:global([data-theme='dark']) .input,
+:global([data-theme='dark']) .textarea {
   background: rgba(15, 23, 42, 0.6);
   border-color: rgba(71, 85, 105, 0.4);
   color: #e2e8f0;
 }
 
-:global(.dark) .input:focus,
-:global(.dark) .textarea:focus {
+:global([data-theme='dark']) .input:focus,
+:global([data-theme='dark']) .textarea:focus {
   border-color: var(--color-primary, #3b82f6);
   background: rgba(15, 23, 42, 0.8);
 }
 
-:global(.dark) .label {
+:global([data-theme='dark']) .label {
   color: #e2e8f0;
 }
 
-:global(.dark) .faqQuestion {
+:global([data-theme='dark']) .faqQuestion {
   color: #f1f5f9;
 }
 
-:global(.dark) .socialLink {
+:global([data-theme='dark']) .socialLink {
   background: rgba(15, 23, 42, 0.6);
   border-color: rgba(71, 85, 105, 0.4);
   color: #e2e8f0;
 }
 
-:global(.dark) .socialLink:hover {
+:global([data-theme='dark']) .socialLink:hover {
   background: rgba(15, 23, 42, 0.8);
   border-color: var(--color-primary, #3b82f6);
 }
