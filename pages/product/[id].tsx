@@ -181,8 +181,15 @@ export default function ProductDetail() {
         setLoading(true)
         setError(null)
 
+        // ID를 숫자로 변환하고 유효성 검증
+        // Number(id)가 NaN이면 유효하지 않은 ID입니다.
+        const productId = Number(id)
+        if (Number.isNaN(productId) || productId <= 0) {
+          throw new Error('유효하지 않은 상품 ID입니다.')
+        }
+
         // API를 통해 상품 정보 가져오기
-        const productData = await fetchProductDetail(Number(id))
+        const productData = await fetchProductDetail(productId)
 
         if (!productData) {
           throw new Error('상품 정보를 불러올 수 없습니다.')

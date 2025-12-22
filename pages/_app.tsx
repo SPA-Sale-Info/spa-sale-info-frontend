@@ -11,6 +11,7 @@ import { ThemeProvider } from 'next-themes';
 import { useEffect } from 'react';
 import Footer from '../components/Footer';
 import type { AppProps } from 'next/app';
+import { Analytics } from '@vercel/analytics/next';
 
 function MyApp({ Component, pageProps }: AppProps) {
   // PWA 서비스 워커 등록 (클라이언트에서만 실행)
@@ -26,6 +27,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ThemeProvider attribute="data-theme">
       <Component {...pageProps} />
+      <Analytics />
       <Footer />
     </ThemeProvider>
   );

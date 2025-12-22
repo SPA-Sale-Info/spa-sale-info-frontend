@@ -30,6 +30,7 @@ export default function Document() {
 
         {/* PWA 설정 */}
         <meta name="theme-color" content="#ffffff" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Sale Archive" />
@@ -82,7 +83,7 @@ export default function Document() {
         {/* 파비콘 설정 */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/favicon.svg" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="canonical" href="https://mion-spa-info.vercel.app" />
       </Head>
