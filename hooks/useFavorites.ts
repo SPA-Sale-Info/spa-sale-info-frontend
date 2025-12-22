@@ -19,7 +19,7 @@ const FAVORITES_STORAGE_KEY = 'mat_project_favorites';
 
 // 찜 목록에 저장되는 간소화된 상품 정보
 interface FavoriteItem {
-  id: number;
+  id: string;
   name: string;
   brand: string;
   brandCode?: string;
@@ -41,7 +41,7 @@ interface FavoriteItem {
 interface UseFavoritesReturn {
   favorites: FavoriteItem[];
   toggleFavorite: (product: Product | FavoriteItem) => void;
-  isFavorite: (productId: number) => boolean;
+  isFavorite: (productId: string | number) => boolean;
   getFavoriteCount: () => number;
   checkPriceDrops: () => { hasDrop: boolean; product?: FavoriteItem; message?: string };
   isInitialized: boolean;
@@ -66,7 +66,13 @@ export default function useFavorites(): UseFavoritesReturn {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          setFavorites(parsed);
+          const normalized = parsed
+            .filter((item) => item && item.id !== undefined && item.id !== null)
+            .map((item) => ({
+              ...item,
+              id: String(item.id),
+            }));
+          setFavorites(normalized);
         }
       }
     } catch {
@@ -97,19 +103,20 @@ export default function useFavorites(): UseFavoritesReturn {
   const toggleFavorite = useCallback(
     (product: Product | FavoriteItem) => {
       // product가 없거나 id가 없으면 처리하지 않음
-      if (!product || !product.id) {
+      if (!product || product.id === undefined || product.id === null) {
         return;
       }
 
+      const productId = String(product.id);
       // 이미 찜 목록에 있는지 확인
-      const alreadyExists = favorites.some((fav) => fav.id === product.id);
+      const alreadyExists = favorites.some((fav) => fav.id === productId);
 
       if (alreadyExists) {
-        setFavorites((prevFavorites) => prevFavorites.filter((fav) => fav.id !== product.id));
+        setFavorites((prevFavorites) => prevFavorites.filter((fav) => fav.id !== productId));
       } else {
         // 새로 저장할 최소한의 정보만 구성
         const favoriteItem: FavoriteItem = {
-          id: product.id,
+          id: productId,
           name: product.name,
           brand: product.brand,
           brandCode: 'brandCode' in product ? product.brandCode : product.brand,
@@ -128,7 +135,7 @@ export default function useFavorites(): UseFavoritesReturn {
 
         // 중복 체크 후 추가
         setFavorites((prevFavorites) => {
-          if (prevFavorites.some((fav) => fav.id === product.id)) {
+          if (prevFavorites.some((fav) => fav.id === productId)) {
             return prevFavorites;
           }
           return [...prevFavorites, favoriteItem];
@@ -142,8 +149,9 @@ export default function useFavorites(): UseFavoritesReturn {
    * isFavorite - 특정 상품이 찜되어 있는지 확인
    */
   const isFavorite = useCallback(
-    (productId: number): boolean => {
-      return favorites.some((fav) => fav.id === productId);
+    (productId: string | number): boolean => {
+      const normalizedId = String(productId);
+      return favorites.some((fav) => fav.id === normalizedId);
     },
     [favorites]
   );

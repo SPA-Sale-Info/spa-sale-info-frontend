@@ -376,8 +376,11 @@ const normalizeProduct = (product: any = {}): NormalizedProduct => {
     }
   }
 
+  const rawId = product.id ?? product.productCode ?? `${brand}-${product.name ?? 'unknown'}`
+  const normalizedId = typeof rawId === 'string' ? rawId : String(rawId)
+
   const normalized = {
-    id: product.id || product.productCode || `${brand}-${product.name ?? 'unknown'}`,
+    id: normalizedId,
     brand,
     brandCode: brand, // 찜 기능을 위해 추가
     brandName: product.brandName || brand, // 찜 기능을 위해 추가

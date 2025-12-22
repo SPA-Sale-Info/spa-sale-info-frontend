@@ -27,7 +27,7 @@ export type Category = 'TOP' | 'BOTTOM' | 'OUTER' | 'SHOES' | 'ETC';
 // Product interface: 상품 데이터의 기본 형태
 // interface는 객체 구조를 정의합니다.
 export interface Product {
-  id: number; // 상품 ID (숫자)
+  id: string; // 상품 ID (문자열)
   name: string; // 상품명
   brand: Brand; // 브랜드 코드
   category: Category; // 카테고리 코드
@@ -124,7 +124,7 @@ export interface PaginationState {
 
 // LocalStorage types: 로컬 저장 데이터 구조
 export interface FavoritesStorage {
-  favorites: number[]; // 찜한 상품 ID 목록
+  favorites: string[]; // 찜한 상품 ID 목록
 }
 
 export interface RecentlyViewedStorage {
@@ -147,7 +147,7 @@ export interface SearchProductsParams {
 export interface ProductCardProps {
   product: Product; // 상품 데이터
   isFavorite?: boolean; // 찜 여부 (옵셔널)
-  onToggleFavorite?: (productId: number) => void; // 찜 토글 콜백 (옵셔널)
+  onToggleFavorite?: (productId: string) => void; // 찜 토글 콜백 (옵셔널)
 }
 
 export interface FilterSectionProps {

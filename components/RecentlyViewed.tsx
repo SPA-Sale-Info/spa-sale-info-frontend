@@ -4,7 +4,7 @@ import styles from '../styles/RecentlyViewed.module.css';
 
 // 최근 본 상품 카드에서 필요한 데이터 구조
 interface RecentlyViewedProduct {
-  id: number;
+  id: string;
   name: string;
   brand: string;
   salePrice: number;

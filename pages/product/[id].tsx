@@ -161,32 +161,26 @@ export default function ProductDetail() {
 
   // API 호출 중복 방지를 위한 ref (상품 ID별로 관리)
   // useRef는 값이 바뀌어도 리렌더가 발생하지 않습니다.
-  const lastFetchedIdRef = useRef<string | string[] | null>(null)
+  const lastFetchedIdRef = useRef<string | null>(null)
 
   /**
    * 상품 정보 로드
    * API를 통해 상품 상세 정보를 가져옵니다
    */
   useEffect(() => {
+    const productId = Array.isArray(id) ? id[0] : id
     // id가 준비되지 않았거나 문자열이 아니면 요청하지 않습니다.
-    if (!id || typeof id !== 'string') return
+    if (!productId || typeof productId !== 'string') return
 
     // React Strict Mode의 이중 실행 방지
     // 같은 ID로 이미 호출했으면 스킵
-    if (lastFetchedIdRef.current === id) return
-    lastFetchedIdRef.current = id
+    if (lastFetchedIdRef.current === productId) return
+    lastFetchedIdRef.current = productId
 
     const loadProduct = async () => {
       try {
         setLoading(true)
         setError(null)
-
-        // ID를 숫자로 변환하고 유효성 검증
-        // Number(id)가 NaN이면 유효하지 않은 ID입니다.
-        const productId = Number(id)
-        if (Number.isNaN(productId) || productId <= 0) {
-          throw new Error('유효하지 않은 상품 ID입니다.')
-        }
 
         // API를 통해 상품 정보 가져오기
         const productData = await fetchProductDetail(productId)
@@ -213,11 +207,11 @@ export default function ProductDetail() {
         // API 응답을 프론트엔드 형식으로 변환
         // - 숫자/문자 타입을 정리하고, 없는 값은 기본값으로 채웁니다.
         const normalizedProduct: ProductDetail = {
-          id: product.id,
+          id: product.id ? String(product.id) : productId,
           brand: product.brand,
           brandCode: product.brand,
           brandName: product.brand,
-          productCode: String(product.id),
+          productCode: String(product.id ?? productId),
           name: product.name,
           description: undefined,
           gender: product.gender,

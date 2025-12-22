@@ -17,7 +17,7 @@ const MAX_RECENT_ITEMS = 10;
 
 // 최근 본 상품 아이템 타입 (저장에 필요한 최소한의 정보)
 interface RecentlyViewedItem {
-  id: number;
+  id: string;
   name: string;
   brand: string;
   salePrice: number;
@@ -49,7 +49,16 @@ export default function useRecentlyViewed(): UseRecentlyViewedReturn {
     try {
       const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
       if (stored) {
-        setRecentItems(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const normalized = parsed
+            .filter((item) => item && item.id !== undefined && item.id !== null)
+            .map((item) => ({
+              ...item,
+              id: String(item.id),
+            }));
+          setRecentItems(normalized);
+        }
       }
     } catch {} finally {
       setIsInitialized(true);
@@ -61,15 +70,16 @@ export default function useRecentlyViewed(): UseRecentlyViewedReturn {
    * useCallback으로 함수 재생성을 줄여 성능을 개선합니다.
    */
   const addRecentItem = useCallback((product: Product) => {
-    if (!product || !product.id) return;
+    if (!product || product.id === undefined || product.id === null) return;
+    const productId = String(product.id);
 
     setRecentItems((prev) => {
       // 이미 본 상품은 제거하여 가장 최근이 맨 앞에 오도록 처리
-      const filtered = prev.filter((item) => item.id !== product.id);
+      const filtered = prev.filter((item) => item.id !== productId);
 
       // 저장할 최소 필드를 구성
       const newItem: RecentlyViewedItem = {
-        id: product.id,
+        id: productId,
         name: product.name,
         brand: product.brand,
         salePrice: product.salePrice,

@@ -320,9 +320,10 @@ export async function fetchSaleProductCount(): Promise<number> {
  * 상품 상세 정보 조회 (가격 히스토리 포함)
  */
 // 상품 상세 정보 조회 (가격 히스토리 포함)
-export async function fetchProductDetail(productId: number): Promise<ProductDetailResponse | null> {
+export async function fetchProductDetail(productId: string | number): Promise<ProductDetailResponse | null> {
   try {
-    const url = `${API_BASE_URL}${API_ENDPOINTS.PRODUCT_DETAIL}/${productId}`;
+    const encodedProductId = encodeURIComponent(String(productId));
+    const url = `${API_BASE_URL}${API_ENDPOINTS.PRODUCT_DETAIL}/${encodedProductId}`;
     const product = await fetchAPI<Product>(url);
 
     // 가격 히스토리는 시뮬레이션 데이터 (백엔드 구현 전까지)
