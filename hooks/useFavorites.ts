@@ -44,7 +44,7 @@ interface UseFavoritesReturn {
 /**
  * useFavorites - 찜 기능 관리 커스텀 훅
  */
-export function useFavorites(): UseFavoritesReturn {
+export default function useFavorites(): UseFavoritesReturn {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -164,5 +164,3 @@ export function useFavorites(): UseFavoritesReturn {
     isInitialized,
   };
 }
-
-export default useFavorites;

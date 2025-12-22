@@ -897,7 +897,9 @@ export default function Home() {
                 </div>
                 <div className={styles.heroInsightCard}>
                   <p className={styles.heroInsightLabel}>할인 중인 상품</p>
-                  <strong className={styles.countNumber}>{animatedCount.toLocaleString()}개</strong>
+                  <strong className={styles.countNumber}>
+                    {(Number.isFinite(animatedCount) ? animatedCount : 0).toLocaleString()}개
+                  </strong>
                   <small>매일 갱신되는 세일 정보</small>
                 </div>
               </div>

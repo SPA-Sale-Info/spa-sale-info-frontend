@@ -252,7 +252,8 @@ export async function fetchSaleProducts(params: {
     };
 
     return result;
-  } catch {
+  } catch (error) {
+    console.error('❌ fetchSaleProducts 에러:', error);
     // 에러 발생 시 빈 결과 반환
     return {
       products: [],
@@ -271,7 +272,15 @@ export async function fetchSaleProductCount(): Promise<number> {
   try {
     const url = `${API_BASE_URL}${API_ENDPOINTS.SALE_COUNT}`;
     const data = await fetchAPI<SaleCountResponse>(url);
-    return data.count;
+    if (typeof data === 'number') {
+      return data;
+    }
+
+    if (data && typeof data.count === 'number') {
+      return data.count;
+    }
+
+    return 0;
   } catch {
     return 0;
   }

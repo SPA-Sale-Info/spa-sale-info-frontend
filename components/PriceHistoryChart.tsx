@@ -14,7 +14,11 @@ interface PriceHistoryChartProps {
 /**
  * 숫자를 한국 원화 형식으로 포맷
  */
-function formatPrice(price: number): string {
+function formatPrice(price: number | null | undefined): string {
+  if (typeof price !== 'number' || Number.isNaN(price)) {
+    return '가격 정보 없음';
+  }
+
   return `${price.toLocaleString('ko-KR')}원`;
 }
 
@@ -23,13 +27,19 @@ function PriceHistoryChart({ originalPrice, salePrice }: PriceHistoryChartProps)
    * 그래프 데이터 계산
    */
   const chartData = useMemo(() => {
-    const discount = originalPrice - salePrice;
-    const discountPercent = Math.round((discount / originalPrice) * 100);
+    const safeOriginalPrice = typeof originalPrice === 'number' && !Number.isNaN(originalPrice)
+      ? originalPrice
+      : 0;
+    const safeSalePrice = typeof salePrice === 'number' && !Number.isNaN(salePrice)
+      ? salePrice
+      : 0;
+    const discount = Math.max(safeOriginalPrice - safeSalePrice, 0);
+    const discountPercent = safeOriginalPrice > 0 ? Math.round((discount / safeOriginalPrice) * 100) : 0;
     const salePricePercent = 100 - discountPercent;
 
     return {
-      originalPrice,
-      salePrice,
+      originalPrice: safeOriginalPrice,
+      salePrice: safeSalePrice,
       discount,
       discountPercent,
       salePricePercent,

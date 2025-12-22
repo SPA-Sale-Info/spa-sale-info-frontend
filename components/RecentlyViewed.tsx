@@ -21,6 +21,13 @@ interface RecentlyViewedProps {
 export default function RecentlyViewed({ products }: RecentlyViewedProps) {
   if (!products || products.length === 0) return null;
 
+  const formatPrice = (price: number | null | undefined) => {
+    if (typeof price !== 'number' || Number.isNaN(price)) {
+      return '가격 정보 없음';
+    }
+    return `${price.toLocaleString('ko-KR')}원`;
+  };
+
   return (
     <section className={styles.container}>
       <h3 className={styles.title}>최근 본 상품</h3>
@@ -43,7 +50,7 @@ export default function RecentlyViewed({ products }: RecentlyViewedProps) {
               <div className={styles.info}>
                 <div className={styles.brand}>{product.brand}</div>
                 <div className={styles.name}>{product.name}</div>
-                <div className={styles.price}>{product.salePrice.toLocaleString()}원</div>
+                <div className={styles.price}>{formatPrice(product.salePrice)}</div>
               </div>
             </Link>
           ))}

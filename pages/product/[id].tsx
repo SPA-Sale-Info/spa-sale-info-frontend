@@ -106,6 +106,27 @@ function getCategoryDisplayName(category: Category): string {
   return categoryNames[category] || category
 }
 
+function coerceNumber(value: unknown): number {
+  if (typeof value === 'number' && !Number.isNaN(value)) {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value.replace(/,/g, ''))
+    return Number.isNaN(parsed) ? 0 : parsed
+  }
+
+  return 0
+}
+
+function formatPriceValue(value: number | null | undefined): string {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return '가격 정보 없음'
+  }
+
+  return `${value.toLocaleString('ko-KR')}원`
+}
+
 /**
  * 상품 상세 페이지 컴포넌트
  * 
@@ -157,6 +178,19 @@ export default function ProductDetail() {
         }
 
         const product = productData.product
+        const originalPrice = coerceNumber(product.originalPrice)
+        const salePriceSource = (product as { currentPrice?: number }).currentPrice ?? product.salePrice
+        const salePrice = coerceNumber(salePriceSource)
+        const discountRate = typeof product.discountRate === 'number'
+          ? product.discountRate
+          : (originalPrice
+            ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
+            : 0)
+        const imageUrl = product.imageUrl || '/placeholder-product.svg'
+        const imageUrls = Array.isArray((product as { imageUrls?: string[] }).imageUrls)
+          && (product as { imageUrls?: string[] }).imageUrls!.length > 0
+          ? (product as { imageUrls?: string[] }).imageUrls!
+          : [imageUrl]
 
         // API 응답을 프론트엔드 형식으로 변환
         const normalizedProduct: ProductDetail = {
@@ -172,14 +206,14 @@ export default function ProductDetail() {
           category: product.category,
           categoryGroup: product.category,
           subCategory: undefined,
-          originalPrice: product.originalPrice,
-          salePrice: product.salePrice,
-          price: product.salePrice,
-          currentPrice: product.salePrice,
-          discountRate: product.discountRate,
-          onSale: product.discountRate > 0,
-          imageUrl: product.imageUrl || '/placeholder-product.svg',
-          imageUrls: [product.imageUrl],
+          originalPrice,
+          salePrice,
+          price: salePrice,
+          currentPrice: salePrice,
+          discountRate,
+          onSale: discountRate > 0,
+          imageUrl,
+          imageUrls,
           productUrl: product.productUrl,
           colors: [],
           sizes: [],
@@ -258,11 +292,11 @@ export default function ProductDetail() {
       */}
       <Head>
         <title>{product ? `${product.brand} ${product.name} - Sale Archive` : '상품 상세 - Sale Archive'}</title>
-        <meta name="description" content={product ? `${product.brand} ${product.name} ${product.discountRate}% 할인 중! 현재 가격: ${product.salePrice.toLocaleString()}원` : 'SPA 브랜드 세일 정보'} />
+        <meta name="description" content={product ? `${product.brand} ${product.name} ${product.discountRate}% 할인 중! 현재 가격: ${formatPriceValue(product.salePrice)}` : 'SPA 브랜드 세일 정보'} />
 
         {/* Open Graph (Facebook, KakaoTalk 등) */}
         <meta property="og:title" content={product ? `${product.brand} ${product.name} (${product.discountRate}% 할인)` : 'Sale Archive'} />
-        <meta property="og:description" content={product ? `정가 ${product.originalPrice.toLocaleString()}원 → 할인가 ${product.salePrice.toLocaleString()}원` : 'SPA 브랜드 세일 정보를 확인하세요.'} />
+        <meta property="og:description" content={product ? `정가 ${formatPriceValue(product.originalPrice)} → 할인가 ${formatPriceValue(product.salePrice)}` : 'SPA 브랜드 세일 정보를 확인하세요.'} />
         <meta property="og:image" content={product?.imageUrl} />
         <meta property="og:url" content={`https://mion-spa-info.vercel.app/product/${id}`} />
       </Head>
@@ -340,11 +374,11 @@ export default function ProductDetail() {
             {/* 가격 정보 */}
             <div className={styles.priceSection}>
               <div className={styles.currentPrice}>
-                {product.salePrice.toLocaleString('ko-KR')}원
+                {formatPriceValue(product.salePrice)}
               </div>
               {product.originalPrice && product.originalPrice > product.salePrice && (
                 <div className={styles.originalPrice}>
-                  {product.originalPrice.toLocaleString('ko-KR')}원
+                  {formatPriceValue(product.originalPrice)}
                 </div>
               )}
             </div>

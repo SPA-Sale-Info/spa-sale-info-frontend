@@ -24,7 +24,11 @@ interface ProductCardProps {
 /**
  * 숫자를 한국 원화 형식으로 포맷
  */
-function formatPrice(price: number): string {
+function formatPrice(price: number | null | undefined): string {
+  if (typeof price !== 'number' || Number.isNaN(price)) {
+    return '가격 정보 없음';
+  }
+
   return `${price.toLocaleString('ko-KR')}원`;
 }
 
