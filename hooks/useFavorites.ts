@@ -60,8 +60,7 @@ export function useFavorites(): UseFavoritesReturn {
           setFavorites(parsed);
         }
       }
-    } catch (error) {
-      console.error('찜 목록을 불러오는 중 오류 발생:', error);
+    } catch {
       setFavorites([]);
     } finally {
       setIsInitialized(true);
@@ -78,9 +77,7 @@ export function useFavorites(): UseFavoritesReturn {
 
     try {
       localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
-    } catch (error) {
-      console.error('찜 목록을 저장하는 중 오류 발생:', error);
-    }
+    } catch {}
   }, [favorites, isInitialized]);
 
   /**
@@ -89,7 +86,6 @@ export function useFavorites(): UseFavoritesReturn {
   const toggleFavorite = useCallback(
     (product: Product | FavoriteItem) => {
       if (!product || !product.id) {
-        console.error('유효하지 않은 상품 데이터입니다.');
         return;
       }
 

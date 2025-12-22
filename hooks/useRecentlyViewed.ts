@@ -45,9 +45,7 @@ export default function useRecentlyViewed(): UseRecentlyViewedReturn {
       if (stored) {
         setRecentItems(JSON.parse(stored));
       }
-    } catch (error) {
-      console.error('최근 본 상품 로드 실패:', error);
-    } finally {
+    } catch {} finally {
       setIsInitialized(true);
     }
   }, []);
@@ -76,9 +74,7 @@ export default function useRecentlyViewed(): UseRecentlyViewedReturn {
 
       try {
         localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(newItems));
-      } catch (error) {
-        console.error('최근 본 상품 저장 실패:', error);
-      }
+      } catch {}
 
       return newItems;
     });

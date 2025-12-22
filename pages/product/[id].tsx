@@ -199,7 +199,6 @@ export default function ProductDetail() {
         setProduct(normalizedProduct)
 
       } catch (err) {
-        console.error('상품 로드 중 오류:', err)
         setError((err as Error).message || '상품 정보를 불러오는 중 오류가 발생했습니다.')
       } finally {
         setLoading(false)

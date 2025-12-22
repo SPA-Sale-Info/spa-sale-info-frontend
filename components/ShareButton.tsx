@@ -24,18 +24,14 @@ export default function ShareButton({ title, text, url }: ShareButtonProps) {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err) {
-        console.log('공유 취소됨', err);
-      }
+      } catch {}
     } else {
       // Fallback: Web Share API 미지원 시 클립보드 복사
       try {
         await navigator.clipboard.writeText(shareData.url);
         setShowTooltip(true);
         setTimeout(() => setShowTooltip(false), 2000);
-      } catch (err) {
-        console.error('클립보드 복사 실패', err);
-      }
+      } catch {}
     }
   };
 

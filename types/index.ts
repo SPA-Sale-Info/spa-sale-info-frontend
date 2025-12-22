@@ -31,6 +31,41 @@ export interface ProductsResponse {
   size?: number;
 }
 
+/**
+ * 백엔드 API의 표준 응답 형식
+ * 모든 API 응답은 이 구조를 따릅니다
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message: string | null;
+}
+
+/**
+ * 페이지네이션이 포함된 API 응답
+ * Spring Boot의 Page 객체 구조와 동일합니다
+ */
+export interface PagedResponse<T> {
+  content: T[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort: any[];
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  totalPages: number;
+  totalElements: number;
+  last: boolean;
+  size: number;
+  number: number;
+  sort: any[];
+  numberOfElements: number;
+  first: boolean;
+  empty: boolean;
+}
+
 export interface ProductDetailResponse {
   product: Product;
   priceHistory?: PriceHistory[];

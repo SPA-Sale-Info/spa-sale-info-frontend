@@ -9,6 +9,8 @@ import type {
   SearchProductsParams,
   SaleCountResponse,
   Brand,
+  ApiResponse,
+  PagedResponse,
 } from '../types';
 
 // ============================================================================
@@ -65,27 +67,31 @@ const API_ENDPOINTS = {
 
 /**
  * fetch 래퍼 함수 - 공통 에러 처리 및 타입 안전성 제공
+ * 백엔드 API의 표준 응답 형식 { success, data, message }을 처리합니다
  */
 async function fetchAPI<T>(url: string, options?: RequestInit): Promise<T> {
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
-    });
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data as T;
-  } catch (error) {
-    console.error('API 요청 실패:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
+
+  // 백엔드 API 응답 구조: { success: boolean, data: T, message: string | null }
+  const apiResponse: ApiResponse<T> = await response.json();
+
+  // success가 false이거나 data가 없으면 에러 처리
+  if (!apiResponse.success) {
+    throw new Error(apiResponse.message || 'API 요청이 실패했습니다');
+  }
+
+  // data 필드를 추출하여 반환
+  return apiResponse.data;
 }
 
 /**
@@ -118,8 +124,7 @@ export async function getProducts(params: Record<string, any> = {}): Promise<Pro
 
     const data = await fetchAPI<Product[]>(url);
     return data;
-  } catch (error) {
-    console.error('상품 목록 조회 실패:', error);
+  } catch {
     return [];
   }
 }
@@ -132,8 +137,7 @@ export async function getProductsByBrand(brandCode: Brand): Promise<Product[]> {
     const url = `${API_BASE_URL}${API_ENDPOINTS.PRODUCTS_BY_BRAND}/${brandCode}/sale`;
     const data = await fetchAPI<Product[]>(url);
     return data;
-  } catch (error) {
-    console.error(`${brandCode} 브랜드 상품 조회 실패:`, error);
+  } catch {
     return [];
   }
 }
@@ -146,8 +150,7 @@ export async function getProductById(productId: number): Promise<Product | null>
     const url = `${API_BASE_URL}${API_ENDPOINTS.PRODUCT_DETAIL}/${productId}`;
     const data = await fetchAPI<Product>(url);
     return data;
-  } catch (error) {
-    console.error(`상품 ${productId} 조회 실패:`, error);
+  } catch {
     return null;
   }
 }
@@ -160,8 +163,7 @@ export async function getBrands(): Promise<Brand[]> {
     const url = `${API_BASE_URL}${API_ENDPOINTS.BRANDS}`;
     const data = await fetchAPI<Brand[]>(url);
     return data;
-  } catch (error) {
-    console.error('브랜드 목록 조회 실패:', error);
+  } catch {
     return [];
   }
 }
@@ -184,14 +186,26 @@ export async function searchProducts(
 
     const data = await fetchAPI<Product[]>(url);
     return data;
-  } catch (error) {
-    console.error('상품 검색 실패:', error);
+  } catch {
     return [];
   }
 }
 
 /**
+ * 세일 상품 조회 결과 타입
+ * 상품 목록과 페이지네이션 정보를 포함합니다
+ */
+export interface SaleProductsResult {
+  products: Product[];
+  totalPages: number;
+  totalElements: number;
+  hasMore: boolean; // last의 반대 (더 불러올 데이터가 있는지)
+  currentPage: number;
+}
+
+/**
  * 세일 상품 조회 (페이지네이션 지원)
+ * 백엔드 API의 페이지네이션 응답을 처리하여 상품 목록과 페이지 정보를 반환합니다
  */
 export async function fetchSaleProducts(params: {
   brands?: Brand[];
@@ -200,7 +214,7 @@ export async function fetchSaleProducts(params: {
   keyword?: string;
   page?: number;
   size?: number;
-}): Promise<Product[]> {
+}): Promise<SaleProductsResult> {
   try {
     const queryParams: Record<string, any> = {
       page: params.page ?? 0,
@@ -223,11 +237,30 @@ export async function fetchSaleProducts(params: {
     const queryString = buildQueryString(queryParams);
     const url = `${API_BASE_URL}${API_ENDPOINTS.PRODUCTS_SALE}${queryString}`;
 
-    const data = await fetchAPI<Product[]>(url);
-    return data;
-  } catch (error) {
-    console.error('세일 상품 조회 실패:', error);
-    return [];
+    // fetchAPI는 이미 ApiResponse를 처리하여 data 필드를 반환합니다
+    // 여기서는 PagedResponse<any> 타입의 데이터를 받습니다
+    // (백엔드 API의 Product 구조가 프론트엔드 타입과 다르므로 any 사용)
+    const pagedData = await fetchAPI<PagedResponse<any>>(url);
+
+    // PagedResponse에서 필요한 정보를 추출하여 반환
+    const result = {
+      products: pagedData.content,
+      totalPages: pagedData.totalPages,
+      totalElements: pagedData.totalElements,
+      hasMore: !pagedData.last, // last가 false이면 더 불러올 데이터가 있음
+      currentPage: pagedData.number,
+    };
+
+    return result;
+  } catch {
+    // 에러 발생 시 빈 결과 반환
+    return {
+      products: [],
+      totalPages: 0,
+      totalElements: 0,
+      hasMore: false,
+      currentPage: 0,
+    };
   }
 }
 
@@ -239,8 +272,7 @@ export async function fetchSaleProductCount(): Promise<number> {
     const url = `${API_BASE_URL}${API_ENDPOINTS.SALE_COUNT}`;
     const data = await fetchAPI<SaleCountResponse>(url);
     return data.count;
-  } catch (error) {
-    console.error('세일 상품 개수 조회 실패:', error);
+  } catch {
     return 0;
   }
 }
@@ -260,8 +292,7 @@ export async function fetchProductDetail(productId: number): Promise<ProductDeta
       product,
       priceHistory,
     };
-  } catch (error) {
-    console.error(`상품 ${productId} 상세 정보 조회 실패:`, error);
+  } catch {
     return null;
   }
 }

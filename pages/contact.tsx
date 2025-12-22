@@ -46,7 +46,6 @@ export default function Contact() {
     }
 
     // 실제로는 여기서 백엔드 API를 호출합니다
-    console.log('문의 내용:', formData)
 
     // 성공 상태로 설정
     setSubmitStatus('success')

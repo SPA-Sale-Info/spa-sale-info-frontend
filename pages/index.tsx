@@ -362,7 +362,7 @@ const normalizeProduct = (product: any = {}): NormalizedProduct => {
     }
   }
 
-  return {
+  const normalized = {
     id: product.id || product.productCode || `${brand}-${product.name ?? 'unknown'}`,
     brand,
     brandCode: brand, // 찜 기능을 위해 추가
@@ -381,6 +381,8 @@ const normalizeProduct = (product: any = {}): NormalizedProduct => {
     vibe: Array.isArray(product.tags) && product.tags.length > 0 ? product.tags[0] : null,
     vibeTags: product.tags || [], // 찜 기능을 위해 추가
   }
+
+  return normalized
 }
 
 export default function Home() {
@@ -433,8 +435,6 @@ export default function Home() {
     return () => clearInterval(timer)
   }, [])
 
-
-
   // 총 할인 상품 개수 가져오기
   useEffect(() => {
     const loadSaleCount = async () => {
@@ -467,9 +467,9 @@ export default function Home() {
   }, [totalSaleCount])
 
   // API에서 받은 원본 데이터를 화면에서 쓰기 좋은 형태로 바꿉니다.
-  const normalizeProducts = useCallback((apiProducts: any[] = []) => (
-    apiProducts.map(normalizeProduct)
-  ), [])
+  const normalizeProducts = useCallback((apiProducts: any[] = []) => {
+    return apiProducts.map((product) => normalizeProduct(product))
+  }, [])
 
   const mergeUniqueProducts = useCallback((prevProducts: NormalizedProduct[], incomingProducts: NormalizedProduct[], replace: boolean) => {
     if (replace) {
@@ -503,6 +503,7 @@ export default function Home() {
     }
 
     try {
+      // fetchSaleProducts는 이제 { products, totalPages, hasMore, ... } 형식을 반환합니다
       const response = await fetchSaleProducts({
         page: pageToLoad,
         size: PAGE_SIZE,
@@ -512,16 +513,17 @@ export default function Home() {
         keyword: searchKeyword || undefined,
       })
 
-      const apiProducts = response ?? []
+      // response.products 배열을 정규화합니다
+      const apiProducts = response.products ?? []
       const normalized = normalizeProducts(apiProducts)
 
+      // 기존 상품 목록에 병합하거나 교체합니다
       setProducts(prev => mergeUniqueProducts(prev, normalized, replace))
       setPage(pageToLoad)
 
-      const isLastPage = normalized.length < PAGE_SIZE
-      setHasMore(!isLastPage)
+      // 백엔드에서 제공하는 페이지네이션 정보(hasMore)를 사용합니다
+      setHasMore(response.hasMore)
     } catch (err) {
-      console.error('상품 데이터를 불러오지 못했습니다.', err)
       const message = (err as Error)?.message || ''
       const isNotFoundError = message.includes('(404)') || /not\s+found/i.test(message)
 
@@ -569,7 +571,7 @@ export default function Home() {
    * 이를 통해 사용자가 필터를 조작할 때 서버 요청 없이도 빠른 피드백을 줄 수 있습니다.
    */
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    const filtered = products.filter((product) => {
       // 이미지 유효성 검사
       const hasValidImage = product.imageUrl && !product.imageUrl.includes('undefined') && !product.imageUrl.includes('null')
 
@@ -604,6 +606,8 @@ export default function Home() {
 
       return hasValidImage && matchesBrand && matchesGender && matchesCategory && matchesDiscount && matchesPrice && matchesSearch
     })
+
+    return filtered
   }, [products, selectedBrand, selectedGender, selectedCategory, selectedDiscount, selectedPrice, searchKeyword])
 
   const filteredCountRef = useRef(0)

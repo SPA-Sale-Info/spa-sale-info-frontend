@@ -41,9 +41,7 @@ export default function useScrollRestoration(): void {
           setTimeout(() => {
             window.scrollTo(x, y);
           }, 100);
-        } catch (e) {
-          console.error('스크롤 복원 실패:', e);
-        }
+        } catch {}
       }
     };
 
