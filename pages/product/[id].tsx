@@ -198,11 +198,12 @@ export default function ProductDetail() {
           : (originalPrice
             ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
             : 0)
-        const imageUrl = product.imageUrl || '/placeholder-product.svg'
-        const imageUrls = Array.isArray((product as { imageUrls?: string[] }).imageUrls)
-          && (product as { imageUrls?: string[] }).imageUrls!.length > 0
-          ? (product as { imageUrls?: string[] }).imageUrls!
-          : [imageUrl]
+        const rawImageUrls = Array.isArray((product as { imageUrls?: string[] }).imageUrls)
+          ? (product as { imageUrls?: string[] }).imageUrls!.filter(Boolean)
+          : []
+        const fallbackImageUrl = product.imageUrl || '/placeholder-product.svg'
+        const imageUrls = rawImageUrls.length > 0 ? rawImageUrls : [fallbackImageUrl]
+        const imageUrl = rawImageUrls[0] || product.imageUrl || '/placeholder-product.svg'
 
         // API 응답을 프론트엔드 형식으로 변환
         // - 숫자/문자 타입을 정리하고, 없는 값은 기본값으로 채웁니다.
