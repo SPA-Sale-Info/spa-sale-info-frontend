@@ -22,50 +22,31 @@ import type {
 } from '../types';
 
 // ============================================================================
-// 환경별 기본 API URL 상수 정의
+// API Base URL 설정
 // ============================================================================
-const DEFAULT_DEV_API = 'http://localhost:8080';
-const DEFAULT_PROD_API = 'https://apimion.click';
+//
+// next.config.js의 rewrites 덕분에 브라우저는 항상 같은 도메인(/api/v1/...)으로
+// 요청하고, Next.js 서버가 실제 백엔드로 프록시합니다.
+// 따라서 브라우저 환경에서는 빈 문자열(현재 origin)을 사용합니다.
+//
+// 서버 사이드(SSR, getServerSideProps 등)에서는 rewrites가 적용되지 않으므로
+// 환경변수로 직접 백엔드 주소를 지정합니다.
+//
+// 우선순위: NEXT_PUBLIC_API_URL → (브라우저: '' / 서버: API_URL 또는 Heroku 기본값)
+const isBrowser = typeof window !== 'undefined';
 
-// 환경 변수 `NODE_ENV`가 production이 아니면 개발 환경으로 간주합니다.
-const isDev = process.env.NODE_ENV !== 'production';
-
-/**
- * API Base URL 결정 함수
- */
-// 반환 타입을 명시합니다. (string)
-function resolveApiBaseUrl(): string {
-  // 가능한 환경 변수 우선순위를 적용합니다.
-  const rawBaseUrl =
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.API_URL ||
-    (isDev ? DEFAULT_DEV_API : DEFAULT_PROD_API);
-
-  if (!rawBaseUrl) {
-    throw new Error('API URL이 설정되지 않았습니다. NEXT_PUBLIC_API_URL 환경변수를 확인하세요.');
+const API_BASE_URL: string = (() => {
+  // NEXT_PUBLIC_API_URL이 명시적으로 설정된 경우 항상 우선 사용
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
   }
-
-  try {
-    // URL 객체로 파싱해 유효성을 검증합니다.
-    const urlObj = new URL(rawBaseUrl);
-
-    if (!['http:', 'https:'].includes(urlObj.protocol)) {
-      throw new Error(`지원하지 않는 프로토콜입니다: ${urlObj.protocol}`);
-    }
-
-    // 끝의 "/"를 제거해 URL을 통일합니다.
-    return rawBaseUrl.replace(/\/$/, '');
-  } catch (error) {
-    // URL 생성이 실패하면 TypeError가 발생합니다.
-    if (error instanceof TypeError) {
-      throw new Error(`유효하지 않은 URL입니다: ${rawBaseUrl}`);
-    }
-    throw error;
+  // 브라우저 환경: 빈 문자열 → Next.js rewrites가 /api/v1/... 를 백엔드로 중계
+  if (isBrowser) {
+    return '';
   }
-}
-
-// API Base URL 초기화
-const API_BASE_URL = resolveApiBaseUrl();
+  // 서버 환경(SSR): 직접 백엔드 주소 사용
+  return (process.env.API_URL || 'https://spa-sales-info-43c4651cbd9c.herokuapp.com').replace(/\/$/, '');
+})();
 
 /**
  * API 엔드포인트 상수

@@ -270,6 +270,36 @@ const nextConfig = {
   async redirects() {
     return []  // 현재는 리다이렉트 없음
   },
+
+  /**
+   * ============================================================================
+   * API 프록시 설정 (CORS 우회)
+   * ============================================================================
+   *
+   * 브라우저 → Next.js 서버 → 백엔드 API 순으로 요청을 중계합니다.
+   * 브라우저는 같은 도메인(/api/v1/...)에만 요청하므로 CORS 에러가 발생하지 않습니다.
+   * 서버-서버 통신에는 CORS 제한이 없습니다.
+   *
+   * Spring Boot 비유:
+   * @RestController
+   * public class ProxyController {
+   *     @GetMapping("/api/v1/**")
+   *     public ResponseEntity<?> proxy(HttpServletRequest request) {
+   *         // 백엔드로 요청 전달
+   *     }
+   * }
+   */
+  async rewrites() {
+    // 백엔드 API 서버 주소 (환경변수 우선, 없으면 Heroku 주소 사용)
+    const apiUrl = process.env.API_URL || 'https://spa-sales-info-43c4651cbd9c.herokuapp.com';
+    return [
+      {
+        // /api/v1/... 로 들어오는 모든 요청을 백엔드로 프록시
+        source: '/api/v1/:path*',
+        destination: `${apiUrl}/api/v1/:path*`,
+      },
+    ];
+  },
 }
 
 /**
