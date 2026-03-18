@@ -36,9 +36,6 @@ export default function Footer() {
               <Link href="/" className={styles.link}>
                 세일 상품
               </Link>
-              <Link href="/style-guide" className={styles.link}>
-                스타일 가이드
-              </Link>
               <Link href="/favorites" className={styles.link}>
                 즐겨찾기
               </Link>
@@ -49,9 +46,6 @@ export default function Footer() {
           <div className={styles.section}>
             <h4 className={styles.sectionTitle}>정보</h4>
             <nav className={styles.nav}>
-              <Link href="/about" className={styles.link}>
-                서비스 소개
-              </Link>
               <Link href="/contact" className={styles.link}>
                 문의하기
               </Link>
