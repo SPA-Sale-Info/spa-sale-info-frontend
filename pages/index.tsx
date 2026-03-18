@@ -254,50 +254,6 @@ const DAILY_MOODS = [
   { palette: '민트 블루', fabric: '린넨', focus: '하와이안 셔츠', note: '민트 초콜릿 같은 청록', background: 'linear-gradient(135deg, rgba(103, 232, 249, 0.8), rgba(165, 243, 252, 0.85))', textColor: '#083344' },
 ]
 
-const QUALITY_PILLARS = [
-  {
-    title: '브랜드 리서치 노트',
-    description: '각 SPA 브랜드의 시즌 할인 전략과 인기 카테고리를 요약해 게시합니다.',
-    detail: '신규 데이터가 부족하면 직접 작성한 노트를 보여줘 Google이 경고하는 “콘텐츠가 없는 화면”을 만들지 않습니다.',
-  },
-  {
-    title: '데이터 정합성 검수',
-    description: '가격 · 할인율 · 품절 여부가 맞지 않는 상품은 수동 검수 전에 노출을 막습니다.',
-    detail: '60% 이상 할인 등 이상치는 정책 위반 소지가 있어 별도 큐에 넣고 수정을 완료한 뒤에만 다시 공개합니다.',
-  },
-  {
-    title: '편집자 코멘트',
-    description: '오늘의 시선과 워드로브 로그처럼 사람이 작성한 에디토리얼을 상단에 고정합니다.',
-    detail: '광고는 항상 이 코멘트와 서비스 설명 사이에 배치해 정보성 콘텐츠와 함께 노출됩니다.',
-  },
-  {
-    title: '정책 체크 기록',
-    description: '배포 전 고품질 사이트 가이드 문항을 체크리스트로 점검합니다.',
-    detail: '점검 시 이상 발견 시 광고를 끄고 임시 텍스트로 대체한 뒤 수정을 완료합니다.',
-  },
-]
-
-const COMPLIANCE_ACTIONS = [
-  'API 응답이 비어도 소개, 사용법, 트렌드 설명이 SSR로 렌더링되어 빈 화면이 되지 않습니다.',
-  '알림 · 로딩 · 공사중 화면에서는 조건부 렌더링으로 광고 컴포넌트를 숨겨 정책 위반을 방지합니다.',
-  '모든 상품 카드에 브랜드 설명과 원본 링크를 표시해 단순 광고 모음이 아닌 큐레이션임을 명확히 합니다.',
-  '고품질 사이트 가이드와 애드센스 정책 전문을 정기적으로 리뷰하고 운영 로그에 기록합니다.',
-]
-
-const REVIEW_CHECKLIST = [
-  {
-    title: '콘텐츠 밀도',
-    detail: '하루 최소 200개의 상품 혹은 1,200자 이상의 에디토리얼이 노출되는지 확인 후 광고를 켭니다.',
-  },
-  {
-    title: '출처 확인',
-    detail: '표본으로 선택한 상품의 가격과 링크가 브랜드 공식 스토어와 일치하는지 검수합니다.',
-  },
-  {
-    title: '정책 메타',
-    detail: '메타 태그와 ads.txt, AdSense 스크립트가 정상 배포됐는지 뷰 소스와 HTTP 요청으로 점검합니다.',
-  },
-]
 
 // 이미지 URL을 안전하게 보정하는 함수
 // - rawUrl 타입을 any로 받지만, 내부에서 문자열인지 확인합니다.
@@ -426,7 +382,6 @@ export default function Home() {
   const [logoStep, setLogoStep] = useState<number>(0)
   const [totalSaleCount, setTotalSaleCount] = useState<number>(0)
   const [animatedCount, setAnimatedCount] = useState<number>(0)
-  const [isComplianceOpen, setIsComplianceOpen] = useState<boolean>(false)
   // useRef는 값이 변경되어도 렌더링을 다시 하지 않는 "mutable 참조"입니다.
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const filterPanelRef = useRef<HTMLDivElement | null>(null)
@@ -741,10 +696,6 @@ export default function Home() {
 
   const toggleFilters = () => {
     setShowFilters(prev => !prev)
-  }
-
-  const toggleComplianceSection = () => {
-    setIsComplianceOpen(prev => !prev)
   }
 
   // 통계 계산
@@ -1102,74 +1053,6 @@ export default function Home() {
           )}
         </main>
 
-        <section className={styles.complianceSection} aria-labelledby="quality-section-title">
-          <div className={styles.complianceHeader}>
-            <p className={styles.complianceKicker}>Policy ready</p>
-            <div className={styles.complianceHeaderMain}>
-              <h2 id="quality-section-title">Google AdSense 기준을 통과하기 위한 운영 방식</h2>
-              <button
-                type="button"
-                className={styles.complianceToggle}
-                onClick={toggleComplianceSection}
-                aria-expanded={isComplianceOpen}
-                aria-controls="compliance-body"
-              >
-                {isComplianceOpen ? '접기' : '자세히 보기'}
-                <span aria-hidden="true">{isComplianceOpen ? '−' : '+'}</span>
-              </button>
-            </div>
-            <p className={styles.complianceSummary}>
-              Google의 고품질·게시자 콘텐츠 정책을 토대로 빈 화면 없이 사람이 작성한 설명을 유지합니다.
-            </p>
-          </div>
-
-          <div
-            id="compliance-body"
-            className={`${styles.complianceBody} ${isComplianceOpen ? styles.complianceBodyOpen : ''}`}
-            aria-hidden={!isComplianceOpen}
-          >
-            <div className={styles.complianceIntro}>
-              <p>
-                Google의 ‘고품질 사이트를 만들기 위한 정책’과 ‘게시자 콘텐츠가 없는 화면’ 가이드를 기준으로
-                서비스 구조를 설계했습니다. 빈 페이지에 광고가 붙지 않도록 모든 섹션을 사람이 작성한 설명과
-                에디토리얼로 채워두고, 상품 데이터가 비어도 정보를 제공하는 카피가 유지됩니다.
-              </p>
-              <p>
-                아래 원칙은 검수 단계뿐 아니라 운영 중에도 반복 점검됩니다. 검토 재요청 전 해당 내용을 체크리스트로
-                확인하면 심사 통과 확률을 높일 수 있습니다.
-              </p>
-            </div>
-
-            <div className={styles.qualityGrid}>
-              {QUALITY_PILLARS.map(pillar => (
-                <article key={pillar.title} className={styles.qualityCard}>
-                  <h3>{pillar.title}</h3>
-                  <p>{pillar.description}</p>
-                  <small>{pillar.detail}</small>
-                </article>
-              ))}
-            </div>
-
-            <div className={styles.complianceDetail}>
-              <div className={styles.complianceCard}>
-                <h3 className={styles.complianceTitle}>콘텐츠 유지 루틴</h3>
-                <ul className={styles.complianceList}>
-                  {COMPLIANCE_ACTIONS.map(action => (
-                    <li key={action}>{action}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className={styles.reviewChecklist}>
-                {REVIEW_CHECKLIST.map(item => (
-                  <article key={item.title} className={styles.reviewItem}>
-                    <strong>{item.title}</strong>
-                    <p>{item.detail}</p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
 
       </div >
       <div className={styles.rightAd}>
