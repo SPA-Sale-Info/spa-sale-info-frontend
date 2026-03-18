@@ -290,8 +290,8 @@ const nextConfig = {
    * }
    */
   async rewrites() {
-    // 백엔드 API 서버 주소 (환경변수 우선, 없으면 Heroku 주소 사용)
-    const apiUrl = process.env.API_URL || 'https://spa-sales-info-43c4651cbd9c.herokuapp.com';
+    // 백엔드 API 서버 주소 (환경변수로 관리, .env.local의 API_URL 사용)
+    const apiUrl = process.env.API_URL || '';
     return [
       {
         // /api/v1/... 로 들어오는 모든 요청을 백엔드로 프록시

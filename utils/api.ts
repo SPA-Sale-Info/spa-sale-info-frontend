@@ -44,8 +44,8 @@ const API_BASE_URL: string = (() => {
   if (isBrowser) {
     return '';
   }
-  // 서버 환경(SSR): 직접 백엔드 주소 사용
-  return (process.env.API_URL || 'https://spa-sales-info-43c4651cbd9c.herokuapp.com').replace(/\/$/, '');
+  // 서버 환경(SSR): 직접 백엔드 주소 사용 (환경변수 필수, 없으면 에러 방지용 빈 문자열)
+  return (process.env.API_URL || '').replace(/\/$/, '');
 })();
 
 /**
