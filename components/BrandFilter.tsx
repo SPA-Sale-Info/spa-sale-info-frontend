@@ -63,69 +63,93 @@ function BrandFilter({ selectedBrand, onBrandChange }: BrandFilterProps) {
 
   return (
     <div className={styles.filterContainer}>
-      <div className={styles.buttonGroup}>
-        {BRANDS.map((brand) => {
-          // 선택 상태에 따라 스타일을 다르게 적용
-          const isSelected = selectedBrand === brand.code;
-          const buttonClassName = [
-            styles.button,
-            isSelected ? styles.selected : '',
-            brand.comingSoon ? styles.buttonDisabled : '',
-          ]
-            .filter(Boolean)
-            .join(' ');
+      {/* 헤더 — 라벨 + 전체 해제 버튼 */}
+      <div className={styles.filterHeader}>
+        <span className={styles.filterLabel}>브랜드</span>
+        {selectedBrand !== 'all' && (
+          <button
+            type="button"
+            className={styles.clearBtn}
+            onClick={() => onBrandChange('all')}
+          >
+            전체 해제
+          </button>
+        )}
+      </div>
 
-          // 버튼 내부 UI: 로고가 있으면 이미지, 없으면 이모지
-          const buttonContent = (
-            <>
-              {brand.logo ? (
-                <span className={styles.logoContainer}>
-                  <Image
-                    src={brand.logo}
-                    alt={`${brand.name} 로고`}
-                    width={56}
-                    height={24}
-                    className={styles.brandLogo}
-                    sizes="56px"
-                  />
-                </span>
-              ) : (
-                <span>{brand.emoji}</span>
-              )}
-              <span className={styles.brandName}>{brand.name}</span>
-            </>
-          );
+      {/* 스크롤 래퍼 — 좌우 fade overlay로 스크롤 가능 영역임을 시각적으로 표시 */}
+      <div className={styles.scrollWrapper}>
+        {/* 왼쪽 fade overlay */}
+        <div className={styles.fadeLeft} aria-hidden="true" />
 
-          // 접근성: aria-pressed, aria-label 등을 통해 상태를 전달
-          const button = (
-            <button
-              className={buttonClassName}
-              onClick={() => handleBrandClick(brand.code as Brand | 'all', brand.comingSoon)}
-              aria-pressed={isSelected}
-              aria-label={`${brand.name} 필터${brand.comingSoon ? ' (곧 추가될 예정)' : ''}`}
-              type="button"
-              disabled={brand.comingSoon}
-              aria-disabled={brand.comingSoon}
-              title={brand.comingSoon ? '곧 추가될 예정이에요!' : undefined}
-            >
-              {buttonContent}
-            </button>
-          );
+        {/* 가로 스크롤 버튼 그룹 */}
+        <div className={styles.buttonGroup}>
+          {BRANDS.map((brand) => {
+            // 선택 상태에 따라 스타일을 다르게 적용
+            const isSelected = selectedBrand === brand.code;
+            const buttonClassName = [
+              styles.button,
+              isSelected ? styles.selected : '',
+              brand.comingSoon ? styles.buttonDisabled : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
 
-          // comingSoon 상태면 툴팁이 들어갈 wrapper를 사용
-          const wrapperClass = brand.comingSoon ? styles.comingSoonWrapper : styles.buttonWrapper;
+            // 버튼 내부 UI: 로고가 있으면 이미지, 없으면 이모지
+            const buttonContent = (
+              <>
+                {brand.logo ? (
+                  <span className={styles.logoContainer}>
+                    <Image
+                      src={brand.logo}
+                      alt={`${brand.name} 로고`}
+                      width={56}
+                      height={24}
+                      className={styles.brandLogo}
+                      sizes="56px"
+                    />
+                  </span>
+                ) : (
+                  <span>{brand.emoji}</span>
+                )}
+                <span className={styles.brandName}>{brand.name}</span>
+              </>
+            );
 
-          return (
-            <div key={brand.code} className={wrapperClass}>
-              {button}
-              {brand.comingSoon && (
-                <span className={styles.comingSoonTooltip} role="status" aria-live="polite">
-                  곧 추가될 예정이에요!
-                </span>
-              )}
-            </div>
-          );
-        })}
+            // 접근성: aria-pressed, aria-label 등을 통해 상태를 전달
+            const button = (
+              <button
+                className={buttonClassName}
+                onClick={() => handleBrandClick(brand.code as Brand | 'all', brand.comingSoon)}
+                aria-pressed={isSelected}
+                aria-label={`${brand.name} 필터${brand.comingSoon ? ' (곧 추가될 예정)' : ''}`}
+                type="button"
+                disabled={brand.comingSoon}
+                aria-disabled={brand.comingSoon}
+                title={brand.comingSoon ? '곧 추가될 예정이에요!' : undefined}
+              >
+                {buttonContent}
+              </button>
+            );
+
+            // comingSoon 상태면 툴팁이 들어갈 wrapper를 사용
+            const wrapperClass = brand.comingSoon ? styles.comingSoonWrapper : styles.buttonWrapper;
+
+            return (
+              <div key={brand.code} className={wrapperClass}>
+                {button}
+                {brand.comingSoon && (
+                  <span className={styles.comingSoonTooltip} role="status" aria-live="polite">
+                    곧 추가될 예정이에요!
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 오른쪽 fade overlay */}
+        <div className={styles.fadeRight} aria-hidden="true" />
       </div>
     </div>
   );

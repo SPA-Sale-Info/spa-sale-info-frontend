@@ -1,47 +1,42 @@
 /**
- * FavoriteButton.module.css
+ * FavoriteButton.module.css — v4 Glassmorphism + pop 애니메이션
  *
- * 찜하기 버튼 스타일
- * 하트 아이콘을 사용하여 직관적인 UI 제공
+ * 변경사항:
+ * - 배경: rgba(255,255,255,0.9) → glassmorphism (backdrop-filter blur)
+ * - active 상태: pop 애니메이션 (globals.css에 정의)
+ * - heartBeat keyframe → globals.css의 pop keyframe 사용
+ * - active 색상: #ff4757 → var(--color-danger)
  */
 
 .favoriteButton {
-  /* 위치 및 레이아웃 */
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  /* 크기 (기본값은 medium) */
   width: 36px;
   height: 36px;
-
-  /* 배경 및 테두리 */
-  background-color: rgba(255, 255, 255, 0.9);
-  border: none;
+  /* v4: glassmorphism */
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 0.5px solid rgba(255, 255, 255, 0.5);
   border-radius: 50%;
-
-  /* 그림자 효과 */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-
-  /* 커서 및 트랜지션 */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
   cursor: pointer;
-  transition: all 0.2s ease;
-
-  /* z-index로 다른 요소 위에 표시 */
+  transition:
+    background var(--duration-fast) var(--ease-smooth),
+    box-shadow var(--duration-fast) var(--ease-smooth),
+    transform var(--duration-fast) var(--ease-smooth);
   z-index: 10;
 }
 
 .favoriteButton:hover {
-  /* 호버 시 배경색 변경 */
-  background-color: rgba(255, 255, 255, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  /* 살짝 확대 효과 */
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
 }
 
 .favoriteButton:active {
-  /* 클릭 시 살짝 축소 효과 */
   transform: scale(0.95);
 }
 
@@ -49,28 +44,30 @@
 .heartIcon {
   width: 20px;
   height: 20px;
-  color: #999;
-  transition: all 0.2s ease;
+  color: var(--color-text-lighter);
+  transition: color var(--duration-fast) var(--ease-smooth);
 }
 
-/* 찜된 상태 (active) */
+/* 찜된 상태 (active) — pop 애니메이션 적용 */
 .favoriteButton.active {
-  background-color: rgba(255, 240, 245, 1);
+  background: rgba(255, 240, 245, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  /* v4: pop 애니메이션 (globals.css의 @keyframes pop) */
+  animation: pop 0.4s var(--ease-spring);
 }
 
 .favoriteButton.active .heartIcon {
-  color: #ff4757;
-  /* 찜된 상태에서 하트 채우기 */
-  fill: #ff4757;
+  color: var(--color-danger);
+  fill: var(--color-danger);
 }
 
 .favoriteButton.active:hover .heartIcon {
-  /* 호버 시 더 진한 색상 */
-  color: #ee2737;
-  fill: #ee2737;
+  color: var(--color-danger);
+  fill: var(--color-danger);
 }
 
-/* 크기 변형 */
+/* ── 크기 변형 ── */
 .small {
   width: 28px;
   height: 28px;
@@ -101,34 +98,9 @@
   height: 24px;
 }
 
-/* 애니메이션 효과 */
-@keyframes heartBeat {
-  0% {
-    transform: scale(1);
-  }
-  25% {
-    transform: scale(1.2);
-  }
-  50% {
-    transform: scale(1);
-  }
-  75% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* 찜 추가 시 애니메이션 */
-.favoriteButton.active .heartIcon {
-  animation: heartBeat 0.5s ease-in-out;
-}
-
 /* 모바일 터치 최적화 */
 @media (max-width: 768px) {
   .favoriteButton {
-    /* 모바일에서 터치하기 쉽도록 크기 증가 */
     width: 40px;
     height: 40px;
   }

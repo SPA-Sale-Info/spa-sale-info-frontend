@@ -44,7 +44,7 @@
 }
 
 .backLink:hover {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(0, 113, 227, 0.08);
   color: var(--color-primary);
 }
 
@@ -196,19 +196,20 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--color-primary);
   color: white;
   text-decoration: none;
   font-weight: 600;
   font-size: 1.05rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
+  transition: all var(--duration-base) var(--ease-smooth);
 }
 
 .emptyButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 113, 227, 0.35);
+  background: var(--color-primary-dark);
 }
 
 /* 푸터 */

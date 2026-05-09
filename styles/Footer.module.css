@@ -2,57 +2,70 @@
  * Footer.module.css - 푸터 컴포넌트 스타일
  */
 
+/* v4: Apple HIG 기반 푸터 — flex 좌우 분할, 단색 배경 */
 .footer {
   width: 100%;
-  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
-  margin-top: 4rem;
+  background: var(--color-bg-secondary);
+  border-top: 0.5px solid var(--color-border);
+  margin-top: var(--space-20);
+  padding: var(--space-10) var(--space-6) var(--space-12);
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1160px;
   margin: 0 auto;
-  padding: 3rem clamp(1rem, 3vw, 2rem);
 }
 
-/* 메인 푸터 콘텐츠 */
+/* 메인 푸터 콘텐츠 — flex 기반 좌우 분할 */
 .main {
-  display: grid;
-  grid-template-columns: 2fr repeat(3, 1fr);
-  gap: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: var(--space-8);
+  border-bottom: 0.5px solid var(--color-border);
 }
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-2);
+}
+
+.section:first-child {
+  min-width: 200px;
+  flex: 1;
+}
+
+.section:not(:first-child) {
+  min-width: 100px;
 }
 
 /* 브랜드 섹션 */
 .brand {
-  font-size: 1.5rem;
+  font-size: 18px;
   font-weight: 800;
-  color: var(--color-dark, #0f172a);
+  color: var(--color-text);
   margin: 0;
 }
 
 .description {
-  font-size: 0.9375rem;
+  font-size: 12px;
   line-height: 1.6;
-  color: var(--color-text-light, #64748b);
+  color: var(--color-text-lighter);
   margin: 0;
+  max-width: 300px;
 }
 
 /* 섹션 타이틀 */
 .sectionTitle {
-  font-size: 0.875rem;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--color-dark, #0f172a);
+  color: var(--color-text);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0;
+  letter-spacing: 0.06em;
+  margin: 0 0 4px;
 }
 
 /* 네비게이션 */
@@ -63,14 +76,14 @@
 }
 
 .link {
-  font-size: 0.9375rem;
-  color: var(--color-text, #334155);
+  font-size: 12px;
+  color: var(--color-text-light);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color var(--duration-fast) var(--ease-smooth);
 }
 
 .link:hover {
-  color: var(--color-primary, #3b82f6);
+  color: var(--color-text);
 }
 
 /* 소셜 미디어 */
@@ -152,129 +165,29 @@
   margin: 0;
 }
 
-/* 다크 모드 지원 */
-:global([data-theme='dark']) .footer {
-  background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
-  border-top-color: rgba(71, 85, 105, 0.3);
-}
+/* 다크 모드: CSS 변수가 자동으로 반영됩니다 (globals.css [data-theme='dark'] 블록). */
+/* 하드코딩된 색상 값이 없으므로 별도 다크모드 재정의 불필요. */
 
-:global([data-theme='dark']) .main {
-  border-bottom-color: rgba(71, 85, 105, 0.3);
-}
+/* 반응형 — 600px 이하에서 섹션을 세로 배치 */
+@media (max-width: 600px) {
+  .footer {
+    padding: var(--space-8) var(--space-4) var(--space-10);
+  }
 
-:global([data-theme='dark']) .brand,
-:global([data-theme='dark']) .sectionTitle,
-:global([data-theme='dark']) .infoText strong {
-  color: #f1f5f9;
-}
-
-:global([data-theme='dark']) .description,
-:global([data-theme='dark']) .socialText,
-:global([data-theme='dark']) .infoText,
-:global([data-theme='dark']) .copyright p,
-:global([data-theme='dark']) .disclaimer p {
-  color: #94a3b8;
-}
-
-:global([data-theme='dark']) .link {
-  color: #cbd5e1;
-}
-
-:global([data-theme='dark']) .link:hover {
-  color: var(--color-primary, #3b82f6);
-}
-
-:global([data-theme='dark']) .social {
-  border-bottom-color: rgba(71, 85, 105, 0.3);
-}
-
-:global([data-theme='dark']) .disclaimer {
-  background: rgba(15, 23, 42, 0.6);
-  border-color: rgba(71, 85, 105, 0.3);
-}
-
-/* 반응형 디자인 */
-@media (max-width: 1024px) {
   .main {
-    grid-template-columns: repeat(2, 1fr);
+    flex-direction: column;
+    gap: var(--space-6);
   }
 
   .section:first-child {
-    grid-column: 1 / -1;
-    text-align: center;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 2rem 1rem;
+    min-width: unset;
   }
 
-  .main {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    padding-bottom: 1.5rem;
-  }
-
-  .section {
-    text-align: center;
-    align-items: center;
-  }
-
-  .nav {
-    align-items: center;
-  }
-
-  .brand {
-    font-size: 1.25rem;
+  .section:not(:first-child) {
+    min-width: unset;
   }
 
   .description {
-    font-size: 0.875rem;
-  }
-
-  .bottom {
-    padding-top: 1.5rem;
-    gap: 1.25rem;
-  }
-
-  .info {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .disclaimer {
-    padding: 1rem;
-  }
-
-  .disclaimer p {
-    font-size: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .container {
-    padding: 1.5rem 0.75rem;
-  }
-
-  .main {
-    gap: 1.5rem;
-  }
-
-  .brand {
-    font-size: 1.125rem;
-  }
-
-  .sectionTitle {
-    font-size: 0.8125rem;
-  }
-
-  .link {
-    font-size: 0.875rem;
-  }
-
-  .infoText,
-  .copyright p {
-    font-size: 0.8125rem;
+    max-width: unset;
   }
 }

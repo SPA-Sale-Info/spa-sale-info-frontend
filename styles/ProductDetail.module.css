@@ -118,10 +118,10 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.1);
+  color: var(--color-primary);
+  background: rgba(0, 113, 227, 0.08);
   border-radius: 100px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(0, 113, 227, 0.15);
 }
 
 .genderBadge,
@@ -204,19 +204,20 @@
   justify-content: center;
   gap: 0.75rem;
   padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: var(--color-primary);
   color: white;
   text-decoration: none;
   font-weight: 700;
   font-size: 1.15rem;
   border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
-  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0, 113, 227, 0.25);
+  transition: all var(--duration-base) var(--ease-smooth);
 }
 
 .purchaseButton:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 12px 32px rgba(0, 113, 227, 0.35);
+  background: var(--color-primary-dark);
 }
 
 .buttonIcon {
@@ -397,8 +398,8 @@
 .loadingSpinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(99, 102, 241, 0.2);
-  border-top-color: #6366f1;
+  border: 4px solid rgba(0, 113, 227, 0.15);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1.5rem;
@@ -426,17 +427,18 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--color-primary);
   color: white;
   text-decoration: none;
   font-weight: 600;
   border-radius: 12px;
-  transition: all 0.3s ease;
+  transition: all var(--duration-base) var(--ease-smooth);
 }
 
 .backButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 113, 227, 0.3);
+  background: var(--color-primary-dark);
 }
 
 /* 모바일 반응형 */

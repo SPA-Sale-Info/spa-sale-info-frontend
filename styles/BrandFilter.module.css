@@ -1,35 +1,125 @@
 /*
- * BrandFilter.module.css - Brand chip styling
+ * BrandFilter.module.css — v4 Apple HIG 스타일
+ *
+ * 변경 사항:
+ * - filterContainer: 카드형 컨테이너 (배경 + 테두리 + 둥근 모서리)
+ * - buttonGroup: flex-wrap: nowrap → 가로 스크롤 전용
+ * - fadeLeft/fadeRight: 가로 스크롤 가능 영역을 시각적으로 표시하는 fade overlay
+ * - selected: indigo → var(--color-text) (중립 다크)
  */
 
+/* ── 카드 컨테이너 ── */
 .filterContainer {
+  background: var(--color-bg-secondary);
+  border-radius: 20px;
+  padding: 16px 18px;
+  border: 0.5px solid var(--color-border);
   width: 100%;
 }
 
-.buttonGroup {
+/* ── 헤더 — 라벨 + 전체 해제 버튼 ── */
+.filterHeader {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  padding-bottom: 2.5rem;
-  padding-top: 0;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
+/* 브랜드 섹션 라벨 */
+.filterLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* 전체 해제 버튼 */
+.clearBtn {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 500;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background var(--duration-fast);
+}
+
+.clearBtn:hover {
+  background: rgba(0, 113, 227, 0.08);
+}
+
+/* ── 스크롤 래퍼 — fade overlay를 위한 position: relative ── */
+.scrollWrapper {
+  position: relative;
+}
+
+/* ── 가로 스크롤 버튼 그룹 ── */
+.buttonGroup {
+  display: flex;
+  flex-wrap: nowrap;
+  /* 가로 스크롤 전용 — 줄바꿈 없음 */
+  overflow-x: auto;
+  gap: 8px;
+  padding: 2px 0 4px;
+  scrollbar-width: none;
+  /* Firefox 스크롤바 숨김 */
+}
+
+.buttonGroup::-webkit-scrollbar {
+  display: none;
+  /* Chrome/Safari 스크롤바 숨김 */
+}
+
+/* ── Fade Overlay ── */
+/* position: absolute로 버튼 그룹 위에 겹쳐 pointer-events: none으로 클릭 통과 */
+.fadeLeft,
+.fadeRight {
+  position: absolute;
+  top: 0;
+  bottom: 4px;
+  /* 스크롤바 영역 제외 */
+  width: 32px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fadeLeft {
+  left: 0;
+  background: linear-gradient(to right, var(--color-bg-secondary), transparent);
+}
+
+.fadeRight {
+  right: 0;
+  background: linear-gradient(to left, var(--color-bg-secondary), transparent);
+}
+
+/* ── 브랜드 버튼 — pill 형태 ── */
 .button {
   display: inline-flex;
   align-items: center;
   gap: 0.65rem;
-  padding: 0.65rem 1.35rem;
-  font-size: 0.95rem;
+  padding: 8px 18px;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--color-text);
+  /* v4: 연한 배경 */
   background: var(--color-bg);
-  border-radius: 100px;
-  border: 1px solid var(--color-bg-tertiary);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
-  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 0.5px solid var(--color-border);
+  flex-shrink: 0;
+  /* 가로 스크롤 시 줄어들지 않음 */
   white-space: nowrap;
   cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-smooth),
+    border-color var(--duration-fast) var(--ease-smooth),
+    box-shadow var(--duration-fast) var(--ease-smooth),
+    transform var(--duration-fast) var(--ease-smooth);
 }
 
 .buttonWrapper {
@@ -41,32 +131,33 @@
 
 .buttonDisabled {
   cursor: not-allowed;
-  opacity: 0.5;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  opacity: 0.45;
   border-style: dashed;
 }
 
-.button:hover,
-.button:focus-visible {
-  transform: translateY(-2px);
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+.button:hover:not(:disabled),
+.button:focus-visible:not(:disabled) {
+  border-color: rgba(0, 113, 227, 0.25);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
 }
 
 .buttonDisabled:hover,
 .buttonDisabled:focus-visible {
   transform: none;
-  border-color: rgba(148, 163, 184, 0.18);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  border-color: var(--color-border);
+  box-shadow: none;
 }
 
+/* ── 선택된 브랜드 버튼 — 다크 중립 배경 ── */
 .selected {
-  color: #fff;
-  background: #6366f1;
+  color: var(--color-bg);
+  background: var(--color-text);
   border-color: transparent;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  box-shadow: var(--shadow-card);
 }
 
+/* 로고 이미지 컨테이너 */
 .logoContainer {
   display: inline-flex;
   align-items: center;
@@ -75,12 +166,13 @@
   height: 24px;
 }
 
+/* 브랜드 로고 이미지 — 기본 grayscale, 선택/호버 시 컬러 */
 .brandLogo {
   width: 100%;
   height: 100%;
   object-fit: contain;
   filter: grayscale(100%);
-  transition: filter var(--transition-base);
+  transition: filter var(--duration-base) var(--ease-smooth);
 }
 
 .button:hover .brandLogo,
@@ -89,10 +181,16 @@
   filter: grayscale(0%);
 }
 
+/* 선택된 버튼의 로고: 다크 배경에서 반전 */
+.selected .brandLogo {
+  filter: grayscale(0%) invert(1) brightness(10);
+}
+
 .brandName {
   display: inline-block;
 }
 
+/* ── 커밍순 툴팁 ── */
 .comingSoonWrapper {
   display: inline-flex;
   flex: 0 0 auto;
@@ -104,20 +202,19 @@
   bottom: calc(100% + 0.75rem);
   left: 50%;
   transform: translateX(-50%);
-  transform: translateX(-50%);
   background: var(--color-bg-secondary);
   color: var(--color-text);
   padding: 0.5rem 0.875rem;
   border-radius: 8px;
   font-size: 0.8rem;
   white-space: nowrap;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-toast);
   text-align: center;
   pointer-events: none;
   z-index: 30;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+  transition: opacity var(--duration-base) var(--ease-smooth), visibility var(--duration-base), transform var(--duration-base);
 }
 
 .comingSoonWrapper:hover .comingSoonTooltip,
@@ -141,24 +238,16 @@
 }
 
 @media (max-width: 768px) {
+  .filterContainer {
+    padding: 12px 14px;
+  }
+
   .buttonGroup {
-    gap: 0.6rem;
-    padding-bottom: 0.25rem;
+    gap: 0.5rem;
   }
 
   .button {
-    padding: 0.6rem 1.1rem;
-    font-size: 0.9rem;
-  }
-
-  .comingSoonBubble {
-    font-size: 0.65rem;
-    padding: 0.35rem 0.65rem;
-  }
-
-  .comingSoonBubbleBottom {
-    font-size: 0.65rem;
-    padding: 0.35rem 0.65rem;
-    top: calc(100% + 0.4rem);
+    padding: 6px 14px;
+    font-size: 0.85rem;
   }
 }

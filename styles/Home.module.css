@@ -65,63 +65,198 @@
   gap: clamp(2rem, 4vw, 3.5rem);
 }
 
-/* 
- * .navbar
- * 상단 네비게이션 바 영역입니다.
+/*
+ * ── Sticky Nav (v4 Apple HIG) ──
+ * 전체 너비 sticky 헤더: backdrop-filter blur(20px) + saturate(180%)로 glassmorphism을 구현합니다.
+ * 스크롤 전에는 border-bottom이 투명하고, 스크롤 후(stickyNavScrolled)에만 나타납니다.
  */
-.navbar {
-  /* 위치를 상대적으로 설정합니다. 
-   * z-index가 작동하려면 position이 static(기본값)이 아니어야 합니다. */
-  position: relative;
-
-  /* 쌓임 순서(stacking order)를 10으로 설정하여 다른 요소들보다 위에 오게 합니다. */
-  z-index: 10;
-
-  /* Flexbox를 사용하여 로고, 메뉴 등을 배치합니다. */
-  display: flex;
-
-  /* 자식 요소들을 세로축(교차축) 기준으로 중앙 정렬합니다. */
-  align-items: center;
-
-  /* 자식 요소들 사이의 간격을 1rem(약 16px)으로 설정합니다. */
-  gap: 1rem;
+.stickyNav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 52px;
+  background: var(--color-surface);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 0.5px solid transparent;
+  transition: border-color var(--duration-base) var(--ease-smooth);
 }
 
-/* 
- * .navContent
- * 네비게이션 바 내부의 실제 콘텐츠(로고, 링크 등)를 감싸는 박스입니다.
+/* 스크롤 10px 이상 시 border-bottom 표시 */
+.stickyNavScrolled {
+  border-bottom-color: var(--color-border);
+}
+
+/*
+ * .navInner
+ * nav 내부 3-column 그리드: [로고(auto)] [검색창(1fr)] [액션(auto)]
+ * 최대 너비 1160px, 가로 패딩 24px
  */
-.navContent {
-  /* flex-grow: 1과 동일합니다. 남은 공간을 모두 차지하여 늘어납니다. */
+.navInner {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+  height: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/*
+ * .logo (v4)
+ * "맛" + suffix 구조: baseline 정렬, Noto Serif KR + Noto Sans KR 조합
+ */
+.logo {
+  display: flex;
+  align-items: baseline;
+  text-decoration: none;
+  flex-shrink: 0;
+  gap: 0;
+}
+
+/* "맛" — Noto Serif KR 굵고 크게 */
+.logoMat {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+/* suffix 컨테이너 — 높이를 고정해 레이아웃 흔들림 방지 */
+.logoSuffix {
+  display: inline-flex;
+  overflow: hidden;
+  height: 20px;
+  align-items: center;
+}
+
+/* 각 phase ("at" / "Sale" / "Archive") — logoFade 애니메이션으로 진입 */
+.logoPhase {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  animation: logoFade var(--duration-base) var(--ease-out);
+  white-space: nowrap;
+}
+
+/*
+ * ── Nav 검색창 ──
+ * 중앙 컬럼을 차지하는 pill형 검색 입력창
+ * focus-within 시 primary 색상으로 테두리 강조
+ */
+.navSearchForm {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-bg-secondary);
+  border-radius: 10px;
+  border: 0.5px solid var(--color-border);
+  padding: 0 var(--space-3);
+  height: 36px;
+  transition:
+    border-color var(--duration-fast) var(--ease-smooth),
+    box-shadow var(--duration-fast) var(--ease-smooth);
+}
+
+.navSearchForm:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+}
+
+.navSearchIcon {
+  font-size: 14px;
+  color: var(--color-text-light);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.navSearchInput {
   flex: 1;
-
-  /* Flexbox를 사용하여 내부 요소들을 배치합니다. */
-  display: flex;
-
-  /* 자식 요소들을 세로축 중앙 정렬합니다. */
-  align-items: center;
-
-  /* 자식 요소들을 양 끝으로 분산 정렬합니다. (로고는 왼쪽, 링크는 오른쪽) */
-  justify-content: space-between;
-
-  /* 내부 요소들 사이의 간격을 1.25rem(약 20px)으로 설정합니다. */
-  gap: 1.25rem;
-
-  /* 안쪽 여백을 설정합니다. 상하 0.85rem, 좌우 1.5rem */
-  padding: 0.85rem 1.5rem;
-
-  /* 배경색을 메인 배경색 변수로 설정합니다. */
-  background: var(--color-bg);
-
-  /* 테두리를 1px 실선으로 설정하고, 색상은 3차 배경색 변수를 사용합니다. */
-  border: 1px solid var(--color-bg-tertiary);
-
-  /* 모서리를 16px만큼 둥글게 깎습니다. */
-  border-radius: 16px;
-
-  /* 그림자 효과를 줍니다. --shadow-sm 변수에 정의된 값을 사용합니다. */
-  box-shadow: var(--shadow-sm);
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--color-text);
+  outline: none;
+  min-width: 0;
+  font-family: var(--font-body);
 }
+
+.navSearchInput::placeholder {
+  color: var(--color-text-lighter);
+}
+
+.navSearchClear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-text-light);
+  padding: 0 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color var(--duration-fast);
+}
+
+.navSearchClear:hover {
+  color: var(--color-text);
+}
+
+/*
+ * ── Nav 오른쪽 액션 영역 ──
+ */
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* 찜 목록 링크 — 원형 아이콘 버튼 */
+.navIconBtn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background var(--duration-fast) var(--ease-smooth);
+}
+
+.navIconBtn:hover {
+  background: var(--color-bg-secondary);
+}
+
+/* 찜 개수 뱃지 */
+.navBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1.5px solid var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* 레거시 호환 — 기존 코드에서 참조하는 클래스 (사용 없어도 빌드 오류 방지) */
+.navContent { display: none; }
+.navLinks { display: none; }
+.themeToggleWrapper { display: contents; }
 
 .navLinks {
   display: flex;
@@ -181,184 +316,22 @@
   font-weight: 700;
 }
 
-/* 
- * .logoSegment
- * 로고의 각 단어(Sales, Product, Archive) 묶음입니다.
- */
-.logoSegment {
-  /* 인라인 요소처럼 흐르되 Flexbox 속성을 가집니다. */
-  display: inline-flex;
+/* 레거시 로고 클래스 — v4에서는 사용되지 않으나 빌드 오류 방지를 위해 유지 */
+.logoSegment { display: inline-flex; align-items: baseline; overflow: hidden; }
+.logoChar { color: var(--color-text); font-weight: 800; }
+.logoWord { max-width: 0; opacity: 0; transition: max-width 0.3s ease, opacity 0.3s ease; }
+.logoWordVisible { max-width: 6rem; opacity: 1; }
 
-  /* 글자의 베이스라인(기준선)에 맞춰 정렬합니다. */
-  align-items: baseline;
-
-  /* 내용이 넘치면 숨깁니다. (애니메이션 효과를 위해 필요) */
-  overflow: hidden;
-}
-
-/* 
- * .logoChar
- * 로고의 첫 글자 (S, P, A) 스타일입니다.
- */
-.logoChar {
-  /* 글자 색상을 진한 색상 변수로 설정합니다. */
-  color: var(--color-dark);
-
-  /* 글자 두께를 800(Extra Bold)으로 매우 굵게 설정합니다. */
-  font-weight: 800;
-
-  /* 오른쪽 여백을 아주 살짝 줍니다. */
-  margin-right: 0.05rem;
-}
-
-/* 
- * .logoWord
- * 로고의 나머지 글자들 (ales, roduct, rchive) 스타일입니다.
- * 초기 상태에서는 숨겨져 있다가 애니메이션으로 나타납니다.
- */
-.logoWord {
-  /* 너비를 0으로 하여 숨깁니다. */
-  max-width: 0;
-
-  /* 투명도를 0으로 하여 보이지 않게 합니다. */
-  opacity: 0;
-
-  /* 글자 색상을 포인트 색상(Primary)으로 설정합니다. */
-  color: var(--color-primary);
-
-  /* 글자 두께를 600(Semi Bold)으로 설정합니다. */
-  font-weight: 600;
-
-  /* 줄 바꿈을 금지합니다. */
-  white-space: nowrap;
-
-  /* 너비와 투명도가 변할 때 0.3초 동안 부드럽게 변하도록 애니메이션을 설정합니다. */
-  transition: max-width 0.3s ease, opacity 0.3s ease;
-}
-
-/* 
- * .logoWordVisible
- * 로고 글자가 보일 때 적용되는 클래스입니다.
- */
-.logoWordVisible {
-  /* 너비를 6rem까지 늘려 글자가 보이게 공간을 확보합니다. */
-  max-width: 6rem;
-
-  /* 투명도를 1로 하여 완전히 보이게 합니다. */
-  opacity: 1;
-}
-
-/* 
- * .favoritesLink
- * 찜 목록으로 가는 링크 버튼 스타일입니다.
- */
-.favoritesLink {
-  /* Flexbox로 내부 아이콘과 텍스트 정렬 */
-  display: flex;
-
-  /* 세로 중앙 정렬 */
-  align-items: center;
-
-  /* 아이콘과 텍스트 사이 간격 */
-  gap: 0.5rem;
-
-  /* 안쪽 여백: 상하 0.6rem, 좌우 1.2rem */
-  padding: 0.6rem 1.2rem;
-
-  /* 배경에 대각선 그라데이션을 적용하여 은은한 효과를 줍니다. */
-  background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 71, 87, 0.05));
-
-  /* 테두리 색상을 반투명한 붉은색으로 설정합니다. */
-  border: 1px solid rgba(255, 71, 87, 0.2);
-
-  /* 모서리를 12px 둥글게 합니다. */
-  border-radius: 12px;
-
-  /* 링크의 기본 밑줄을 제거합니다. */
-  text-decoration: none;
-
-  /* 글자 색상을 붉은색(#ff4757)으로 설정합니다. */
-  color: #ff4757;
-
-  /* 글자 두께 600(Semi Bold) */
-  font-weight: 600;
-
-  /* 글자 크기 0.95rem */
-  font-size: 0.95rem;
-
-  /* 모든 속성 변화에 0.3초 애니메이션 적용 */
-  transition: all 0.3s ease;
-
-  /* 자식 요소(뱃지 등)의 절대 위치 기준점이 됩니다. */
-  position: relative;
-}
-
-/* 
- * .favoritesLink:hover
- * 찜 목록 링크에 마우스를 올렸을 때 스타일입니다.
- */
-.favoritesLink:hover {
-  /* 배경색을 조금 더 진하게 변경합니다. */
-  background: linear-gradient(135deg, rgba(255, 71, 87, 0.15), rgba(255, 71, 87, 0.08));
-
-  /* 테두리 색상을 더 진하게 변경합니다. */
-  border-color: rgba(255, 71, 87, 0.3);
-
-  /* 버튼을 위로 2px 살짝 들어올리는 효과를 줍니다. */
-  transform: translateY(-2px);
-
-  /* 그림자를 추가하여 떠 있는 느낌을 줍니다. */
-  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.2);
-}
-
-/* 하트 아이콘 */
-.favoritesLink .heartIcon {
-  /* 아이콘 크기를 1.2rem으로 설정 */
-  font-size: 1.2rem;
-
-  /* 아이콘 색상 */
-  color: #ff4757;
-}
-
-/* 찜 목록 텍스트 */
-.favoritesText {
-  /* 텍스트 색상을 기본 텍스트 색상 변수로 설정 */
-  color: var(--color-text);
-}
-
-/* 
- * .favoritesBadge
- * 찜한 개수를 표시하는 붉은색 원형 뱃지입니다.
- */
+/* 레거시 찜 링크 클래스 — v4에서 navIconBtn/navBadge로 이전되었으나 빌드 오류 방지용으로 유지 */
+.favoritesLink { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--color-text); }
+.favoritesLink:hover { color: var(--color-primary); }
+.heartIcon { font-size: 1.2rem; }
+.favoritesText { color: var(--color-text); }
 .favoritesBadge {
-  /* 인라인 Flexbox로 배치 */
-  display: inline-flex;
-
-  /* 내용물 중앙 정렬 */
-  align-items: center;
-  justify-content: center;
-
-  /* 최소 너비와 높이를 지정하여 원형 유지 */
-  min-width: 1.5rem;
-  height: 1.5rem;
-
-  /* 좌우 여백 */
-  padding: 0 0.4rem;
-
-  /* 배경색 붉은색 */
-  background: #ff4757;
-
-  /* 글자색 흰색 */
-  color: white;
-
-  /* 모서리 둥글게 */
-  border-radius: 12px;
-
-  /* 글자 크기 작게 */
-  font-size: 0.75rem;
-
-  /* 글자 두께 굵게 */
-  font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.5rem; height: 1.5rem; padding: 0 0.4rem;
+  background: var(--color-primary); color: white;
+  border-radius: 12px; font-size: 0.75rem; font-weight: 700;
 }
 
 /* 
@@ -697,63 +670,56 @@
   color: var(--color-text-lighter);
 }
 
-/* 검색 버튼 */
+/* 검색 버튼 (v4: Apple Blue) */
 .searchButton {
   padding: 0.5rem 1.25rem;
   border-radius: 100px;
   border: none;
-  background: #6366f1;
-  /* Primary Color */
+  background: var(--color-primary);
   color: #fff;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
+  transition: all var(--duration-base) var(--ease-smooth);
+  box-shadow: 0 2px 6px rgba(0, 113, 227, 0.25);
+  font-family: var(--font-body);
 }
 
 .searchButton:hover,
 .searchButton:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.35);
-  background: #5558e3;
+  box-shadow: 0 4px 10px rgba(0, 113, 227, 0.35);
+  background: var(--color-primary-dark);
 }
 
 /* 
  * .filterToggleButton
  * 모바일에서 필터 패널을 여는 플로팅 버튼입니다.
  */
+/* filterToggleButton (v4: FAB 스타일, Apple Blue) */
 .filterToggleButton {
-  /* 뷰포트 기준으로 고정 위치 */
   position: fixed;
-
-  /* 하단에서 6rem 위 */
   bottom: 6rem;
-
-  /* 우측에서 1.5rem 왼쪽 */
   right: 1.5rem;
-
-  /* 다른 요소 위에 표시 */
   z-index: 100;
-
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: #6366f1;
-  color: #fff;
+  background: var(--color-text);
+  color: var(--color-bg);
   border: none;
   border-radius: 100px;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  box-shadow: var(--shadow-fab);
   cursor: pointer;
   font-weight: 600;
   font-size: 0.95rem;
-  transition: all 0.2s ease;
+  font-family: var(--font-body);
+  transition: transform var(--duration-base) var(--ease-spring), box-shadow var(--duration-base);
 }
 
 .filterToggleButton:hover {
-  background: #5558e3;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: var(--shadow-fab);
 }
 
 .filterToggleIcon {
@@ -931,18 +897,13 @@
   background: var(--color-bg);
 }
 
-/* 로딩 스피너 */
+/* 로딩 스피너 (v4: Apple Blue) */
 .loadingSpinner {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  /* 원형 */
-  border: 3px solid rgba(99, 102, 241, 0.25);
-  /* 연한 테두리 */
+  border: 3px solid rgba(0, 113, 227, 0.20);
   border-top-color: var(--color-primary);
-  /* 상단만 진하게 */
-
-  /* 회전 애니메이션 */
   animation: spin 0.9s linear infinite;
 }
 
@@ -980,13 +941,12 @@
   }
 }
 
-/* 상품 목록 그리드 */
+/* 상품 목록 그리드 (v4: 240px 최소 너비, 20px 간격) */
 .productsGrid {
   display: grid;
-  gap: clamp(1.5rem, 3vw, 2rem);
-
-  /* 반응형 열: 최소 260px 너비를 유지하며 자동으로 열 개수 조절 */
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  /* v4: 8pt 그리드 기준 2.5단위 */
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
 }
 
 /* 빈 상태 (상품 없음) */
@@ -1249,27 +1209,27 @@
   }
 }
 
-/* 
- * .scrollTopButton
- * 맨 위로 가기 버튼
+/*
+ * .scrollTopButton (v4 FAB 스타일)
+ * 맨 위로 가기 버튼: 진한 배경 + var(--shadow-fab) 그림자
  */
 .scrollTopButton {
   position: fixed;
-  right: 2rem;
-  bottom: 2rem;
-  width: 3rem;
-  height: 3rem;
+  right: 20px;
+  bottom: 20px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.8);
-  color: #fff;
-  font-size: 1.25rem;
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 20px 40px -25px rgba(15, 23, 42, 0.6);
+  box-shadow: var(--shadow-fab);
   cursor: pointer;
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  transition: transform var(--duration-base) var(--ease-spring);
   z-index: 90;
 }
 
@@ -1355,8 +1315,8 @@
 
 .complianceToggle:hover,
 .complianceToggle:focus-visible {
-  background: rgba(99, 102, 241, 0.08);
-  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(0, 113, 227, 0.08);
+  border-color: rgba(0, 113, 227, 0.4);
   transform: translateY(-1px);
 }
 
@@ -1719,5 +1679,83 @@
   .footerLinks {
     flex-direction: column;
     gap: 1rem;
+  }
+}
+
+/*
+ * ── Skeleton Loading (v4 shimmer 애니메이션) ──
+ * 초기 로딩 시 실제 카드와 동일한 레이아웃으로 로딩 상태를 표현합니다.
+ * shimmer 애니메이션은 globals.css에 정의되어 있습니다.
+ */
+
+/* 스켈레톤 그리드 — productsGrid와 동일한 레이아웃 */
+.skeletonGrid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+}
+
+/* 스켈레톤 카드 */
+.skeletonCard {
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--color-bg-secondary);
+}
+
+/* 스켈레톤 이미지 영역 — 3:4 비율, shimmer 애니메이션 */
+.skeletonImage {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(
+    90deg,
+    var(--shimmer-from) 25%,
+    var(--shimmer-to) 50%,
+    var(--shimmer-from) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+/* 스켈레톤 텍스트 영역 */
+.skeletonBody {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 스켈레톤 텍스트 줄 — width는 인라인 style로 개별 지정 */
+.skeletonLine {
+  height: 13px;
+  border-radius: 7px;
+  background: linear-gradient(
+    90deg,
+    var(--shimmer-from) 25%,
+    var(--shimmer-to) 50%,
+    var(--shimmer-from) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+/* 모바일에서 nav 검색창 숨기기 — 모바일은 필터 패널 내 검색 사용 */
+@media (max-width: 480px) {
+  .navSearchForm {
+    display: none;
+  }
+  /* nav를 2-column으로 전환 (로고 | 액션) */
+  .navInner {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+/* 모바일 scrollTopButton 위치 조정 */
+@media (max-width: 768px) {
+  .scrollTopButton {
+    right: 1rem;
+    bottom: 12rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
   }
 }

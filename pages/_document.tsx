@@ -11,6 +11,15 @@ export default function Document() {
   return (
     <Html lang="ko">
       <Head>
+        {/* Google Fonts — Noto Sans KR(본문) + Noto Serif KR(로고) */}
+        {/* preconnect로 DNS·TCP 연결을 미리 수행해 폰트 로딩 지연 최소화 */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Noto+Serif+KR:wght@600;700;900&display=swap"
+          rel="stylesheet"
+        />
+
         {/* SEO 기본 메타 태그 */}
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />

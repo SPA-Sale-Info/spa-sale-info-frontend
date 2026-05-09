@@ -2,10 +2,11 @@
  * CategoryFilter.tsx - 카테고리 필터 (TypeScript 버전)
  *
  * 카테고리 버튼 UI를 렌더링하고, 선택 상태를 부모에 전달합니다.
- * TypeScript 문법 포인트:
- * - `Category | 'all'`은 "카테고리 중 하나 또는 all"을 뜻합니다.
+ * v4 변경사항: 슬라이딩 인디케이터 추가 (GenderFilter와 동일한 패턴)
+ * - useRef/useLayoutEffect로 선택된 버튼의 DOM 위치를 읽어 인디케이터를 spring 애니메이션으로 이동시킵니다.
  */
 
+import { useRef, useState, useLayoutEffect } from 'react';
 import styles from '../styles/CategoryFilter.module.css';
 import type { Category } from '../types';
 
@@ -32,13 +33,33 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterProps) {
-  // 버튼 클릭 시 부모에 선택 값을 전달
-  const handleCategoryClick = (categoryCode: Category | 'all') => {
-    onCategoryChange(categoryCode);
-  };
+  // GenderFilter와 동일한 슬라이딩 인디케이터 패턴을 적용합니다.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, ready: false });
+
+  // 선택된 카테고리가 바뀔 때마다 해당 버튼의 DOM 위치를 읽어 인디케이터를 이동시킵니다.
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+    const btn = containerRef.current.querySelector('[aria-pressed="true"]') as HTMLElement | null;
+    if (!btn) return;
+    setIndicator({ left: btn.offsetLeft, width: btn.offsetWidth, ready: true });
+  }, [selectedCategory]);
 
   return (
-    <div className={styles.container} role="radiogroup" aria-label="카테고리 필터">
+    <div className={styles.container} ref={containerRef} role="radiogroup" aria-label="카테고리 필터">
+      {/* 슬라이딩 인디케이터 */}
+      <span
+        className={styles.indicator}
+        aria-hidden="true"
+        style={{
+          left: `${indicator.left}px`,
+          width: `${indicator.width}px`,
+          opacity: indicator.ready ? 1 : 0,
+          transition: indicator.ready
+            ? 'left 380ms var(--ease-spring), width 380ms var(--ease-spring), opacity 120ms'
+            : 'none',
+        }}
+      />
       {CATEGORIES.map((category) => {
         // 선택 여부에 따라 스타일을 다르게 적용
         const isSelected = selectedCategory === category.code;
@@ -51,7 +72,7 @@ function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterPr
             className={className}
             aria-pressed={isSelected}
             aria-label={`${category.label} 상품만 보기`}
-            onClick={() => handleCategoryClick(category.code)}
+            onClick={() => onCategoryChange(category.code)}
           >
             {category.label}
           </button>

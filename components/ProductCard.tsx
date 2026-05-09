@@ -25,6 +25,10 @@ interface ProductCardProps {
   imageUrl: string;
   isFavorite?: boolean;
   onFavoriteToggle?: (product: Product) => void;
+  // v4 추가: 카드 스태거 delay용 인덱스 (index * 60ms)
+  cardIndex?: number;
+  // v4 추가: 이미지 위 오버레이로 표시할 vibe 태그 배열
+  vibeTags?: string[];
 }
 
 /**
@@ -68,6 +72,8 @@ function ProductCard({
   imageUrl,
   isFavorite = false,
   onFavoriteToggle,
+  cardIndex,
+  vibeTags,
 }: ProductCardProps) {
   const router = useRouter();
 
@@ -107,6 +113,11 @@ function ProductCard({
     }
   };
 
+  // v4: cardIndex * 60ms 스태거 delay — 카드들이 순서대로 진입합니다.
+  const cardStyle = cardIndex !== undefined
+    ? { animationDelay: `${cardIndex * 60}ms` }
+    : undefined;
+
   return (
     <article
       className={styles.card}
@@ -114,6 +125,7 @@ function ProductCard({
       onKeyDown={handleCardKeyDown}
       role="button"
       tabIndex={0}
+      style={cardStyle}
     >
       <div className={styles.imageContainer}>
         <Image
@@ -132,6 +144,15 @@ function ProductCard({
               onToggle={onFavoriteToggle}
               size="medium"
             />
+          </div>
+        )}
+
+        {/* v4: vibe 태그 오버레이 — 이미지 위 하단에 glassmorphism pill로 표시 */}
+        {vibeTags && vibeTags.length > 0 && (
+          <div className={styles.vibeTagsOverlay}>
+            {vibeTags.slice(0, 2).map(tag => (
+              <span key={tag} className={styles.vibeTagOverlay}>{tag}</span>
+            ))}
           </div>
         )}
       </div>

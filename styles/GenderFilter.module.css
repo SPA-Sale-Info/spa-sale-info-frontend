@@ -1,60 +1,78 @@
 /*
- * GenderFilter.module.css - Toggle buttons for gender selection
+ * GenderFilter.module.css — v4 세그먼트 컨트롤 스타일
+ *
+ * 슬라이딩 인디케이터 패턴:
+ * - .container: position: relative (인디케이터의 기준점)
+ * - .indicator: position: absolute, z-index: 0 (버튼 뒤에 깔림)
+ * - .button: position: relative, z-index: 1 (인디케이터 위에 표시)
+ *
+ * 선택된 버튼의 텍스트만 굵어지고, 실제 배경 이동은 인디케이터가 담당합니다.
  */
 
+/* 세그먼트 컨트롤 컨테이너 */
 .container {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  padding: 0.5rem;
-  border-radius: 100px;
-  background: rgba(248, 250, 252, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  padding: 3px;
+  border-radius: 12px;
+  gap: 0;
+  background: var(--color-bg-secondary);
+  border: 0.5px solid var(--color-border);
 }
 
+/* 슬라이딩 인디케이터 — spring 애니메이션으로 선택된 버튼 위치로 이동 */
+.indicator {
+  position: absolute;
+  top: 3px;
+  height: calc(100% - 6px);
+  background: var(--color-bg);
+  border-radius: 9px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.10);
+  pointer-events: none;
+  z-index: 0;
+  /* transition은 index.tsx에서 inline style로 동적으로 적용됩니다 */
+}
+
+/* 개별 버튼 */
 .button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.55rem 1.3rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-text);
-  border-radius: 100px;
+  position: relative;
+  z-index: 1;
+  /* 인디케이터 위에 표시 */
+  padding: 7px 16px;
   border: none;
   background: transparent;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-light);
   cursor: pointer;
-  transition: all 0.2s ease;
+  /* color transition만 적용 (transform은 인디케이터가 담당) */
+  transition: color var(--duration-base) var(--ease-smooth);
+  white-space: nowrap;
+  font-family: var(--font-body);
 }
 
-.button:hover,
-.button:focus-visible {
-  transform: translateY(-1px);
-  background: rgba(99, 102, 241, 0.08);
-}
-
+/* 선택된 버튼: 텍스트만 진해집니다 (배경은 인디케이터) */
 .selected {
-  color: #fff;
-  background: #6366f1;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
+  color: var(--color-text);
+  font-weight: 600;
 }
 
+/* 레거시 호환 */
 .emoji {
-  font-size: 1.05rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
 @media (max-width: 768px) {
   .container {
     width: 100%;
-    justify-content: space-between;
   }
 
   .button {
     flex: 1;
-    padding: 0.55rem 0.75rem;
+    text-align: center;
+    padding: 7px 12px;
   }
 }

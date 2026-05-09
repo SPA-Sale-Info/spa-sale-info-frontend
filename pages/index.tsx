@@ -380,6 +380,8 @@ export default function Home() {
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false)
   const [showFilters, setShowFilters] = useState<boolean>(false)
   const [logoStep, setLogoStep] = useState<number>(0)
+  // navScrolled: 스크롤이 10px 이상이면 nav 하단 border-bottom을 표시합니다.
+  const [navScrolled, setNavScrolled] = useState<boolean>(false)
   const [totalSaleCount, setTotalSaleCount] = useState<number>(0)
   const [animatedCount, setAnimatedCount] = useState<number>(0)
   // useRef는 값이 변경되어도 렌더링을 다시 하지 않는 "mutable 참조"입니다.
@@ -402,10 +404,12 @@ export default function Home() {
     return DAILY_INSIGHTS[index]
   }, [])
 
+  // 로고 애니메이션: 3000ms 마다 "맛at" → "Sale" → "Archive" 순환
+  // % 3으로 0~2 범위를 순환합니다. key prop으로 React가 DOM을 교체하게 하여 logoFade 애니메이션이 매번 실행됩니다.
   useEffect(() => {
     const timer = setInterval(() => {
-      setLogoStep(prev => (prev + 1) % 4)
-    }, 1200)
+      setLogoStep(prev => (prev + 1) % 3)
+    }, 3000)
     return () => clearInterval(timer)
   }, [])
 
@@ -681,6 +685,8 @@ export default function Home() {
     const onScroll = () => {
       const currentScrollY = window.scrollY
       setShowScrollTop(currentScrollY > 400)
+      // 10px 이상 스크롤 시 nav에 border-bottom 표시
+      setNavScrolled(currentScrollY > 10)
       lastScrollY.current = currentScrollY
     }
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -797,44 +803,61 @@ export default function Home() {
           />
         </Head>
 
-        {/* 네비게이션 */}
-        <nav className={styles.navbar}>
-          <div className={styles.navContent}>
+        {/* 네비게이션 — Apple HIG sticky glassmorphism nav
+            navScrolled 상태에 따라 stickyNavScrolled 클래스를 추가해 하단 border-bottom을 표시합니다.
+            3-column grid: [로고] [검색창] [액션] */}
+        <header className={`${styles.stickyNav} ${navScrolled ? styles.stickyNavScrolled : ''}`}>
+          <div className={styles.navInner}>
+
+            {/* 로고 — 3단계 순환 (맛at / Sale / Archive)
+                key prop을 부여해야 React가 DOM을 교체하면서 logoFade 애니메이션이 재실행됩니다. */}
             <Link href="/" className={styles.logo}>
-              <span className={styles.logoSegment}>
-                <span className={styles.logoChar}>S</span>
-                <span className={`${styles.logoWord} ${logoStep >= 1 ? styles.logoWordVisible : ''}`}>
-                  ales
-                </span>
-              </span>
-              <span className={styles.logoSegment}>
-                <span className={styles.logoChar}>P</span>
-                <span className={`${styles.logoWord} ${logoStep >= 2 ? styles.logoWordVisible : ''}`}>
-                  roduct
-                </span>
-              </span>
-              <span className={styles.logoSegment}>
-                <span className={styles.logoChar}>A</span>
-                <span className={`${styles.logoWord} ${logoStep >= 3 ? styles.logoWordVisible : ''}`}>
-                  rchive
-                </span>
+              <span className={styles.logoMat}>맛</span>
+              <span className={styles.logoSuffix}>
+                {logoStep === 0 && <span key="at" className={styles.logoPhase}>at</span>}
+                {logoStep === 1 && <span key="sale" className={styles.logoPhase}>Sale</span>}
+                {logoStep === 2 && <span key="archive" className={styles.logoPhase}>Archive</span>}
               </span>
             </Link>
 
-            <div className={styles.navLinks}>
-              <Link href="/favorites" className={styles.favoritesLink}>
-                <span className={styles.heartIcon}>♥</span>
-                <span className={styles.favoritesText}>찜 목록</span>
+            {/* 검색창 — nav 중앙 배치 (모바일에서는 CSS로 숨김 처리) */}
+            <form className={styles.navSearchForm} onSubmit={handleSearchSubmit}>
+              <span className={styles.navSearchIcon} aria-hidden="true">🔍</span>
+              <input
+                type="text"
+                name="keyword"
+                value={searchInput}
+                onChange={handleSearchInputChange}
+                className={styles.navSearchInput}
+                placeholder="브랜드, 무드, 상품 검색"
+                aria-label="상품 검색"
+              />
+              {/* 검색어가 있을 때만 지우기 버튼 표시 */}
+              {searchInput && (
+                <button
+                  type="button"
+                  className={styles.navSearchClear}
+                  onClick={() => { setSearchInput(''); setSearchKeyword(''); }}
+                  aria-label="검색어 지우기"
+                >
+                  ✕
+                </button>
+              )}
+            </form>
+
+            {/* 오른쪽 액션 영역 — 찜 목록 링크 + 테마 토글 */}
+            <div className={styles.navActions}>
+              <Link href="/favorites" className={styles.navIconBtn} aria-label="찜 목록">
+                <span aria-hidden="true">♥</span>
                 {getFavoriteCount() > 0 && (
-                  <span className={styles.favoritesBadge}>{getFavoriteCount()}</span>
+                  <span className={styles.navBadge}>{getFavoriteCount()}</span>
                 )}
               </Link>
+              <ThemeToggle />
             </div>
+
           </div>
-          <div className={styles.themeToggleWrapper}>
-            <ThemeToggle />
-          </div>
-        </nav>
+        </header>
 
         {/* 히어로 섹션 */}
         <section className={styles.hero}>
@@ -905,25 +928,9 @@ export default function Home() {
             </p>
           </div>
 
-          {/* 필터 패널 */}
-          <div className={styles.searchBarWrap}>
-            <form className={styles.searchForm} onSubmit={handleSearchSubmit}>
-              <input
-                type="text"
-                name="keyword"
-                value={searchInput}
-                onChange={handleSearchInputChange}
-                className={styles.searchInput}
-                placeholder="상품명이나 브랜드를 검색해 보세요"
-                aria-label="상품 검색"
-              />
-              <button type="submit" className={styles.searchButton}>
-                검색
-              </button>
-            </form>
-          </div>
-
-          {/* 필터 토글 버튼 */}
+          {/* 필터 토글 버튼
+              searchBarWrap은 nav 검색창으로 이동했으므로 제거되었습니다.
+              모바일에서는 이 토글 버튼을 통해 필터 패널을 열고 닫습니다. */}
           <button
             className={styles.filterToggleButton}
             onClick={toggleFilters}
@@ -984,11 +991,21 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 로딩 상태 */}
+          {/* 초기 로딩 — shimmer 스켈레톤 카드 8개
+              스피너 대신 shimmer 애니메이션으로 콘텐츠 영역을 미리 채웁니다.
+              Array.from으로 길이 8짜리 배열을 만들어 map으로 렌더링합니다. */}
           {isInitialLoading && (
-            <div className={styles.loading}>
-              <div className={styles.loadingSpinner}></div>
-              <p className={styles.loadingText}>상품을 불러오는 중...</p>
+            <div className={styles.skeletonGrid}>
+              {Array.from({ length: 8 }, (_, i) => (
+                <div key={i} className={styles.skeletonCard}>
+                  <div className={styles.skeletonImage} />
+                  <div className={styles.skeletonBody}>
+                    <div className={styles.skeletonLine} style={{ width: '35%' }} />
+                    <div className={styles.skeletonLine} style={{ width: '75%' }} />
+                    <div className={styles.skeletonLine} style={{ width: '50%' }} />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -1015,22 +1032,31 @@ export default function Home() {
                     </div>
                   )
                   : (
-                    filteredProducts.map(product => (
+                    filteredProducts.map((product, index) => (
                       <ProductCard
                         key={product.id}
                         product={product}
                         {...product}
                         isFavorite={isFavorite(product.id)}
                         onFavoriteToggle={toggleFavorite}
+                        cardIndex={index}
                       />
                     ))
                   )}
               </div>
 
+              {/* 추가 로딩 — shimmer 스켈레톤 카드 4개 (무한 스크롤 시 하단에 표시) */}
               {isFetchingMore && (
-                <div className={styles.loading}>
-                  <div className={styles.loadingSpinner}></div>
-                  <p className={styles.loadingText}>추가 상품을 불러오는 중...</p>
+                <div className={styles.skeletonGrid}>
+                  {Array.from({ length: 4 }, (_, i) => (
+                    <div key={i} className={styles.skeletonCard}>
+                      <div className={styles.skeletonImage} />
+                      <div className={styles.skeletonBody}>
+                        <div className={styles.skeletonLine} style={{ width: '40%' }} />
+                        <div className={styles.skeletonLine} style={{ width: '65%' }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
