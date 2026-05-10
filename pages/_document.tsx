@@ -31,7 +31,7 @@ export default function Document() {
           name="keywords"
           content="SPA 브랜드, 할인, 세일, H&M, ZARA, UNIQLO, MUJI, 찰스앤키스, Charles & Keith, 패션, 쇼핑, 가격비교, 세일정보, 온라인쇼핑, 세일모음, 패션할인, 의류세일"
         />
-        <meta name="author" content="Sale Archive" />
+        <meta name="author" content="ARCA" />
         <meta
           name="google-site-verification"
           content="_KMcFZsQnyR0XLtsW2dKq3pk7zUzyWhA9ocxFf5TYHY"
@@ -42,7 +42,7 @@ export default function Document() {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Sale Archive" />
+        <meta name="apple-mobile-web-app-title" content="ARCA" />
 
         {/* 추가 SEO 메타 태그 */}
         <meta name="language" content="Korean" />
@@ -52,8 +52,8 @@ export default function Document() {
 
         {/* Open Graph 태그 (SNS 공유용) */}
         <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Sale Archive" />
-        <meta property="og:title" content="Sale Archive - SPA 브랜드 세일 정보" />
+        <meta property="og:site_name" content="ARCA" />
+        <meta property="og:title" content="ARCA - SPA 브랜드 세일 정보" />
         <meta
           property="og:description"
           content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요."
@@ -63,7 +63,7 @@ export default function Document() {
 
         {/* Twitter Card 태그 */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Sale Archive - SPA 브랜드 세일 정보" />
+        <meta name="twitter:title" content="ARCA - SPA 브랜드 세일 정보" />
         <meta
           name="twitter:description"
           content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요."

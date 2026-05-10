@@ -722,20 +722,20 @@ export default function Home() {
       </div>
       <div className={styles.mainContent}>
         <Head>
-          <title>Sale Archive - H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 세일 정보 | 매일 업데이트</title>
+          <title>ARCA - H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 세일 정보 | 매일 업데이트</title>
           <meta name="description" content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 합리적인 쇼핑을 즐기세요." />
           <meta name="google-site-verification" content="Jq8ncQ8slNfWXuqPL_ZZv8f10qrXEApKFkjkwDsy56k" />
           <link rel="canonical" href="https://mion-spa-info.vercel.app" />
 
           {/* Open Graph 메타 태그 */}
-          <meta property="og:title" content="Sale Archive - SPA 브랜드 세일 정보 | 매일 업데이트" />
+          <meta property="og:title" content="ARCA - SPA 브랜드 세일 정보 | 매일 업데이트" />
           <meta property="og:description" content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요." />
           <meta property="og:type" content="website" />
           <meta property="og:url" content="https://mion-spa-info.vercel.app" />
 
           {/* Twitter Card */}
           <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content="Sale Archive - SPA 브랜드 세일 정보" />
+          <meta name="twitter:title" content="ARCA - SPA 브랜드 세일 정보" />
           <meta name="twitter:description" content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 할인 상품을 한눈에 비교하세요." />
 
           {/* 구조화된 데이터 (JSON-LD) */}
@@ -745,8 +745,8 @@ export default function Home() {
               __html: JSON.stringify({
                 '@context': 'https://schema.org',
                 '@type': 'WebSite',
-                name: 'Sale Archive',
-                description: 'SPA 브랜드 세일 정보 큐레이션 서비스',
+                name: 'ARCA',
+                description: 'SPA 브랜드 세일 정보 큐레이션 서비스 — ARCA',
                 url: 'https://mion-spa-info.vercel.app',
                 potentialAction: {
                   '@type': 'SearchAction',
@@ -793,10 +793,10 @@ export default function Home() {
               __html: JSON.stringify({
                 '@context': 'https://schema.org',
                 '@type': 'Organization',
-                name: 'Sale Archive',
+                name: 'ARCA',
                 url: 'https://mion-spa-info.vercel.app',
                 logo: 'https://mion-spa-info.vercel.app/favicon.ico',
-                description: 'SPA 브랜드 할인 상품 정보를 제공하는 큐레이션 서비스',
+                description: 'ARCA — SPA 브랜드 할인 상품 정보를 제공하는 큐레이션 서비스',
                 sameAs: [],
               }),
             }}
@@ -809,25 +809,14 @@ export default function Home() {
         <header className={`${styles.stickyNav} ${navScrolled ? styles.stickyNavScrolled : ''}`}>
           <div className={styles.navInner}>
 
-            {/* 로고 — S·P·A 프로그레시브 리빌 애니메이션
-                logoStep이 커질수록 ales / roduct / rchive가 순서대로 펼쳐집니다. */}
+            {/* 로고 — ARCA 프리미엄 모노그램 애니메이션
+                logoStep 0: "A"만 노출 / logoStep 1~3: "ARCA" 풀네임 노출
+                하나의 이니셜에서 브랜드 전체 이름이 펼쳐지는 고급스러운 리빌 효과입니다. */}
             <Link href="/" className={styles.logo}>
               <span className={styles.logoSegment}>
-                <span className={styles.logoChar}>S</span>
-                <span className={`${styles.logoWord} ${logoStep >= 1 ? styles.logoWordVisible : ''}`}>
-                  ales
-                </span>
-              </span>
-              <span className={styles.logoSegment}>
-                <span className={styles.logoChar}>P</span>
-                <span className={`${styles.logoWord} ${logoStep >= 2 ? styles.logoWordVisible : ''}`}>
-                  roduct
-                </span>
-              </span>
-              <span className={styles.logoSegment}>
                 <span className={styles.logoChar}>A</span>
-                <span className={`${styles.logoWord} ${logoStep >= 3 ? styles.logoWordVisible : ''}`}>
-                  rchive
+                <span className={`${styles.logoWord} ${logoStep >= 1 ? styles.logoWordVisible : ''}`}>
+                  RCA
                 </span>
               </span>
             </Link>

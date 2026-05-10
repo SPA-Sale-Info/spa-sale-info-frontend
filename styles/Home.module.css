@@ -104,8 +104,9 @@
 }
 
 /*
- * .logo (v4)
- * "맛" + suffix 구조: baseline 정렬, Noto Serif KR + Noto Sans KR 조합
+ * .logo — ARCA 브랜드 로고
+ * 이니셜 "A"에서 풀 네임 "ARCA"가 부드럽게 펼쳐지는 프리미엄 모노그램 애니메이션
+ * baseline 정렬로 Noto Serif KR의 세리프 느낌을 활용합니다.
  */
 .logo {
   display: flex;
@@ -113,33 +114,6 @@
   text-decoration: none;
   flex-shrink: 0;
   gap: 0;
-}
-
-/* "맛" — Noto Serif KR 굵고 크게 */
-.logoMat {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 900;
-  color: var(--color-text);
-  line-height: 1;
-}
-
-/* suffix 컨테이너 — 높이를 고정해 레이아웃 흔들림 방지 */
-.logoSuffix {
-  display: inline-flex;
-  overflow: hidden;
-  height: 20px;
-  align-items: center;
-}
-
-/* 각 phase ("at" / "Sale" / "Archive") — logoFade 애니메이션으로 진입 */
-.logoPhase {
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-primary);
-  animation: logoFade var(--duration-base) var(--ease-out);
-  white-space: nowrap;
 }
 
 /*
@@ -316,11 +290,28 @@
   font-weight: 700;
 }
 
-/* 레거시 로고 클래스 — v4에서는 사용되지 않으나 빌드 오류 방지를 위해 유지 */
+/* ARCA 로고 — 이니셜 "A"에서 "RCA"가 펼쳐지는 프리미엄 reveal 효과 */
 .logoSegment { display: inline-flex; align-items: baseline; overflow: hidden; }
-.logoChar { color: var(--color-text); font-weight: 800; }
-.logoWord { max-width: 0; opacity: 0; transition: max-width 0.3s ease, opacity 0.3s ease; }
-.logoWordVisible { max-width: 6rem; opacity: 1; }
+.logoChar {
+  color: var(--color-text);
+  font-family: var(--font-serif);
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+}
+.logoWord {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.4s var(--ease-smooth), opacity 0.4s var(--ease-smooth);
+  font-family: var(--font-serif);
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+}
+.logoWordVisible { max-width: 4rem; opacity: 1; }
 
 /* 레거시 찜 링크 클래스 — v4에서 navIconBtn/navBadge로 이전되었으나 빌드 오류 방지용으로 유지 */
 .favoritesLink { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--color-text); }

@@ -21,7 +21,7 @@ export default function Footer() {
         <div className={styles.main}>
           {/* 브랜드 섹션 */}
           <div className={styles.section}>
-            <h3 className={styles.brand}>맛 프로젝트</h3>
+            <h3 className={styles.brand}>ARCA</h3>
             <p className={styles.description}>
               합리적인 가격으로 즐기는
               <br />
@@ -90,7 +90,7 @@ export default function Footer() {
 
           {/* 저작권 */}
           <div className={styles.copyright}>
-            <p>© {currentYear} 맛 프로젝트 (Sale Archive). All rights reserved.</p>
+            <p>© {currentYear} ARCA. All rights reserved.</p>
           </div>
 
           {/* 면책 조항 */}

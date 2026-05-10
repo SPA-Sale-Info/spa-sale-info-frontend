@@ -1,6 +1,6 @@
 {
-    "name": "Sale Archive - SPA 브랜드 세일 정보",
-    "short_name": "Sale Archive",
+    "name": "ARCA - SPA 브랜드 세일 정보",
+    "short_name": "ARCA",
     "description": "H&M, ZARA, UNIQLO 등 인기 SPA 브랜드의 실시간 세일 정보를 확인하세요.",
     "start_url": "/",
     "display": "standalone",

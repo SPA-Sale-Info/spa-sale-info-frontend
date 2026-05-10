@@ -13,8 +13,8 @@ export default function Terms() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>이용약관 - Sale Archive</title>
-        <meta name="description" content="Sale Archive의 이용약관입니다." />
+        <title>이용약관 - ARCA</title>
+        <meta name="description" content="ARCA의 이용약관입니다." />
         <meta name="robots" content="index, follow" />
       </Head>
 
@@ -31,7 +31,7 @@ export default function Terms() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>제1조 (목적)</h2>
             <p className={styles.text}>
-              본 약관은 Sale Archive(이하 "서비스")가 제공하는 SPA 브랜드 할인 정보 큐레이션 서비스의
+              본 약관은 ARCA(이하 "서비스")가 제공하는 SPA 브랜드 할인 정보 큐레이션 서비스의
               이용과 관련하여 서비스와 이용자의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
             </p>
           </section>
@@ -41,7 +41,7 @@ export default function Terms() {
             <p className={styles.text}>본 약관에서 사용하는 용어의 정의는 다음과 같습니다:</p>
             <ul className={styles.list}>
               <li>
-                <strong>"서비스"</strong>란 Sale Archive가 운영하는 웹사이트를 통해 제공하는
+                <strong>"서비스"</strong>란 ARCA가 운영하는 웹사이트를 통해 제공하는
                 SPA 브랜드 할인 정보 큐레이션 및 관련 부가 서비스를 의미합니다.
               </li>
               <li>

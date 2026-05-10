@@ -23,7 +23,7 @@ interface SEOProps {
  * SEO 컴포넌트
  */
 export default function SEO({
-  title = 'Sale Archive - SPA 브랜드 세일 정보',
+  title = 'ARCA - SPA 브랜드 세일 정보',
   description = 'H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 최신 세일 정보.',
   canonical = 'https://mion-spa-info.vercel.app',
   ogImage = 'https://mion-spa-info.vercel.app/og-image.png',
@@ -34,7 +34,7 @@ export default function SEO({
   const defaultStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Sale Archive',
+    name: 'ARCA',
     description: 'SPA 브랜드 세일 정보 모음',
     url: 'https://mion-spa-info.vercel.app',
     potentialAction: {
@@ -47,7 +47,7 @@ export default function SEO({
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Sale Archive',
+      name: 'ARCA',
       logo: {
         '@type': 'ImageObject',
         url: 'https://mion-spa-info.vercel.app/favicon.svg',
@@ -77,7 +77,7 @@ export default function SEO({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonical} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:site_name" content="Sale Archive" />
+      <meta property="og:site_name" content="ARCA" />
       <meta property="og:locale" content="ko_KR" />
 
       {/* Twitter Card 메타 태그 */}

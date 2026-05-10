@@ -75,8 +75,8 @@ export default function Contact() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>문의하기 - Sale Archive</title>
-        <meta name="description" content="맛 프로젝트에 대한 문의, 제안, 피드백을 보내주세요. 언제나 열려있습니다." />
+        <title>문의하기 - ARCA</title>
+        <meta name="description" content="ARCA에 대한 문의, 제안, 피드백을 보내주세요. 언제나 열려있습니다." />
         <meta name="robots" content="index, follow" />
       </Head>
 
@@ -195,7 +195,7 @@ export default function Contact() {
             <div className={contactStyles.faqItem}>
               <h3 className={contactStyles.faqQuestion}>Q. 회원가입이 필요한가요?</h3>
               <p className={styles.text}>
-                아니요! 맛 프로젝트는 회원가입 없이 모든 기능을 무료로 이용할 수 있습니다.
+                아니요! ARCA는 회원가입 없이 모든 기능을 무료로 이용할 수 있습니다.
                 즐겨찾기 기능도 브라우저에 저장되어 개인정보 없이 사용 가능합니다.
               </p>
             </div>
@@ -211,7 +211,7 @@ export default function Contact() {
             <div className={contactStyles.faqItem}>
               <h3 className={contactStyles.faqQuestion}>Q. 구매는 어떻게 하나요?</h3>
               <p className={styles.text}>
-                맛 프로젝트는 정보 제공 서비스입니다. 상품을 클릭하면 해당 브랜드의
+                ARCA는 정보 제공 서비스입니다. 상품을 클릭하면 해당 브랜드의
                 공식 웹사이트로 연결되어 안전하게 구매하실 수 있습니다.
               </p>
             </div>
@@ -236,7 +236,7 @@ export default function Contact() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>📱 소셜 미디어</h2>
             <p className={styles.text}>
-              맛 프로젝트의 최신 소식과 스타일 팁을 소셜 미디어에서도 만나보세요.
+              ARCA의 최신 소식과 스타일 팁을 소셜 미디어에서도 만나보세요.
             </p>
             <div className={contactStyles.socialLinks}>
               <p className={styles.text}>
@@ -262,7 +262,7 @@ export default function Contact() {
             <h2 className={styles.sectionTitle}>🏢 사업자 정보</h2>
             <div className={styles.contact}>
               <p>
-                <strong>서비스명</strong>: 맛 프로젝트 (Sale Archive)<br/>
+                <strong>서비스명</strong>: ARCA (ARCA)<br/>
                 <strong>운영자</strong>: 개인 프로젝트<br/>
                 <strong>이메일</strong>: support@salearchive.com<br/>
                 <strong>호스팅</strong>: Vercel

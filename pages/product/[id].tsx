@@ -305,11 +305,11 @@ export default function ProductDetail() {
         상품 정보를 기반으로 Open Graph 태그를 생성하여 SNS 공유 시 미리보기를 최적화합니다.
       */}
       <Head>
-        <title>{product ? `${product.brand} ${product.name} - Sale Archive` : '상품 상세 - Sale Archive'}</title>
+        <title>{product ? `${product.brand} ${product.name} - ARCA` : '상품 상세 - ARCA'}</title>
         <meta name="description" content={product ? `${product.brand} ${product.name} ${product.discountRate}% 할인 중! 현재 가격: ${formatPriceValue(product.salePrice)}` : 'SPA 브랜드 세일 정보'} />
 
         {/* Open Graph (Facebook, KakaoTalk 등) */}
-        <meta property="og:title" content={product ? `${product.brand} ${product.name} (${product.discountRate}% 할인)` : 'Sale Archive'} />
+        <meta property="og:title" content={product ? `${product.brand} ${product.name} (${product.discountRate}% 할인)` : 'ARCA'} />
         <meta property="og:description" content={product ? `정가 ${formatPriceValue(product.originalPrice)} → 할인가 ${formatPriceValue(product.salePrice)}` : 'SPA 브랜드 세일 정보를 확인하세요.'} />
         <meta property="og:image" content={product?.imageUrl} />
         <meta property="og:url" content={`https://mion-spa-info.vercel.app/product/${id}`} />
