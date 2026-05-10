@@ -404,12 +404,12 @@ export default function Home() {
     return DAILY_INSIGHTS[index]
   }, [])
 
-  // 로고 애니메이션: 3000ms 마다 "맛at" → "Sale" → "Archive" 순환
-  // % 3으로 0~2 범위를 순환합니다. key prop으로 React가 DOM을 교체하게 하여 logoFade 애니메이션이 매번 실행됩니다.
+  // 로고 애니메이션: 1200ms마다 logoStep 0→1→2→3 순환
+  // S(ales) / S·P(roduct) / S·P·A(rchive) 순서로 단어가 펼쳐집니다.
   useEffect(() => {
     const timer = setInterval(() => {
-      setLogoStep(prev => (prev + 1) % 3)
-    }, 3000)
+      setLogoStep(prev => (prev + 1) % 4)
+    }, 1200)
     return () => clearInterval(timer)
   }, [])
 
@@ -809,14 +809,26 @@ export default function Home() {
         <header className={`${styles.stickyNav} ${navScrolled ? styles.stickyNavScrolled : ''}`}>
           <div className={styles.navInner}>
 
-            {/* 로고 — 3단계 순환 (맛at / Sale / Archive)
-                key prop을 부여해야 React가 DOM을 교체하면서 logoFade 애니메이션이 재실행됩니다. */}
+            {/* 로고 — S·P·A 프로그레시브 리빌 애니메이션
+                logoStep이 커질수록 ales / roduct / rchive가 순서대로 펼쳐집니다. */}
             <Link href="/" className={styles.logo}>
-              <span className={styles.logoMat}>맛</span>
-              <span className={styles.logoSuffix}>
-                {logoStep === 0 && <span key="at" className={styles.logoPhase}>at</span>}
-                {logoStep === 1 && <span key="sale" className={styles.logoPhase}>Sale</span>}
-                {logoStep === 2 && <span key="archive" className={styles.logoPhase}>Archive</span>}
+              <span className={styles.logoSegment}>
+                <span className={styles.logoChar}>S</span>
+                <span className={`${styles.logoWord} ${logoStep >= 1 ? styles.logoWordVisible : ''}`}>
+                  ales
+                </span>
+              </span>
+              <span className={styles.logoSegment}>
+                <span className={styles.logoChar}>P</span>
+                <span className={`${styles.logoWord} ${logoStep >= 2 ? styles.logoWordVisible : ''}`}>
+                  roduct
+                </span>
+              </span>
+              <span className={styles.logoSegment}>
+                <span className={styles.logoChar}>A</span>
+                <span className={`${styles.logoWord} ${logoStep >= 3 ? styles.logoWordVisible : ''}`}>
+                  rchive
+                </span>
               </span>
             </Link>
 
