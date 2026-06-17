@@ -98,20 +98,6 @@ function getGenderDisplayMeta(genderCode: Gender): GenderMeta | null {
   return genderMap[genderCode] || null
 }
 
-/**
- * 카테고리 표시 이름
- */
-function getCategoryDisplayName(category: Category): string {
-  const categoryNames: Record<Category, string> = {
-    TOP: '상의',
-    BOTTOM: '하의',
-    OUTER: '아우터',
-    SHOES: '신발',
-    ETC: '기타',
-  }
-  return categoryNames[category] || category
-}
-
 // 값이 문자열/숫자일 수 있을 때 안전하게 숫자로 변환
 function coerceNumber(value: unknown): number {
   if (typeof value === 'number' && !Number.isNaN(value)) {
@@ -359,18 +345,13 @@ export default function ProductDetail() {
 
           {/* 오른쪽: 상품 정보 영역 */}
           <div className={styles.infoSection}>
-            {/* 브랜드 & 카테고리 */}
+            {/* 브랜드 & 성별 */}
             <div className={styles.meta}>
               <div className={styles.brandBadge}>{brandName}</div>
               {genderMeta && (
                 <div className={styles.genderBadge}>
                   <span>{genderMeta.emoji}</span>
                   <span>{genderMeta.label}</span>
-                </div>
-              )}
-              {product.categoryGroup && (
-                <div className={styles.categoryBadge}>
-                  {getCategoryDisplayName(product.categoryGroup)}
                 </div>
               )}
             </div>
