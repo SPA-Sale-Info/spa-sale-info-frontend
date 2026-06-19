@@ -5,19 +5,19 @@
  * Head 태그로 검색 엔진용 메타를 설정합니다.
  */
 
-import Head from 'next/head'
 import Link from 'next/link'
+import SEO from '../components/SEO'
 import styles from '../styles/Legal.module.css'
 
 export default function Privacy() {
   // 정적 콘텐츠이므로 별도 상태 없이 JSX만 반환
   return (
     <div className={styles.container}>
-      <Head>
-        <title>개인정보처리방침 - ARCA</title>
-        <meta name="description" content="ARCA의 개인정보처리방침입니다." />
-        <meta name="robots" content="index, follow" />
-      </Head>
+      <SEO
+        title="개인정보처리방침 - ARCA"
+        description="ARCA의 개인정보처리방침입니다."
+        canonical="https://mion-spa-info.vercel.app/privacy"
+      />
 
       <div className={styles.content}>
         <header className={styles.header}>
@@ -32,7 +32,7 @@ export default function Privacy() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>1. 개인정보의 처리 목적</h2>
             <p className={styles.text}>
-              ARCA(이하 "본 서비스")는 다음의 목적을 위하여 개인정보를 처리합니다.
+              ARCA(이하 &quot;본 서비스&quot;)는 다음의 목적을 위하여 개인정보를 처리합니다.
               처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며,
               이용 목적이 변경되는 경우에는 「개인정보 보호법」 제18조에 따라 별도의 동의를 받는 등
               필요한 조치를 이행할 예정입니다.
@@ -166,7 +166,7 @@ export default function Privacy() {
             <h2 className={styles.sectionTitle}>10. 쿠키(Cookie)의 운용</h2>
             <p className={styles.text}>
               본 서비스는 이용자에게 개별적인 맞춤서비스를 제공하기 위해 이용정보를 저장하고
-              수시로 불러오는 '쿠키(cookie)'를 사용합니다.
+              수시로 불러오는 &apos;쿠키(cookie)&apos;를 사용합니다.
             </p>
             <p className={styles.text}>
               <strong>쿠키의 사용 목적:</strong>

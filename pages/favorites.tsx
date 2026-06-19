@@ -7,8 +7,8 @@
  */
 
 import { useState } from 'react';
-import Head from 'next/head';
 import Link from 'next/link';
+import SEO from '../components/SEO';
 import ProductCard from '../components/ProductCard';
 import useFavorites from '../hooks/useFavorites';
 import styles from '../styles/Favorites.module.css';
@@ -40,10 +40,11 @@ export default function Favorites() {
 
   return (
     <>
-      <Head>
-        <title>{pageTitle}</title>
-        <meta name="description" content="찜한 상품을 모아보고 저렴한 가격에 구매하세요." />
-      </Head>
+      <SEO
+        title={pageTitle}
+        description="찜한 상품을 모아보고 저렴한 가격에 구매하세요."
+        canonical="https://mion-spa-info.vercel.app/favorites"
+      />
 
       <div className={styles.container}>
         {/* 헤더 영역 */}
@@ -110,15 +111,15 @@ export default function Favorites() {
                 {favorites.map((product) => (
                   <ProductCard
                     key={product.id}
-                    product={product as any}
-                    brand={product.brand as any}
+                    product={product}
+                    brand={product.brand}
                     name={product.name}
                     salePrice={product.salePrice}
                     originalPrice={product.originalPrice}
                     discountRate={product.discountRate}
                     imageUrl={product.imageUrl}
                     isFavorite={isFavorite(product.id)}
-                    onFavoriteToggle={toggleFavorite as any}
+                    onFavoriteToggle={toggleFavorite}
                   />
                 ))}
               </div>

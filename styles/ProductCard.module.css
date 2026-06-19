@@ -71,12 +71,90 @@
   margin-right: 0.5rem;
 }
 
+/* 할인율 배지 — 이미지 좌상단 오버레이 (가장 강조되는 정보) */
+.discountBadgeOverlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 4px 10px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* 품절 오버레이 — 이미지를 어둡게 덮고 "품절" 라벨을 가운데 표시 */
+.soldOutOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+}
+
+.soldOutLabel {
+  padding: 6px 16px;
+  background: rgba(17, 24, 39, 0.82);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+}
+
+/* 품절 카드는 전체적으로 살짝 채도를 낮춰 "지난 상품" 느낌을 줍니다. */
+.cardSoldOut .image {
+  filter: grayscale(0.3);
+}
+
 /* 찜 버튼 위치 */
 .favoriteButtonWrapper {
   position: absolute;
   top: 1rem;
   right: 1rem;
   z-index: 3;
+}
+
+/* 비교 담기 버튼 — 찜 버튼 아래에 배치 (이미지 우상단 세로 정렬) */
+.compareButton {
+  position: absolute;
+  top: 3.6rem;
+  right: 1rem;
+  z-index: 3;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 150ms var(--ease-smooth);
+}
+
+.compareButton:hover:not(:disabled) {
+  background: #fff;
+}
+
+.compareButtonActive {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.compareButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* ── vibe 태그 오버레이 (v4 신규) ── */
@@ -134,19 +212,13 @@
 .genderBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  padding: 0.3rem 0.8rem;
+  padding: 0.12rem 0.5rem;
   border-radius: 100px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   background: var(--color-bg-tertiary);
   color: var(--color-text-light);
-}
-
-.genderBadge span:first-child {
-  font-size: 0.95rem;
 }
 
 .genderMen {
@@ -169,6 +241,7 @@
   font-weight: 600;
   color: var(--color-text);
   line-height: 1.4;
+  margin: 0;
   /* 2줄 이상은 말줄임표 */
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -176,51 +249,69 @@
   overflow: hidden;
 }
 
+/* 상품명 링크 — 부모 색/굵기를 그대로 상속받아 텍스트처럼 보이게 합니다. */
+.productNameLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.productNameLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .priceContainer {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
 
-/* v4: 가격 — indigo gradient 제거, 일반 굵은 텍스트 */
+/* 할인가 — 가장 굵고 큰 텍스트 (구매 판단의 핵심) */
 .salePrice {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   color: var(--color-text);
 }
 
-.salePrice strong {
-  /* v4: gradient 제거 */
-  background: none;
-  -webkit-text-fill-color: unset;
-  color: var(--color-text);
+/* 원가 — 취소선 + 흐린 색 (할인의 "before"를 보여줘 매력 전달) */
+.originalPrice {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-light);
+  text-decoration: line-through;
 }
 
-/* hover 상세보기 오버레이 */
-.hoverOverlay {
-  position: absolute;
-  inset: 0;
+/* 카드 하단 행: 업데이트 시각(좌) + 외부 사이트 CTA(우) */
+.cardFooter {
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding: 1.25rem;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.10) 100%);
-  opacity: 0;
-  transition: opacity var(--duration-base) var(--ease-smooth);
-  pointer-events: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  min-height: 22px;
 }
 
-.hoverOverlay span {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.92);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+.updatedAt {
+  font-size: 11px;
+  color: var(--color-text-light);
+  white-space: nowrap;
 }
 
-.card:hover .hoverOverlay,
-.card:focus-within .hoverOverlay {
-  opacity: 1;
+/* 외부 브랜드 사이트 이동 버튼 — 텍스트 링크 형태(공간 절약) */
+.externalCta {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  margin-left: auto;
+  transition: opacity 150ms var(--ease-smooth);
+}
+
+.externalCta:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 @media (max-width: 768px) {
@@ -234,6 +325,6 @@
   }
 
   .salePrice {
-    font-size: 14px;
+    font-size: 15px;
   }
 }

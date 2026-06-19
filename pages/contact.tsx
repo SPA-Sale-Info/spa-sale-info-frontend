@@ -10,8 +10,8 @@
  */
 
 import { useState } from 'react';
-import Head from 'next/head';
 import Link from 'next/link';
+import SEO from '../components/SEO';
 import styles from '../styles/Legal.module.css';
 import contactStyles from '../styles/Contact.module.css';
 
@@ -74,11 +74,11 @@ export default function Contact() {
 
   return (
     <div className={styles.container}>
-      <Head>
-        <title>문의하기 - ARCA</title>
-        <meta name="description" content="ARCA에 대한 문의, 제안, 피드백을 보내주세요. 언제나 열려있습니다." />
-        <meta name="robots" content="index, follow" />
-      </Head>
+      <SEO
+        title="문의하기 - ARCA"
+        description="ARCA에 대한 문의, 제안, 피드백을 보내주세요. 언제나 열려있습니다."
+        canonical="https://mion-spa-info.vercel.app/contact"
+      />
 
       <div className={styles.content}>
         <header className={styles.header}>

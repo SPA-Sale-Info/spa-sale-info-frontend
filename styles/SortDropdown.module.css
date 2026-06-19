@@ -1,0 +1,70 @@
+/*
+ * SortDropdown.module.css — 정렬 드롭다운 스타일
+ *
+ * 네이티브 <select>의 기본 화살표는 숨기고, CSS로 커스텀 화살표를 얹어
+ * 디자인 시스템(Apple HIG 톤)과 일관되게 보이도록 합니다.
+ */
+
+.container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-light);
+  white-space: nowrap;
+}
+
+.selectWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.select {
+  /* 네이티브 외형 제거 후 직접 스타일링 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0.45rem 2rem 0.45rem 0.85rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-bg-tertiary);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 150ms var(--ease-smooth);
+}
+
+.select:hover {
+  border-color: var(--color-text-lighter);
+}
+
+.select:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+/* 커스텀 드롭다운 화살표 — 클릭은 select가 받도록 pointer-events 차단 */
+.arrow {
+  position: absolute;
+  right: 0.85rem;
+  font-size: 11px;
+  color: var(--color-text-light);
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .label {
+    /* 모바일에서는 공간 절약을 위해 "정렬" 텍스트를 숨기고 select만 노출 */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}

@@ -940,6 +940,134 @@
   grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
 }
 
+/* ── 최대 할인율 TOP 스트립 ───────────────────────────────────── */
+.highlightSection {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 0;
+}
+
+.highlightHeader {
+  margin-bottom: 1rem;
+}
+
+.highlightTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.highlightSubtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-light);
+  margin: 0.25rem 0 0;
+}
+
+/* 가로 스크롤 컨테이너 */
+.highlightStrip {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 각 항목 고정 너비 (ProductCard가 이 너비를 채움) */
+.highlightItem {
+  flex: 0 0 auto;
+  width: 200px;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 768px) {
+  .highlightItem {
+    width: 160px;
+  }
+}
+
+/* ── 자연어 검색 해석 칩 ──────────────────────────────────────── */
+.parsedChips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.parsedChipsLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-light);
+}
+
+.parsedChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.7rem;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: rgba(0, 113, 227, 0.08);
+  border: 1px solid rgba(0, 113, 227, 0.18);
+  border-radius: 999px;
+}
+
+/* ── 결과/정렬 툴바 ───────────────────────────────────────────── */
+.resultsToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.resultsCount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* 품절 제외 토글 버튼 (체크박스 형태) */
+.soldOutToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-light);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-bg-tertiary);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 150ms var(--ease-smooth);
+}
+
+.soldOutToggle:hover {
+  border-color: var(--color-text-lighter);
+}
+
+.soldOutToggleActive {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: rgba(0, 113, 227, 0.08);
+}
+
+.soldOutToggleCheck {
+  font-size: 14px;
+  line-height: 1;
+}
+
 /* 빈 상태 (상품 없음) */
 .emptyState {
   display: flex;

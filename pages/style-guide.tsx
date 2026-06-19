@@ -10,8 +10,8 @@
  */
 
 import { useState, useMemo } from 'react'
-import Head from 'next/head'
 import Link from 'next/link'
+import SEO from '../components/SEO'
 import styles from '../styles/StyleGuide.module.css'
 
 /**
@@ -218,12 +218,12 @@ export default function StyleGuide() {
 
   return (
     <div className={styles.container}>
-      <Head>
-        <title>스타일 가이드 - 100가지 코디 팁 | ARCA</title>
-        <meta name="description" content="ARCA의 스타일 가이드. 미니멀, 캐주얼, 스트리트, 오피스 등 다양한 스타일의 100가지 코디 팁과 패션 노하우를 제공합니다." />
-        <meta name="keywords" content="스타일 가이드, 코디 팁, 패션, 미니멀, 캐주얼, 스트리트 패션, 오피스룩, 빈티지 스타일" />
-        <meta name="robots" content="index, follow" />
-      </Head>
+      <SEO
+        title="스타일 가이드 - 100가지 코디 팁 | ARCA"
+        description="ARCA의 스타일 가이드. 미니멀, 캐주얼, 스트리트, 오피스 등 다양한 스타일의 100가지 코디 팁과 패션 노하우를 제공합니다."
+        canonical="https://mion-spa-info.vercel.app/style-guide"
+        keywords="스타일 가이드, 코디 팁, 패션, 미니멀, 캐주얼, 스트리트 패션, 오피스룩, 빈티지 스타일"
+      />
 
       <div className={styles.content}>
         {/* 헤더 */}

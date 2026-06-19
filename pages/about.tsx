@@ -2,26 +2,22 @@
  * about.tsx - 서비스 소개 페이지 (TypeScript 버전)
  *
  * 정적인 설명 텍스트를 렌더링하는 페이지입니다.
- * Next.js의 <Head>를 이용해 SEO 메타를 설정합니다.
+ * 공통 SEO 컴포넌트로 검색 엔진용 메타를 설정합니다.
  */
 
-import Head from 'next/head';
 import Link from 'next/link';
+import SEO from '../components/SEO';
 import styles from '../styles/Legal.module.css';
 
 export default function About() {
   // JSX를 반환하는 함수형 컴포넌트
   return (
     <div className={styles.container}>
-      <Head>
-        <title>ARCA 소개 - SPA 세일 큐레이션</title>
-        <meta
-          name="description"
-          content="ARCA의 서비스 목적, 운영 원칙, 데이터 수집·검증 방식, 광고 고지 및 연락처를 확인하세요."
-        />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://mion-spa-info.vercel.app/about" />
-      </Head>
+      <SEO
+        title="ARCA 소개 - SPA 세일 큐레이션"
+        description="ARCA의 서비스 목적, 운영 원칙, 데이터 수집·검증 방식, 광고 고지 및 연락처를 확인하세요."
+        canonical="https://mion-spa-info.vercel.app/about"
+      />
 
       <div className={styles.content}>
         <header className={styles.header}>
@@ -38,7 +34,7 @@ export default function About() {
             <p className={styles.text}>
               ARCA는 H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 주요 SPA 브랜드의 할인 상품을 한곳에서
               비교할 수 있게 설계된 큐레이션 서비스입니다. 단순 나열이 아닌, 시즌별 스타일링 팁과 소재·체형·예산을
-              고려한 추천을 제공해 사용자가 빠르게 "지금 사도 되는 상품"을 찾도록 돕습니다.
+              고려한 추천을 제공해 사용자가 빠르게 &quot;지금 사도 되는 상품&quot;을 찾도록 돕습니다.
             </p>
             <p className={styles.text}>
               매일 2회 이상 데이터를 갱신하며, 가격·할인율·이미지 오류가 확인되면 비노출 처리 후 대체 상품을

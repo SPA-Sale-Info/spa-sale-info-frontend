@@ -1,51 +1,99 @@
 /**
  * BrandFilter.tsx - 브랜드 필터 컴포넌트 (TypeScript 버전)
  *
- * 화면에서 브랜드 버튼을 선택/해제하는 UI를 렌더링합니다.
+ * ═══════════════════════════════════════════════════════════════
+ * 📌 이 파일이 하는 일
+ * ═══════════════════════════════════════════════════════════════
+ * 상단에 가로 스크롤 가능한 브랜드 버튼 목록을 렌더링합니다.
+ * 버튼을 클릭하면 해당 브랜드의 상품만 필터링합니다.
+ * comingSoon 브랜드는 비활성화되어 클릭 불가입니다.
+ *
+ * ═══════════════════════════════════════════════════════════════
+ * 상태를 부모로 올리는 패턴 (Lifting State Up)
+ * ═══════════════════════════════════════════════════════════════
+ * 이 컴포넌트는 자체적으로 selectedBrand 상태를 갖지 않습니다.
+ * 부모(index.tsx)가 상태를 관리하고 props로 내려줍니다.
+ * 클릭 시 onBrandChange 콜백으로 부모에게 변경을 알립니다.
+ * → GenderFilter, CategoryFilter와 동일한 패턴입니다.
+ *
  * TypeScript 문법 포인트:
- * - interface는 객체 구조를 정의합니다.
- * - `Brand | 'all'` 처럼 유니온(|)으로 "여러 값 중 하나"를 표현합니다.
+ * - interface: 객체 구조 정의
+ * - Brand | 'all': 유니온 타입 (특정 브랜드 또는 '전체')
+ * - string | null: 문자열 또는 null 유니온
+ * - ?:optional 필드 (있어도 되고 없어도 됨)
  */
 
+// Image: Next.js의 최적화된 이미지 컴포넌트
+// 브랜드 로고(SVG) 이미지를 표시합니다.
 import Image from 'next/image';
-import styles from '../styles/BrandFilter.module.css';
-import type { Brand } from '../types';
 
-// 각 브랜드 버튼이 가져야 할 데이터 구조
-interface BrandItem {
-  code: string;
-  name: string;
-  logo?: string | null;
+// 이 컴포넌트 전용 CSS 모듈
+import styles from '../styles/BrandFilter.module.css';
+
+import {
+  ACTIVE_BRAND_CODES,
+  BRAND_METADATA,
+  NO_SALE_BRAND_CODES,
+  PLANNED_BRAND_CODES,
+} from '../types';
+
+// import type: 타입 정보만 가져옵니다 (빌드된 JS에 포함 안 됨)
+import type { Brand, BrandMetadata } from '../types';
+
+/**
+ * BrandItem - 브랜드 버튼 하나의 데이터 구조
+ *
+ * code: API에서 사용하는 브랜드 코드 (예: 'HM', 'ZARA')
+ * name: 화면에 표시할 브랜드명 (예: 'H&M', 'ZARA')
+ * logo?: 로고 이미지 경로 (선택, null이면 이모지 표시)
+ *   string | null: 문자열 또는 null (없으면 이모지 사용)
+ * emoji?: 로고 대신 표시할 이모지 (선택)
+ * comingSoon?: 아직 지원하지 않는 브랜드 여부 (선택, 기본값: false)
+ * noSale?: 현재 세일 없는 브랜드 여부 (선택)
+ * bubblePosition?: 툴팁 위치 (선택, 'bottom' 등)
+ *
+ * 모든 ?필드는 TypeScript에서 undefined가 가능한 선택적 필드입니다.
+ */
+interface BrandItem extends Omit<BrandMetadata, 'code'> {
+  code: Brand | 'all';
   emoji?: string;
-  comingSoon?: boolean;
-  noSale?: boolean;
   bubblePosition?: string;
 }
 
-// 컴포넌트에 전달되는 props 타입
+/**
+ * BrandFilterProps - 컴포넌트가 받는 props 구조
+ *
+ * selectedBrand: 현재 선택된 브랜드 코드 ('all' 또는 Brand 코드)
+ * onBrandChange: 브랜드가 바뀔 때 부모에게 알리는 콜백
+ */
 interface BrandFilterProps {
   selectedBrand: Brand | 'all';
   onBrandChange: (brandCode: Brand | 'all') => void;
 }
 
-// 브랜드 버튼 목록 (정적 데이터)
+/**
+ * BRANDS - 화면에 표시할 브랜드 목록 (정적 데이터)
+ *
+ * 컴포넌트 외부에 선언하는 이유:
+ * 이 배열은 절대 변하지 않습니다.
+ * 컴포넌트 내부에 선언하면 렌더링마다 새 배열이 생성됩니다 (낭비).
+ * 외부에 선언하면 앱 시작 시 한 번만 생성됩니다.
+ *
+ * comingSoon: true인 브랜드는 버튼이 비활성화됩니다.
+ * noSale: true인 브랜드는 현재 세일이 없는 상태입니다.
+ */
+const BRAND_ORDER: Brand[] = [
+  ...ACTIVE_BRAND_CODES,
+  ...NO_SALE_BRAND_CODES,
+  ...PLANNED_BRAND_CODES,
+];
+
 const BRANDS: BrandItem[] = [
-  { code: 'all', name: '전체', logo: null, emoji: '🛍️' },
-  { code: 'HM', name: 'H&M', logo: '/logos/hm.svg' },
-  { code: 'ZARA', name: 'ZARA', logo: '/logos/zara.svg' },
-  { code: 'UNIQLO', name: 'UNIQLO', logo: '/logos/uniqlo.svg' },
-  { code: 'MUJI', name: 'MUJI', logo: '/logos/muji.svg' },
-  { code: 'CHARLESKEITH', name: '찰스앤키스', logo: '/logos/charleskeith.svg' },
-  { code: 'COS', name: 'COS', logo: '/logos/cos.svg', noSale: true },
-  { code: 'ARKET', name: 'ARKET', logo: '/logos/arket.svg', noSale: true },
-  { code: 'MASSIMODUTTI', name: 'Massimo Dutti', logo: '/logos/massimodutti.svg', emoji: '🧥' },
-  { code: 'MANGO', name: 'Mango', logo: '/logos/mango.svg', emoji: '🥭', comingSoon: true, bubblePosition: 'bottom' },
-  { code: 'EIGHTSECONDS', name: '에잇세컨즈', logo: '/logos/eightseconds.svg', comingSoon: true },
-  { code: 'MIXXO', name: '미쏘', logo: '/logos/mixxo.svg', comingSoon: true },
-  { code: 'MUSINSASTANDARD', name: '무신사 스탠다드', logo: '/logos/musinsastandard.svg', comingSoon: true },
-  { code: 'TOPTEN', name: '탑텐', logo: '/logos/topten.svg', comingSoon: true },
-  { code: 'SPAO', name: '스파오', logo: '/logos/spao.svg', comingSoon: true },
-  { code: 'GIORDANO', name: '지오다노', logo: '/logos/giordano.svg', comingSoon: true },
+  { code: 'all', name: '전체', emoji: '🛍️', status: 'active' },
+  ...BRAND_ORDER.map((code) => ({
+    ...BRAND_METADATA[code],
+    bubblePosition: code === 'MANGO' ? 'bottom' : undefined,
+  })),
 ];
 
 function BrandFilter({ selectedBrand, onBrandChange }: BrandFilterProps) {
@@ -87,10 +135,11 @@ function BrandFilter({ selectedBrand, onBrandChange }: BrandFilterProps) {
           {BRANDS.map((brand) => {
             // 선택 상태에 따라 스타일을 다르게 적용
             const isSelected = selectedBrand === brand.code;
+            const isComingSoon = brand.status === 'planned';
             const buttonClassName = [
               styles.button,
               isSelected ? styles.selected : '',
-              brand.comingSoon ? styles.buttonDisabled : '',
+              isComingSoon ? styles.buttonDisabled : '',
             ]
               .filter(Boolean)
               .join(' ');
@@ -120,25 +169,25 @@ function BrandFilter({ selectedBrand, onBrandChange }: BrandFilterProps) {
             const button = (
               <button
                 className={buttonClassName}
-                onClick={() => handleBrandClick(brand.code as Brand | 'all', brand.comingSoon)}
+                onClick={() => handleBrandClick(brand.code, isComingSoon)}
                 aria-pressed={isSelected}
-                aria-label={`${brand.name} 필터${brand.comingSoon ? ' (곧 추가될 예정)' : ''}`}
+                aria-label={`${brand.name} 필터${isComingSoon ? ' (곧 추가될 예정)' : ''}`}
                 type="button"
-                disabled={brand.comingSoon}
-                aria-disabled={brand.comingSoon}
-                title={brand.comingSoon ? '곧 추가될 예정이에요!' : undefined}
+                disabled={isComingSoon}
+                aria-disabled={isComingSoon}
+                title={isComingSoon ? '곧 추가될 예정이에요!' : undefined}
               >
                 {buttonContent}
               </button>
             );
 
             // comingSoon 상태면 툴팁이 들어갈 wrapper를 사용
-            const wrapperClass = brand.comingSoon ? styles.comingSoonWrapper : styles.buttonWrapper;
+            const wrapperClass = isComingSoon ? styles.comingSoonWrapper : styles.buttonWrapper;
 
             return (
               <div key={brand.code} className={wrapperClass}>
                 {button}
-                {brand.comingSoon && (
+                {isComingSoon && (
                   <span className={styles.comingSoonTooltip} role="status" aria-live="polite">
                     곧 추가될 예정이에요!
                   </span>

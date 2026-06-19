@@ -1,397 +1,213 @@
 /**
- * index.tsx - 완전히 새로운 프리미엄 메인 페이지 (TypeScript)
+ * pages/index.tsx - 메인 페이지 (TypeScript 버전)
  *
- * 이 페이지는 상품 리스트/필터/무한 스크롤을 모두 담당합니다.
- * TypeScript 문법 포인트:
- * - interface: 객체 구조 정의
- * - useState<타입>: 상태 타입 명시
- * - useMemo/useCallback: 계산 결과/함수를 메모이제이션하여 성능 개선
+ * ═══════════════════════════════════════════════════════════════
+ * 📌 이 파일이 하는 일
+ * ═══════════════════════════════════════════════════════════════
+ * ARCA 앱의 메인 화면입니다. URL "/" 에 해당합니다.
+ * 상품 목록 표시, 필터(브랜드/성별/카테고리), 검색, 무한 스크롤을 담당합니다.
+ *
+ * ═══════════════════════════════════════════════════════════════
+ * Next.js 페이지 파일이란?
+ * ═══════════════════════════════════════════════════════════════
+ * pages/ 폴더 안의 파일은 자동으로 URL 경로가 됩니다 (파일 기반 라우팅).
+ * pages/index.tsx → http://localhost:3000/ (루트 경로)
+ * pages/about.tsx → http://localhost:3000/about
+ * 별도 라우터 설정 없이 파일 위치만으로 URL이 결정됩니다.
+ *
+ * Java/Spring 비유:
+ * @Controller 클래스에서 @GetMapping("/")으로 루트 경로 처리하는 것과 같습니다.
+ *
+ * ═══════════════════════════════════════════════════════════════
+ * 핵심 React 훅 정리
+ * ═══════════════════════════════════════════════════════════════
+ * useState<T>   : 변하는 값(상태)을 관리합니다. 값이 바뀌면 자동으로 화면이 재렌더됩니다.
+ * useEffect     : 사이드 이펙트(API 호출, 이벤트 등록 등)를 처리합니다.
+ * useMemo       : 비싼 계산 결과를 캐싱합니다. 의존성이 바뀔 때만 재계산합니다.
+ * useRef        : DOM 요소 참조 또는 렌더 없이 값을 저장하는 "변경 가능한 상자"입니다.
+ * useCallback   : 함수를 캐싱합니다. 의존성이 바뀔 때만 재생성합니다.
+ *
+ * Java/Spring 비유:
+ * useState  ≈ @Getter/@Setter 필드 (단, 변경 시 View가 자동 갱신)
+ * useEffect ≈ @PostConstruct, @EventListener
+ * useMemo   ≈ @Cacheable
+ * useRef    ≈ ThreadLocal 또는 instance 변수 (렌더와 무관하게 유지)
+ * useCallback ≈ @Cacheable 메서드 (함수 자체를 캐싱)
  */
 
+// React의 내장 훅들을 가져옵니다.
+// useState, useEffect 등은 react 패키지에 포함된 함수들입니다.
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import BrandFilter from '../components/BrandFilter'
 import GenderFilter from '../components/GenderFilter'
 import CategoryFilter from '../components/CategoryFilter'
 import DetailedFilters from '../components/DetailedFilters'
+import SortDropdown from '../components/SortDropdown'
 import ThemeToggle from '../components/ThemeToggle'
 import ProductCard from '../components/ProductCard'
+import CompareTray from '../components/CompareTray'
+import SEO from '../components/SEO'
 import styles from '../styles/Home.module.css'
-import { fetchSaleProducts, fetchSaleProductCount } from '../utils/api'
+import { ApiRequestError, fetchSaleProducts, fetchSaleProductCount } from '../utils/api'
+import { normalizeProducts } from '../utils/productNormalization'
+import { parseSearchQuery, isActiveBrand } from '../utils/parseSearchQuery'
 import useFavorites from '../hooks/useFavorites'
-import type { Product, Brand, Gender, Category } from '../types'
+import useCompare from '../hooks/useCompare'
+import { SORT_OPTIONS, DEFAULT_SORT_VALUE } from '../types'
+import type { Brand, Gender, Category, NormalizedProduct } from '../types'
+import { DAILY_INSIGHTS, DAILY_MOODS } from '../constants/dailyContent'
 
 /**
- * 확장된 제품 타입 (프론트엔드용)
- * - 백엔드 Product 타입에 화면 표시용 필드를 추가합니다.
+ * PAGE_SIZE - 한 번에 불러올 상품 수
+ *
+ * 값이 너무 작으면(예: 4) 스크롤을 조금만 내려도 계속 API를 호출합니다.
+ * 값이 너무 크면(예: 100) 첫 로딩이 느립니다.
+ * 12는 3열 그리드 4행 = 한 화면에 적당한 수입니다.
+ *
+ * Java 비유: private static final int PAGE_SIZE = 12;
  */
-interface NormalizedProduct extends Product {
-  brandCode: Brand;
-  brandName: string;
-  mainCategory: Category;
-  categoryGroup: string;
-  price: number;
-  vibe: string | null;
-  vibeTags: string[];
-}
-
-/**
- * API에서 충분히 많은 상품을 받기 위해 한 번에 불러올 개수를 결정합니다.
- * 값이 너무 작으면 스크롤을 조금만 내려도 계속 네트워크 요청을 하게 됩니다.
- */
-// 페이지네이션 기본 크기
 const PAGE_SIZE = 12
-// 이미지가 없거나 잘못된 경우 사용할 기본 이미지
-const FALLBACK_IMAGE = '/placeholder-product.svg'
-// API에서 오는 카테고리를 우리 기준 카테고리로 묶기 위한 매핑
-const CATEGORY_GROUPS: Record<string, string[]> = {
-  TOP: ['SHIRT', 'T_SHIRT', 'KNIT', 'SWEATSHIRT', 'DRESS', 'BLOUSE'],
-  BOTTOM: ['PANTS', 'JEANS', 'SHORTS', 'SKIRT'],
-  OUTER: ['JACKET', 'COAT', 'PADDING'],
-  SHOES: ['SHOES'],
-  ETC: ['ACCESSORIES', 'BAG', 'UNCATEGORIZED', 'UNKNOWN'],
-}
-// 오늘의 시선 - 스타일 제안 (100개)
-const DAILY_INSIGHTS = [
-  { theme: '레이어드로 완성하는 가을 무드', tip: '긴 셔츠 위에 짧은 니트를 매치하세요' },
-  { theme: '미니멀한 하루를 위한 베이직', tip: '화이트 티 · 데님 · 로퍼 조합' },
-  { theme: '캐주얼한 주말 스타일링', tip: '오버핏 후디와 슬랙스의 편안한 균형' },
-  { theme: '오피스룩에 개성 더하기', tip: '정장 바지에 스니커즈를 매치해보세요' },
-  { theme: '톤온톤으로 세련되게', tip: '같은 계열 색상을 여러 레이어로 쌓기' },
-  { theme: '빈티지 무드 연출법', tip: '워싱 진 · 오버핏 셔츠 · 레더 슈즈' },
-  { theme: '모노크롬 스타일의 힘', tip: '흑백만으로도 충분히 멋진 룩 완성' },
-  { theme: '스트리트 감성 살리기', tip: '와이드 카고팬츠에 크롭 후디를 매치' },
-  { theme: '심플한 데이트 룩', tip: '슬림 진 · 니트 · 클린한 스니커즈' },
-  { theme: '비오는 날 스타일링', tip: '트렌치코트에 첼시부츠로 멋스럽게' },
-  { theme: '출근길 세미캐주얼', tip: '블레이저 · 티셔츠 · 치노팬츠 조합' },
-  { theme: '주말 브런치 룩', tip: '린넨 셔츠에 반바지, 에스파드류를 더해' },
-  { theme: '캠퍼스 스타일 연출', tip: '맨투맨 · 와이드 진 · 캔버스 백팩' },
-  { theme: '저녁 약속 룩', tip: '블랙 터틀넥 · 슬랙스 · 로퍼로 세련되게' },
-  { theme: '올 블랙 스타일링', tip: '다양한 소재 믹스로 단조로움 탈출' },
-  { theme: '프렌치 시크 따라하기', tip: '스트라이프 티 · 베이지 팬츠 · 로퍼' },
-  { theme: '노멀코어의 정석', tip: '심플한 아이템만으로 완성하는 스타일' },
-  { theme: '레트로 감성 코디', tip: '플레어 팬츠 · 크롭 니트 · 플랫폼 슈즈' },
-  { theme: '스포티 캐주얼', tip: '트랙 재킷에 조거팬츠, 러닝화 매치' },
-  { theme: '비즈니스 캐주얼 완성', tip: '니트 카디건 · 셔츠 · 치노팬츠' },
-  { theme: '아메카지 스타일', tip: '체크 셔츠 · 데님 · 워크부츠 조합' },
-  { theme: '올화이트 룩', tip: '다양한 화이트 톤으로 깊이감 연출' },
-  { theme: '컬러 포인트 활용법', tip: '베이직한 룩에 밝은 색 아이템 하나만' },
-  { theme: '레이어링의 기본', tip: '긴팔 티 위에 반팔 티를 겹쳐 입기' },
-  { theme: '패턴 믹스 매치', tip: '스트라이프와 체크를 조화롭게' },
-  { theme: '데님 온 데님', tip: '다른 워싱의 데님을 매치해 자연스럽게' },
-  { theme: '오버사이즈 핏 활용', tip: '큰 상의에는 슬림한 하의로 밸런스' },
-  { theme: '액세서리로 포인트', tip: '심플한 코디에 시계 하나만으로 완성' },
-  { theme: '계절 전환기 룩', tip: '가벼운 아우터를 허리에 둘러 연출' },
-  { theme: '컬러 블로킹 시도', tip: '대비되는 두 가지 색상으로 강렬하게' },
-  { theme: '시티보이 감성', tip: '코치 재킷 · 슬랙스 · 클래식 스니커즈' },
-  { theme: '이지 웨어 스타일', tip: '편한 옷도 핏과 소재로 고급스럽게' },
-  { theme: '어센틱 룩 완성', tip: '빈티지 가죽 재킷 · 워싱 진 · 부츠' },
-  { theme: '클린 미니멀', tip: '장식 없는 깔끔한 라인만으로 승부' },
-  { theme: '스마트 캐주얼', tip: '니트 · 셔츠 · 슬랙스로 품격있게' },
-  { theme: '힙한 거리 패션', tip: '그래픽 티 · 카고팬츠 · 하이탑 스니커즈' },
-  { theme: '젠더리스 스타일', tip: '성별 구분 없는 유니섹스 아이템 활용' },
-  { theme: '모던 클래식', tip: '전통적인 아이템을 현대적으로 해석' },
-  { theme: '테일러드 룩', tip: '잘 맞는 재킷과 팬츠로 완벽한 실루엣' },
-  { theme: '아웃도어 무드', tip: '플리스 · 하이킹 팬츠 · 트레일 슈즈' },
-  { theme: '네오 프레피', tip: '폴로 셔츠 · 치노 쇼츠 · 보트슈즈' },
-  { theme: '얼리지 룩', tip: '스타디움 점퍼 · 스웨트팬츠 · 스니커즈' },
-  { theme: '아티스트 감성', tip: '오버핏 셔츠 · 와이드 팬츠 · 슬립온' },
-  { theme: '리조트 웨어', tip: '린넨 셔츠 · 쇼츠 · 샌들로 여유롭게' },
-  { theme: '어반 테크', tip: '기능성 재킷 · 테이퍼드 팬츠 · 러닝화' },
-  { theme: '핸섬 무드', tip: '셔츠 · 베스트 · 슬랙스로 단정하게' },
-  { theme: '소프트 그런지', tip: '오버사이즈 니트 · 스키니 진 · 첼시부츠' },
-  { theme: '뉴트로 감성', tip: '90년대 스타일을 현대적으로 재해석' },
-  { theme: '에슬레저 룩', tip: '스포츠웨어를 일상에 자연스럽게' },
-  { theme: '스칸디나비안 스타일', tip: '미니멀하고 기능적인 북유럽 감성' },
-  { theme: '브리티시 클래식', tip: '트렌치 · 울팬츠 · 옥스포드 슈즈' },
-  { theme: '이탈리안 스프레차투라', tip: '무심한 듯 세련된 이탈리아 스타일' },
-  { theme: '재팬 캐주얼', tip: '심플하고 고품질의 일본 감성' },
-  { theme: 'LA 캐주얼', tip: '편안하고 여유로운 서부 해안 스타일' },
-  { theme: '뉴요커 스타일', tip: '올블랙 · 레이어드 · 미니멀' },
-  { theme: '파리지앵 시크', tip: '자연스러운 멋과 고급스러움의 조화' },
-  { theme: '밀리터리 믹스', tip: 'MA-1 · 카고팬츠 · 컴뱃부츠' },
-  { theme: '워크웨어 트렌드', tip: '작업복에서 영감받은 실용적 스타일' },
-  { theme: '테크웨어 입문', tip: '기능성과 미래지향적 디자인의 만남' },
-  { theme: '노르딕 미니멀', tip: '단순함 속의 따뜻함과 아늑함' },
-  { theme: '모드 스트리트', tip: '하이패션을 스트리트에 녹여내기' },
-  { theme: '캠핑 코어', tip: '아웃도어 무드를 도시에서 즐기기' },
-  { theme: '고프코어 스타일', tip: '기능성 아웃도어를 일상복으로' },
-  { theme: '블루칼라 시크', tip: '작업복의 실용성을 패셔너블하게' },
-  { theme: '아이비 룩', tip: '대학 캠퍼스 느낌의 프레피 스타일' },
-  { theme: '소호 아티스트', tip: '창의적이고 자유로운 예술가 룩' },
-  { theme: '코지 웨어', tip: '포근하고 편안한 집콕 스타일' },
-  { theme: '스마트 레저', tip: '세미 포멀과 캐주얼의 완벽한 중간' },
-  { theme: '어글리 슈즈 매치', tip: '투박한 신발로 개성있게 연출' },
-  { theme: '크롭 스타일링', tip: '짧은 상의로 시원하고 세련되게' },
-  { theme: '롱 실루엣', tip: '긴 기장으로 날씬하고 우아하게' },
-  { theme: '하프 앤 하프', tip: '상하의 색상을 대비시켜 재미있게' },
-  { theme: '언더웨어 노출', tip: '속옷을 패션 아이템으로 활용' },
-  { theme: '니트 온 셔츠', tip: '셔츠 위에 니트 조끼로 지적인 느낌' },
-  { theme: '터틀넥 레이어드', tip: '터틀넥 안에 셔츠 칼라만 살짝' },
-  { theme: '벨트 포인트', tip: '허리띠 하나로 실루엣 정리' },
-  { theme: '삭스 코디', tip: '양말로 포인트 컬러 주기' },
-  { theme: '헤드웨어 활용', tip: '모자나 헤어밴드로 완성도 높이기' },
-  { theme: '백팩 스타일링', tip: '가방 선택으로 룩의 분위기 바꾸기' },
-  { theme: '슬리브 롤업', tip: '소매 걷기로 캐주얼함 더하기' },
-  { theme: '언터크 vs 터크인', tip: '상의 넣고 빼기로 분위기 변화' },
-  { theme: '버튼 조절', tip: '셔츠 단추 개수로 무드 조정' },
-  { theme: '카라 세우기', tip: '칼라를 세워 스타일리시하게' },
-  { theme: '레이어 컬러 매치', tip: '겹치는 옷의 색조화로 깊이감' },
-  { theme: '소재 믹스 매치', tip: '다른 질감을 조합해 입체감 연출' },
-  { theme: '패턴 vs 무지', tip: '패턴 아이템은 하나만 포인트로' },
-  { theme: '슬림 vs 오버핏', tip: '상하의 핏 대비로 밸런스 잡기' },
-  { theme: '쇼트 vs 롱', tip: '기장 차이로 비율 보정' },
-  { theme: '하이웨이스트 활용', tip: '높은 허리선으로 다리 길어보이기' },
-  { theme: '로우라이즈 스타일', tip: '낮은 팬츠로 캐주얼하고 편하게' },
-  { theme: '와이드 실루엣', tip: '넓은 팬츠로 여유롭고 트렌디하게' },
-  { theme: '테이퍼드 핏', tip: '발목으로 갈수록 좁아지는 깔끔한 라인' },
-  { theme: '스트레이트 레그', tip: '직선 실루엣으로 클래식하게' },
-  { theme: '플레어 팬츠', tip: '발목 아래로 퍼지는 레트로 무드' },
-  { theme: '카고 디테일', tip: '주머니 많은 팬츠로 유틸리티 감성' },
-  { theme: '조거 스타일', tip: '밴딩 팬츠로 편안하고 스포티하게' },
-  { theme: '팬츠 롤업', tip: '바지 단을 접어 발목 노출' },
-  { theme: '신발과 양말 매치', tip: '양말 색상으로 신발과 조화롭게' },
-]
-
-// Wardrobe Log - 컬러/소재 조합 (100개)
-const DAILY_MOODS = [
-  { palette: '잿빛 스카이블루', fabric: '워셔블 울', focus: '여유 있는 셔츠', note: '햇빛 아래에서도 거슬리지 않는 차분한 색감', background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.9), rgba(96, 165, 250, 0.85))', textColor: '#f8fafc' },
-  { palette: '먼지 낀 네이비', fabric: '코튼 트윌', focus: '하이웨이스트 팬츠', note: '밝고 어두운 아이템을 자연스럽게 연결', background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 118, 110, 0.85))', textColor: '#e0f2f1' },
-  { palette: '바랜 베이지', fabric: '린넨 & 레이온', focus: '가벼운 드레스', note: '공기를 머금은 느낌이 필요한 날', background: 'linear-gradient(135deg, rgba(244, 224, 196, 0.95), rgba(217, 180, 130, 0.85))', textColor: '#4a3425' },
-  { palette: '모래빛 카키', fabric: '나일론 혼방', focus: '가볍게 걸칠 점퍼', note: '도로 먼지를 닮은 무심한 분위기', background: 'linear-gradient(135deg, rgba(64, 64, 59, 0.95), rgba(156, 163, 175, 0.85))', textColor: '#f1f5f9' },
-  { palette: '차분한 모브', fabric: '캐시미어 블렌드', focus: '부드러운 터틀넥', note: '보라빛 도는 회색으로 고급스럽게', background: 'linear-gradient(135deg, rgba(156, 163, 175, 0.9), rgba(139, 92, 246, 0.75))', textColor: '#faf5ff' },
-  { palette: '따뜻한 테라코타', fabric: '코듀로이', focus: '빈티지 재킷', note: '가을 햇살을 닮은 따뜻한 컬러', background: 'linear-gradient(135deg, rgba(234, 88, 12, 0.85), rgba(217, 119, 6, 0.9))', textColor: '#fffbeb' },
-  { palette: '올리브 그린', fabric: '헤비 코튼', focus: '밀리터리 파카', note: '자연스러운 그린 톤의 만능 아이템', background: 'linear-gradient(135deg, rgba(77, 124, 15, 0.9), rgba(132, 204, 22, 0.8))', textColor: '#f7fee7' },
-  { palette: '크림 화이트', fabric: '메리노 울', focus: '케이블 니트', note: '따뜻하고 포근한 겨울 필수 아이템', background: 'linear-gradient(135deg, rgba(254, 252, 232, 0.95), rgba(254, 243, 199, 0.9))', textColor: '#78350f' },
-  { palette: '차콜 그레이', fabric: '울 블렌드', focus: '오버사이즈 코트', note: '깊이 있는 회색으로 세련된 실루엣', background: 'linear-gradient(135deg, rgba(55, 65, 81, 0.95), rgba(75, 85, 99, 0.9))', textColor: '#f9fafb' },
-  { palette: '버건디 레드', fabric: '벨벳', focus: '크루넥 스웨터', note: '풍부한 색감이 돋보이는 가을 무드', background: 'linear-gradient(135deg, rgba(127, 29, 29, 0.9), rgba(185, 28, 28, 0.85))', textColor: '#fef2f2' },
-  { palette: '머스타드 옐로', fabric: '모직', focus: '체스터 코트', note: '활기찬 노란빛으로 우울함 날리기', background: 'linear-gradient(135deg, rgba(202, 138, 4, 0.9), rgba(234, 179, 8, 0.85))', textColor: '#fefce8' },
-  { palette: '포레스트 그린', fabric: '플란넬', focus: '체크 셔츠', note: '깊은 숲 속 같은 편안한 색감', background: 'linear-gradient(135deg, rgba(20, 83, 45, 0.95), rgba(22, 101, 52, 0.9))', textColor: '#f0fdf4' },
-  { palette: '아이보리', fabric: '앙고라 혼방', focus: '카디건', note: '부드럽고 따뜻한 상아색 포근함', background: 'linear-gradient(135deg, rgba(255, 251, 235, 0.95), rgba(254, 249, 195, 0.9))', textColor: '#713f12' },
-  { palette: '슬레이트 블루', fabric: '데님', focus: '워크 재킷', note: '회색빛 파란색의 중성적 매력', background: 'linear-gradient(135deg, rgba(71, 85, 105, 0.9), rgba(100, 116, 139, 0.85))', textColor: '#f1f5f9' },
-  { palette: '로즈 핑크', fabric: '실크 혼방', focus: '블라우스', note: '은은한 핑크빛 우아함', background: 'linear-gradient(135deg, rgba(244, 114, 182, 0.7), rgba(251, 207, 232, 0.85))', textColor: '#831843' },
-  { palette: '인디고 블루', fabric: '셀비지 데님', focus: '청바지', note: '진정한 빈티지 데님의 깊은 색감', background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(37, 99, 235, 0.85))', textColor: '#dbeafe' },
-  { palette: '밀크 티 브라운', fabric: '스웨이드', focus: '트러커 재킷', note: '밀크티처럼 부드러운 갈색 톤', background: 'linear-gradient(135deg, rgba(168, 162, 158, 0.9), rgba(214, 211, 209, 0.85))', textColor: '#1c1917' },
-  { palette: '민트 그린', fabric: '코튼 저지', focus: '루즈핏 티', note: '상쾌한 민트색으로 경쾌하게', background: 'linear-gradient(135deg, rgba(167, 243, 208, 0.85), rgba(134, 239, 172, 0.9))', textColor: '#14532d' },
-  { palette: '코발트 블루', fabric: '테크니컬 패브릭', focus: '윈드브레이커', note: '강렬한 파란색의 스포티 에너지', background: 'linear-gradient(135deg, rgba(29, 78, 216, 0.9), rgba(59, 130, 246, 0.85))', textColor: '#eff6ff' },
-  { palette: '라벤더 퍼플', fabric: '저지 니트', focus: '폴로 셔츠', note: '연보라빛의 부드러운 봄 분위기', background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.8), rgba(233, 213, 255, 0.85))', textColor: '#581c87' },
-  { palette: '샌드 베ージ', fabric: '치노 코튼', focus: '치노 팬츠', note: '모래사장처럼 편안한 중성 컬러', background: 'linear-gradient(135deg, rgba(231, 229, 228, 0.9), rgba(245, 245, 244, 0.85))', textColor: '#292524' },
-  { palette: '피치 코랄', fabric: '텐셀', focus: '플로우 블라우스', note: '복숭아빛 산호색의 발랄함', background: 'linear-gradient(135deg, rgba(254, 205, 211, 0.85), rgba(252, 165, 165, 0.9))', textColor: '#7f1d1d' },
-  { palette: '애쉬 그레이', fabric: '테리 코튼', focus: '후드 집업', note: '재빛 회색의 도시적 감성', background: 'linear-gradient(135deg, rgba(156, 163, 175, 0.9), rgba(209, 213, 219, 0.85))', textColor: '#111827' },
-  { palette: '와인 레드', fabric: '울 플란넬', focus: '더블 코트', note: '와인처럼 깊고 우아한 빨강', background: 'linear-gradient(135deg, rgba(153, 27, 27, 0.95), rgba(220, 38, 38, 0.85))', textColor: '#fef2f2' },
-  { palette: '세이지 그린', fabric: '오가닉 코튼', focus: '유틸리티 셔츠', note: '허브 같은 연두빛 초록', background: 'linear-gradient(135deg, rgba(163, 230, 53, 0.7), rgba(217, 249, 157, 0.85))', textColor: '#365314' },
-  { palette: '스틸 그레이', fabric: '폴리에스터 블렌드', focus: '트랙 재킷', note: '강철 같은 차가운 회색빛', background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.9), rgba(156, 163, 175, 0.85))', textColor: '#f3f4f6' },
-  { palette: '카라멜 브라운', fabric: '가죽', focus: '라이더 재킷', note: '캬라멜처럼 달콤한 갈색 톤', background: 'linear-gradient(135deg, rgba(146, 64, 14, 0.9), rgba(194, 65, 12, 0.85))', textColor: '#ffedd5' },
-  { palette: '퍼플 그레이', fabric: '울 믹스', focus: '테일러드 블레이저', note: '보라빛 도는 우아한 회색', background: 'linear-gradient(135deg, rgba(126, 34, 206, 0.7), rgba(167, 139, 250, 0.8))', textColor: '#faf5ff' },
-  { palette: '다크 초콜릿', fabric: '코듀로이', focus: '밴딩 팬츠', note: '초콜릿처럼 진한 갈색의 깊이', background: 'linear-gradient(135deg, rgba(68, 64, 60, 0.95), rgba(87, 83, 78, 0.9))', textColor: '#fafaf9' },
-  { palette: '스카이 블루', fabric: '옥스포드 코튼', focus: '버튼다운 셔츠', note: '맑은 하늘색의 상쾌함', background: 'linear-gradient(135deg, rgba(125, 211, 252, 0.85), rgba(186, 230, 253, 0.9))', textColor: '#0c4a6e' },
-  { palette: '더스티 로즈', fabric: '벨루어', focus: '집업 후디', note: '먼지 낀 장미빛 빈티지 무드', background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.6), rgba(251, 113, 133, 0.75))', textColor: '#fff1f2' },
-  { palette: '탄 브라운', fabric: '캔버스', focus: '워크 팬츠', note: '태양에 그을린 갈색의 내추럴함', background: 'linear-gradient(135deg, rgba(120, 113, 108, 0.9), rgba(168, 162, 158, 0.85))', textColor: '#fafaf9' },
-  { palette: '네온 옐로', fabric: '립스탑', focus: '조끼', note: '형광 노란색의 강렬한 비주얼', background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.85), rgba(253, 224, 71, 0.9))', textColor: '#713f12' },
-  { palette: '페일 그레이', fabric: '저지', focus: '크루넥 맨투맨', note: '연한 회색의 심플한 베이직', background: 'linear-gradient(135deg, rgba(243, 244, 246, 0.95), rgba(249, 250, 251, 0.9))', textColor: '#1f2937' },
-  { palette: '에메랄드 그린', fabric: '실크 새틴', focus: '오픈 카라 셔츠', note: '보석 같은 녹색의 화려함', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.85), rgba(52, 211, 153, 0.9))', textColor: '#064e3b' },
-  { palette: '블러시 핑크', fabric: '시폰', focus: '플리츠 스커트', note: '볼에 홍조 띈 듯한 연분홍', background: 'linear-gradient(135deg, rgba(251, 207, 232, 0.8), rgba(252, 231, 243, 0.85))', textColor: '#9f1239' },
-  { palette: '오션 블루', fabric: '폴라 플리스', focus: '플리스 집업', note: '바다처럼 깊은 파란색', background: 'linear-gradient(135deg, rgba(3, 105, 161, 0.9), rgba(14, 165, 233, 0.85))', textColor: '#e0f2fe' },
-  { palette: '헤이즐넛 브라운', fabric: '니트', focus: '카라 니트', note: '헤이즐넛처럼 고소한 갈색', background: 'linear-gradient(135deg, rgba(161, 98, 7, 0.9), rgba(217, 119, 6, 0.85))', textColor: '#fffbeb' },
-  { palette: '라임 그린', fabric: '메쉬', focus: '스포츠 탱크탑', note: '라임처럼 신선한 연두색', background: 'linear-gradient(135deg, rgba(163, 230, 53, 0.85), rgba(190, 242, 100, 0.9))', textColor: '#1a2e05' },
-  { palette: '플럼 퍼플', fabric: '트위드', focus: '자켓', note: '자두 같은 진한 보라색', background: 'linear-gradient(135deg, rgba(109, 40, 217, 0.85), rgba(147, 51, 234, 0.9))', textColor: '#faf5ff' },
-  { palette: '골드 옐로', fabric: '새틴', focus: '볼링 셔츠', note: '금빛 노란색의 럭셔리함', background: 'linear-gradient(135deg, rgba(202, 138, 4, 0.9), rgba(245, 158, 11, 0.85))', textColor: '#451a03' },
-  { palette: '실버 그레이', fabric: '메탈릭 패브릭', focus: '패딩 조끼', note: '은빛 회색의 미래적 감성', background: 'linear-gradient(135deg, rgba(209, 213, 219, 0.9), rgba(229, 231, 235, 0.85))', textColor: '#111827' },
-  { palette: '코퍼 브라운', fabric: '워싱 데님', focus: '데님 셔츠', note: '구리 같은 적갈색 톤', background: 'linear-gradient(135deg, rgba(180, 83, 9, 0.9), rgba(217, 119, 6, 0.85))', textColor: '#fff7ed' },
-  { palette: '틸 블루', fabric: '시어서커', focus: '스트라이프 셔츠', note: '청록빛의 시원한 여름 색감', background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.85), rgba(34, 211, 238, 0.9))', textColor: '#083344' },
-  { palette: '모카 브라운', fabric: '페이크 레더', focus: '바이커 재킷', note: '모카커피 같은 진한 브라운', background: 'linear-gradient(135deg, rgba(87, 83, 78, 0.95), rgba(120, 113, 108, 0.9))', textColor: '#fafaf9' },
-  { palette: '아쿠아 민트', fabric: '쿨맥스', focus: '드라이 티셔츠', note: '수영장 물처럼 시원한 청록', background: 'linear-gradient(135deg, rgba(103, 232, 249, 0.8), rgba(165, 243, 252, 0.85))', textColor: '#0e7490' },
-  { palette: '체리 레드', fabric: '울 믹스', focus: '비니', note: '체리처럼 선명한 빨강', background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.9), rgba(239, 68, 68, 0.85))', textColor: '#fef2f2' },
-  { palette: '소프트 그린', fabric: '쿨링 패브릭', focus: '헨리넥 티', note: '부드러운 연초록의 자연스러움', background: 'linear-gradient(135deg, rgba(134, 239, 172, 0.8), rgba(187, 247, 208, 0.85))', textColor: '#14532d' },
-  { palette: '피죤 그레이', fabric: '울 개버딘', focus: '트렌치 코트', note: '비둘기 같은 회색의 우아함', background: 'linear-gradient(135deg, rgba(156, 163, 175, 0.9), rgba(209, 213, 219, 0.85))', textColor: '#1f2937' },
-  { palette: '살몬 핑크', fabric: '저지 니트', focus: '폴로 티셔츠', note: '연어빛 핑크의 활기참', background: 'linear-gradient(135deg, rgba(251, 113, 133, 0.8), rgba(252, 165, 165, 0.85))', textColor: '#7f1d1d' },
-  { palette: '제이드 그린', fabric: '실크', focus: '네커치프', note: '비취 같은 녹색의 고급스러움', background: 'linear-gradient(135deg, rgba(6, 95, 70, 0.9), rgba(16, 185, 129, 0.85))', textColor: '#d1fae5' },
-  { palette: '매트 블랙', fabric: '코튼 트윌', focus: '카고 팬츠', note: '무광 검정의 강렬함', background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(31, 41, 55, 0.9))', textColor: '#f9fafb' },
-  { palette: '라이트 베이지', fabric: '리넨', focus: '반팔 셔츠', note: '연한 베이지의 여름 청량함', background: 'linear-gradient(135deg, rgba(250, 250, 249, 0.95), rgba(245, 245, 244, 0.9))', textColor: '#292524' },
-  { palette: '버프 옐로', fabric: '코튼 트윌', focus: '치노 쇼츠', note: '황토빛 노란색의 따스함', background: 'linear-gradient(135deg, rgba(253, 224, 71, 0.85), rgba(254, 240, 138, 0.9))', textColor: '#713f12' },
-  { palette: '프루시안 블루', fabric: '울 플란넬', focus: '오버 셔츠', note: '프러시아 군복 같은 진한 파랑', background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(29, 78, 216, 0.9))', textColor: '#dbeafe' },
-  { palette: '러스트 오렌지', fabric: '코듀로이', focus: '트러커 재킷', note: '녹슨 철처럼 빈티지한 주황', background: 'linear-gradient(135deg, rgba(194, 65, 12, 0.9), rgba(234, 88, 12, 0.85))', textColor: '#fff7ed' },
-  { palette: '초코 브라운', fabric: '스웨이드', focus: '첼시 부츠', note: '초콜릿처럼 달콤한 짙은 갈색', background: 'linear-gradient(135deg, rgba(41, 37, 36, 0.95), rgba(68, 64, 60, 0.9))', textColor: '#fafaf9' },
-  { palette: '클라우드 화이트', fabric: '니트', focus: '터틀넥 스웨터', note: '구름처럼 포근한 순백', background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(250, 250, 250, 0.9))', textColor: '#171717' },
-  { palette: '페트롤 블루', fabric: '울 블렌드', focus: '피코트', note: '석유 같은 진한 청록색', background: 'linear-gradient(135deg, rgba(8, 51, 68, 0.95), rgba(14, 116, 144, 0.9))', textColor: '#cffafe' },
-  { palette: '토프 브라운', fabric: '캐시미어', focus: '롱 머플러', note: '토프처럼 부드러운 회갈색', background: 'linear-gradient(135deg, rgba(120, 113, 108, 0.9), rgba(168, 162, 158, 0.85))', textColor: '#fafaf9' },
-  { palette: '스프링 그린', fabric: '코튼 피케', focus: '반팔 폴로', note: '봄날처럼 싱그러운 연두', background: 'linear-gradient(135deg, rgba(163, 230, 53, 0.8), rgba(217, 249, 157, 0.85))', textColor: '#1a2e05' },
-  { palette: '오닉스 블랙', fabric: '울 개버딘', focus: '싱글 코트', note: '흑옥처럼 깊은 검정', background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(23, 23, 23, 0.9))', textColor: '#fafafa' },
-  { palette: '레몬 옐로', fabric: '코튼 저지', focus: '그래픽 티', note: '레몬처럼 상큼한 노란색', background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.85), rgba(253, 224, 71, 0.9))', textColor: '#713f12' },
-  { palette: '아이스 블루', fabric: '나일론', focus: '윈드 재킷', note: '얼음처럼 차가운 하늘색', background: 'linear-gradient(135deg, rgba(186, 230, 253, 0.85), rgba(224, 242, 254, 0.9))', textColor: '#0c4a6e' },
-  { palette: '테라 브라운', fabric: '가죽', focus: '벨트', note: '대지 같은 따뜻한 갈색', background: 'linear-gradient(135deg, rgba(146, 64, 14, 0.9), rgba(180, 83, 9, 0.85))', textColor: '#ffedd5' },
-  { palette: '미스트 그레이', fabric: '프렌치 테리', focus: '스웨트 팬츠', note: '안개 낀 듯한 연한 회색', background: 'linear-gradient(135deg, rgba(229, 231, 235, 0.9), rgba(243, 244, 246, 0.85))', textColor: '#111827' },
-  { palette: '포그 그린', fabric: '윈드스토퍼', focus: '쉘 재킷', note: '안개 속 녹색의 신비로움', background: 'linear-gradient(135deg, rgba(110, 231, 183, 0.7), rgba(167, 243, 208, 0.8))', textColor: '#064e3b' },
-  { palette: '선셋 오렌지', fabric: '코튼 블렌드', focus: '후드 티셔츠', note: '노을 같은 따뜻한 주황', background: 'linear-gradient(135deg, rgba(234, 88, 12, 0.85), rgba(249, 115, 22, 0.9))', textColor: '#fff7ed' },
-  { palette: '딥 퍼플', fabric: '벨벳', focus: '블레이저', note: '깊은 보라색의 고급스러움', background: 'linear-gradient(135deg, rgba(88, 28, 135, 0.9), rgba(126, 34, 206, 0.85))', textColor: '#faf5ff' },
-  { palette: '크림 옐로', fabric: '실크', focus: '스카프', note: '크림처럼 부드러운 연노랑', background: 'linear-gradient(135deg, rgba(254, 249, 195, 0.9), rgba(254, 252, 232, 0.85))', textColor: '#713f12' },
-  { palette: '스톤 그레이', fabric: '울', focus: '더블 코트', note: '돌처럼 단단한 회색', background: 'linear-gradient(135deg, rgba(120, 113, 108, 0.9), rgba(168, 162, 158, 0.85))', textColor: '#fafaf9' },
-  { palette: '바이올렛', fabric: '니트', focus: '카디건', note: '제비꽃 같은 연보라', background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.8), rgba(196, 181, 253, 0.85))', textColor: '#581c87' },
-  { palette: '피스타치오 그린', fabric: '코튼 혼방', focus: '크루넥 티', note: '피스타치오처럼 연한 초록', background: 'linear-gradient(135deg, rgba(187, 247, 208, 0.85), rgba(220, 252, 231, 0.9))', textColor: '#14532d' },
-  { palette: '슬레이트 그린', fabric: '데님', focus: '데님 재킷', note: '회색빛 녹색의 차분함', background: 'linear-gradient(135deg, rgba(71, 85, 105, 0.9), rgba(100, 116, 139, 0.85))', textColor: '#f1f5f9' },
-  { palette: '샴페인 골드', fabric: '새틴', focus: '셔츠', note: '샴페인 거품 같은 금빛', background: 'linear-gradient(135deg, rgba(253, 224, 71, 0.7), rgba(254, 240, 138, 0.8))', textColor: '#713f12' },
-  { palette: '번트 오렌지', fabric: '울 블렌드', focus: '니트 조끼', note: '불탄 듯한 진한 오렌지', background: 'linear-gradient(135deg, rgba(194, 65, 12, 0.9), rgba(234, 88, 12, 0.85))', textColor: '#fff7ed' },
-  { palette: '미드나잇 블루', fabric: '벨벳', focus: '턱시도 재킷', note: '한밤의 하늘 같은 검푸른색', background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.95), rgba(30, 58, 138, 0.9))', textColor: '#dbeafe' },
-  { palette: '세피아 브라운', fabric: '워싱 코튼', focus: '밴딩 팬츠', note: '오래된 사진 같은 갈색', background: 'linear-gradient(135deg, rgba(120, 113, 108, 0.9), rgba(168, 162, 158, 0.85))', textColor: '#fafaf9' },
-  { palette: '머큐리 그레이', fabric: '폴리에스터', focus: '트랙 수트', note: '수은 같은 차가운 회색', background: 'linear-gradient(135deg, rgba(156, 163, 175, 0.9), rgba(209, 213, 219, 0.85))', textColor: '#111827' },
-  { palette: '토마토 레드', fabric: '코튼', focus: '티셔츠', note: '토마토처럼 생생한 빨강', background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.9), rgba(239, 68, 68, 0.85))', textColor: '#fef2f2' },
-  { palette: '피치 베이지', fabric: '린넨', focus: '와이드 팬츠', note: '복숭아빛 베이지의 부드러움', background: 'linear-gradient(135deg, rgba(254, 215, 170, 0.85), rgba(253, 186, 116, 0.9))', textColor: '#7c2d12' },
-  { palette: '일렉트릭 블루', fabric: '나일론', focus: '바람막이', note: '전기처럼 강렬한 파랑', background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(59, 130, 246, 0.85))', textColor: '#eff6ff' },
-  { palette: '마룬 레드', fabric: '울 플란넬', focus: '체크 셔츠', note: '밤색 빨강의 클래식함', background: 'linear-gradient(135deg, rgba(127, 29, 29, 0.95), rgba(153, 27, 27, 0.9))', textColor: '#fef2f2' },
-  { palette: '허니 옐로', fabric: '코튼 니트', focus: '카라 티', note: '꿀처럼 달콤한 노란색', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.85), rgba(251, 191, 36, 0.9))', textColor: '#451a03' },
-  { palette: '스모크 블랙', fabric: '테크니컬 울', focus: '싱글 재킷', note: '연기 낀 듯한 검정', background: 'linear-gradient(135deg, rgba(31, 41, 55, 0.95), rgba(55, 65, 81, 0.9))', textColor: '#f9fafb' },
-  { palette: '알로에 그린', fabric: '쿨맥스', focus: '기능성 티', note: '알로에처럼 싱그러운 초록', background: 'linear-gradient(135deg, rgba(134, 239, 172, 0.8), rgba(187, 247, 208, 0.85))', textColor: '#14532d' },
-  { palette: '실버 화이트', fabric: '새틴', focus: '볼링 셔츠', note: '은빛 도는 순백', background: 'linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.9))', textColor: '#0f172a' },
-  { palette: '코코아 브라운', fabric: '플리스', focus: '집업 후디', note: '코코아처럼 달콤한 갈색', background: 'linear-gradient(135deg, rgba(87, 83, 78, 0.95), rgba(120, 113, 108, 0.9))', textColor: '#fafaf9' },
-  { palette: '스틸 블루', fabric: '데님', focus: '워크 셔츠', note: '강철 같은 청색', background: 'linear-gradient(135deg, rgba(71, 85, 105, 0.9), rgba(100, 116, 139, 0.85))', textColor: '#f1f5f9' },
-  { palette: '올리브 옐로', fabric: '코튼', focus: '유틸리티 재킷', note: '올리브 기름 같은 황록색', background: 'linear-gradient(135deg, rgba(132, 204, 22, 0.8), rgba(163, 230, 53, 0.85))', textColor: '#1a2e05' },
-  { palette: '차콜 블랙', fabric: '울 개버딘', focus: '슬랙스', note: '숯처럼 깊은 검정', background: 'linear-gradient(135deg, rgba(23, 23, 23, 0.95), rgba(38, 38, 38, 0.9))', textColor: '#fafafa' },
-  { palette: '블러드 오렌지', fabric: '코튼 저지', focus: '후드 티', note: '블러드 오렌지처럼 진한 주황', background: 'linear-gradient(135deg, rgba(234, 88, 12, 0.9), rgba(249, 115, 22, 0.85))', textColor: '#fff7ed' },
-  { palette: '페일 핑크', fabric: '시폰', focus: '플리츠 블라우스', note: '연한 핑크의 우아함', background: 'linear-gradient(135deg, rgba(252, 231, 243, 0.85), rgba(253, 242, 248, 0.9))', textColor: '#9f1239' },
-  { palette: '네이비 블루', fabric: '울 혼방', focus: '더블 수트', note: '진한 남색의 정통 클래식', background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(37, 99, 235, 0.85))', textColor: '#dbeafe' },
-  { palette: '캐러멜', fabric: '스웨이드', focus: '블루종', note: '캐러멜처럼 달콤한 갈색', background: 'linear-gradient(135deg, rgba(161, 98, 7, 0.9), rgba(217, 119, 6, 0.85))', textColor: '#fffbeb' },
-  { palette: '민트 블루', fabric: '린넨', focus: '하와이안 셔츠', note: '민트 초콜릿 같은 청록', background: 'linear-gradient(135deg, rgba(103, 232, 249, 0.8), rgba(165, 243, 252, 0.85))', textColor: '#083344' },
-]
 
 
-// 이미지 URL을 안전하게 보정하는 함수
-// - rawUrl 타입을 any로 받지만, 내부에서 문자열인지 확인합니다.
-const resolveImageUrl = (rawUrl: any): string => {
-  if (typeof rawUrl !== 'string' || rawUrl.trim() === '') {
-    return FALLBACK_IMAGE
-  }
 
-  const trimmed = rawUrl.trim()
-
-  // 절대 경로(URL)면 그대로 사용합니다.
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed
-  }
-
-  // 슬래시로 시작하면 Next.js에서 동일 호스트 자원으로 취급할 수 있습니다.
-  if (trimmed.startsWith('/')) {
-    return trimmed
-  }
-
-  // 그 외의 경우(예: assets/hm/... 처럼 상대 경로)는 Next Image가 파싱하지 못하므로
-  // 안전하게 플레이스홀더 이미지를 사용합니다.
-  return FALLBACK_IMAGE
-}
-
-// 숫자 형태로 바꿔주는 유틸 함수
-// - 숫자가 아니면 0으로 반환
-const coerceNumber = (value: any): number => {
-  if (typeof value === 'number' && !Number.isNaN(value)) {
-    return value
-  }
-
-  if (typeof value === 'string') {
-    const parsed = Number(value.replace(/,/g, ''))
-    return Number.isNaN(parsed) ? 0 : parsed
-  }
-
-  return 0
-}
-
-// API에서 받은 상품 객체를 화면에서 쓰기 좋은 형태로 변환
-// - 반환 타입을 NormalizedProduct로 명시합니다.
-const normalizeProduct = (product: any = {}): NormalizedProduct => {
-  const originalPrice = coerceNumber(product.originalPrice)
-  const salePriceSource = product.currentPrice !== undefined ? product.currentPrice : product.salePrice
-  const salePrice = coerceNumber(salePriceSource)
-
-  const discountRate = typeof product.discountRate === 'number'
-    ? product.discountRate
-    : (originalPrice
-      ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
-      : 0)
-
-  const rawImageUrl = Array.isArray(product.imageUrls) && product.imageUrls.length > 0
-    ? product.imageUrls[0]
-    : product.imageUrl
-
-  const imageUrl = resolveImageUrl(rawImageUrl)
-
-  const gender = typeof product.gender === 'string'
-    ? product.gender.toUpperCase()
-    : 'UNISEX'
-
-  const brand = (product.brandType || product.brandName || 'UNKNOWN').toUpperCase()
-  const rawMainCategory = (product.mainCategory || '').toUpperCase()
-  const rawSubCategory = (product.category || product.subCategory || '').toUpperCase()
-  const categoryKey = rawMainCategory || rawSubCategory || 'UNCATEGORIZED'
-
-  let categoryGroup = 'ETC'
-  if (CATEGORY_GROUPS[categoryKey]) {
-    categoryGroup = categoryKey
-  } else {
-    const match = Object.entries(CATEGORY_GROUPS).find(([, items]) => items.includes(categoryKey))
-    if (match) {
-      categoryGroup = match[0]
-    }
-  }
-
-  const rawId = product.id ?? product.productCode ?? `${brand}-${product.name ?? 'unknown'}`
-  const normalizedId = typeof rawId === 'string' ? rawId : String(rawId)
-
-  const normalized = {
-    id: normalizedId,
-    brand,
-    brandCode: brand, // 찜 기능을 위해 추가
-    brandName: product.brandName || brand, // 찜 기능을 위해 추가
-    gender,
-    category: categoryKey,
-    categoryGroup,
-    mainCategory: categoryKey, // 찜 기능을 위해 추가
-    name: product.name || '이름 미정',
-    originalPrice,
-    salePrice,
-    price: salePrice, // 찜 기능을 위해 추가 (salePrice와 동일)
-    discountRate,
-    imageUrl,
-    productUrl: product.productUrl || '#',
-    vibe: Array.isArray(product.tags) && product.tags.length > 0 ? product.tags[0] : null,
-    vibeTags: product.tags || [], // 찜 기능을 위해 추가
-  }
-
-  return normalized
-}
-
+/**
+ * Home - 메인 페이지 컴포넌트
+ *
+ * `export default function Home()`:
+ * - export default: Next.js가 이 파일을 페이지로 사용하려면 반드시 기본 내보내기가 있어야 합니다.
+ * - function Home(): 함수형 컴포넌트 선언 (클래스 컴포넌트보다 간결하고 현대적인 방식)
+ * - 이 함수가 반환하는 JSX가 화면에 그려집니다.
+ */
 export default function Home() {
-  // 상태 관리
-  // ▶ products: 화면에 보여줄 전체 상품 목록
-  // ▶ selectedBrand / selectedGender: 사용자가 선택한 필터
-  // ▶ isInitialLoading / isFetchingMore: 처음 로딩과 추가 로딩을 구분해 UI를 부드럽게 합니다.
-  // useState<타입>으로 상태가 어떤 배열/값인지 명확히 선언합니다.
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * 상태(State) 변수 선언 — useState
+   * ═══════════════════════════════════════════════════════════════
+   * const [현재값, 변경함수] = useState<타입>(초기값)
+   *
+   * - 현재값: 지금의 상태 값
+   * - 변경함수(set...): 호출하면 상태가 바뀌고 컴포넌트가 다시 렌더됩니다.
+   * - <타입>: TypeScript 제네릭으로 이 상태가 어떤 타입인지 명시합니다.
+   *   → 잘못된 타입의 값을 전달하면 컴파일 에러가 발생합니다.
+   * - 초기값: 컴포넌트가 처음 생성될 때의 기본 값
+   *
+   * Java 비유:
+   * private NormalizedProduct[] products = new NormalizedProduct[0]; // useState([] )와 같음
+   * public void setProducts(NormalizedProduct[] p) { this.products = p; rerender(); }
+   */
+
+  // 화면에 표시할 상품 목록 (NormalizedProduct 배열)
+  // 빈 배열([])로 시작하여 API 응답이 오면 채워집니다.
   const [products, setProducts] = useState<NormalizedProduct[]>([])
+
+  // 필터 상태들
+  // Brand | 'all': 특정 브랜드 또는 '전체'(all) 중 하나
+  // 초기값 'all': 처음에는 모든 브랜드 표시
   const [selectedBrand, setSelectedBrand] = useState<Brand | 'all'>('all')
   const [selectedGender, setSelectedGender] = useState<Gender | 'all'>('all')
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all')
-  const [selectedDiscount, setSelectedDiscount] = useState<number>(0)
-  const [selectedPrice, setSelectedPrice] = useState<number>(Infinity)
+  const [selectedDiscount, setSelectedDiscount] = useState<number>(0)       // 최소 할인율 (0 = 전체)
+  const [selectedPrice, setSelectedPrice] = useState<number>(Infinity)      // 최대 가격 (Infinity = 전체)
+
+  // sortValue: 정렬 옵션의 value (예: 'discount_desc'). 기본값은 할인율 높은순.
+  // SORT_OPTIONS(types/index.ts)에서 정의한 value 중 하나를 가집니다.
+  const [sortValue, setSortValue] = useState<string>(DEFAULT_SORT_VALUE)
+
+  // excludeSoldOut: true이면 품절 상품(inStock === false)을 목록에서 제외합니다.
+  const [excludeSoldOut, setExcludeSoldOut] = useState<boolean>(false)
+
+  // 로딩 상태들
+  // isInitialLoading: 첫 데이터 로딩 중 (전체 화면 스켈레톤 표시)
+  // isFetchingMore: 무한 스크롤로 추가 데이터 로딩 중 (하단 작은 스켈레톤 표시)
+  // 두 상태를 분리하는 이유: 각각 다른 UI를 보여주기 위해
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true)
   const [isFetchingMore, setIsFetchingMore] = useState<boolean>(false)
+
+  // error: null이면 에러 없음, 문자열이면 에러 메시지
+  // string | null: TypeScript에서 "문자열 또는 null" 중 하나를 허용하는 유니온 타입
   const [error, setError] = useState<string | null>(null)
+
+  // 페이지네이션 상태
+  // hasMore: 더 불러올 데이터가 있는지 (false이면 스크롤해도 더 로드 안 함)
+  // page: 현재 페이지 번호 (0부터 시작, Spring Pageable과 동일)
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [page, setPage] = useState<number>(0)
+
+  // 검색 상태
+  // searchInput: 입력창에 타이핑 중인 값 (실시간 반영)
+  // searchKeyword: 실제 검색에 사용되는 값 (폼 제출 시에만 업데이트)
+  // 두 상태를 분리하는 이유: 타이핑할 때마다 API를 호출하지 않기 위해
   const [searchInput, setSearchInput] = useState<string>('')
   const [searchKeyword, setSearchKeyword] = useState<string>('')
-  const [showScrollTop, setShowScrollTop] = useState<boolean>(false)
-  const [showFilters, setShowFilters] = useState<boolean>(false)
-  const [logoStep, setLogoStep] = useState<number>(0)
-  // navScrolled: 스크롤이 10px 이상이면 nav 하단 border-bottom을 표시합니다.
+
+  // UI 표시 상태들
+  const [showScrollTop, setShowScrollTop] = useState<boolean>(false)  // "맨 위로" 버튼 표시
+  const [showFilters, setShowFilters] = useState<boolean>(false)      // 필터 패널 표시
+  const [logoStep, setLogoStep] = useState<number>(0)                 // 로고 애니메이션 단계 (0~3)
+
+  // navScrolled: 스크롤이 10px 이상이면 nav에 border-bottom을 표시합니다.
+  // 스크롤 이벤트에서 window.scrollY > 10이면 true로 설정합니다.
   const [navScrolled, setNavScrolled] = useState<boolean>(false)
+
+  // highlights: 메인 상단 "최대 할인율 TOP" 가로 스트립에 보여줄 상품들
+  // 메인 그리드의 필터와 무관하게, 진입 시 한 번만 "할인율 높은순" 상위 상품을 가져옵니다.
+  const [highlights, setHighlights] = useState<NormalizedProduct[]>([])
+
+  // 세일 상품 총 개수 (헤더의 "X개 할인 중" 표시용)
   const [totalSaleCount, setTotalSaleCount] = useState<number>(0)
+  // animatedCount: totalSaleCount까지 숫자가 올라가는 카운터 애니메이션용
   const [animatedCount, setAnimatedCount] = useState<number>(0)
-  // useRef는 값이 변경되어도 렌더링을 다시 하지 않는 "mutable 참조"입니다.
+
+  /**
+   * useRef — 렌더링 없이 값을 유지하는 "변경 가능한 상자"
+   * ─────────────────────────────────────────────────────────
+   * useState와 달리, useRef의 값이 바뀌어도 컴포넌트가 다시 렌더되지 않습니다.
+   * 두 가지 용도:
+   * 1. DOM 요소 참조: ref.current로 실제 HTML 요소에 접근
+   * 2. 렌더와 무관한 값 저장: 이전 스크롤 위치 등
+   *
+   * useRef<HTMLDivElement | null>(null):
+   * - <HTMLDivElement | null>: ref가 가리킬 요소 타입 (div 또는 null)
+   * - null: 초기값 (아직 DOM에 연결 전)
+   * - JSX에서 ref={loadMoreRef}로 연결하면 loadMoreRef.current에 실제 요소가 담깁니다.
+   *
+   * Java 비유: private volatile Element loadMoreElement; (스레드 안전한 참조)
+   */
+
+  // loadMoreRef: 무한 스크롤 감지용 sentinel 요소 (화면 하단에 숨겨진 div)
+  // IntersectionObserver가 이 요소가 화면에 보이면 다음 페이지를 로드합니다.
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+  // filterPanelRef: 필터 패널 DOM 요소 참조 (스크롤 행동 제어용)
   const filterPanelRef = useRef<HTMLDivElement | null>(null)
+
+  // sectionHeaderRef: "맨 위로 이동" 버튼 클릭 시 스크롤 목표 위치
   const sectionHeaderRef = useRef<HTMLDivElement | null>(null)
+
+  // lastScrollY: 이전 스크롤 Y 위치 저장 (방향 감지용, 렌더 없이 저장)
   const lastScrollY = useRef<number>(0)
+
+  // Next.js 라우터 — 필터 상태를 URL 쿼리스트링과 동기화하는 데 사용합니다.
+  const router = useRouter()
+
+  // didHydrateFromUrl: URL → 상태 초기화를 "한 번만" 수행하기 위한 플래그입니다.
+  // (router.isReady 시점에 쿼리를 읽어 상태에 반영하고, 이후에는 상태 → URL 방향만 동기화)
+  const didHydrateFromUrl = useRef<boolean>(false)
 
   // 찜 기능 훅
   const { toggleFavorite, isFavorite, getFavoriteCount } = useFavorites()
+
+  // 상품 비교 훅 (최대 4개, localStorage 저장)
+  const {
+    compareItems,
+    toggleCompare,
+    removeCompare,
+    clearCompare,
+    isComparing,
+    isFull: isCompareFull,
+  } = useCompare()
   const dailyMood = useMemo(() => {
     const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '')
     const index = Number(todayKey) % DAILY_MOODS.length
@@ -422,6 +238,25 @@ export default function Home() {
     loadSaleCount()
   }, [])
 
+  // 상단 "최대 할인율 TOP" 스트립용 데이터 — 진입 시 한 번만 로드합니다.
+  useEffect(() => {
+    const loadHighlights = async () => {
+      try {
+        const response = await fetchSaleProducts({
+          page: 0,
+          size: 10,
+          sortBy: 'discount',
+          sortDirection: 'desc',
+        })
+        setHighlights(normalizeProducts(response.products ?? []))
+      } catch {
+        // 스트립은 부가 기능이므로 실패해도 조용히 무시합니다(메인 그리드에 영향 없음).
+        setHighlights([])
+      }
+    }
+    loadHighlights()
+  }, [])
+
   // 카운트 애니메이션: totalSaleCount가 바뀌면 숫자를 서서히 증가시킵니다.
   useEffect(() => {
     if (totalSaleCount === 0) return undefined
@@ -443,11 +278,6 @@ export default function Home() {
 
     return () => clearInterval(timer)
   }, [totalSaleCount])
-
-  // API에서 받은 원본 데이터를 화면에서 쓰기 좋은 형태로 바꿉니다.
-  const normalizeProducts = useCallback((apiProducts: any[] = []) => {
-    return apiProducts.map((product) => normalizeProduct(product))
-  }, [])
 
   const mergeUniqueProducts = useCallback((prevProducts: NormalizedProduct[], incomingProducts: NormalizedProduct[], replace: boolean) => {
     if (replace) {
@@ -482,6 +312,9 @@ export default function Home() {
     }
 
     try {
+      // 현재 정렬 옵션을 찾습니다. value가 유효하지 않으면 첫 번째(기본) 옵션을 사용합니다.
+      const currentSort = SORT_OPTIONS.find(option => option.value === sortValue) ?? SORT_OPTIONS[0]
+
       // fetchSaleProducts는 이제 { products, totalPages, hasMore, ... } 형식을 반환합니다
       const response = await fetchSaleProducts({
         page: pageToLoad,
@@ -490,6 +323,11 @@ export default function Home() {
         genders: selectedGender !== 'all' ? [selectedGender] : undefined,
         categories: selectedCategory !== 'all' ? [selectedCategory] : undefined,
         keyword: searchKeyword || undefined,
+        maxPrice: Number.isFinite(selectedPrice) ? selectedPrice : undefined,
+        minDiscountRate: selectedDiscount > 0 ? selectedDiscount : undefined,
+        // 정렬 기준/방향을 서버에 전달합니다 (전체 데이터 기준 정렬).
+        sortBy: currentSort.sortBy,
+        sortDirection: currentSort.sortDirection,
       })
 
       // response.products 배열을 정규화합니다
@@ -504,7 +342,10 @@ export default function Home() {
       setHasMore(response.hasMore)
     } catch (err) {
       const message = (err as Error)?.message || ''
-      const isNotFoundError = message.includes('(404)') || /not\s+found/i.test(message)
+      const isNotFoundError =
+        (err instanceof ApiRequestError && err.status === 404) ||
+        message.includes('status: 404') ||
+        /not\s+found/i.test(message)
 
       if (replace && isNotFoundError) {
         setError('NO_RESULTS')
@@ -527,68 +368,52 @@ export default function Home() {
         setIsFetchingMore(false)
       }
     }
-  }, [mergeUniqueProducts, normalizeProducts, searchKeyword, selectedBrand, selectedCategory, selectedGender, selectedDiscount, selectedPrice])
+  }, [mergeUniqueProducts, searchKeyword, selectedBrand, selectedCategory, selectedGender, selectedDiscount, selectedPrice, sortValue])
 
   /**
-   * 선택한 브랜드가 바뀌면
+   * 필터/정렬/검색이 바뀌면
    * 1) 목록을 비우고
    * 2) 첫 페이지(0페이지)를 다시 불러옵니다.
+   *
+   * loadProducts는 useCallback으로 위 의존성(브랜드/성별/카테고리/할인율/가격/검색어/정렬)이
+   * 바뀔 때마다 새로 생성되므로, 이 effect도 그때마다 재실행됩니다.
    */
   useEffect(() => {
     setProducts([])
     setPage(0)
     setHasMore(true)
     loadProducts({ pageToLoad: 0, replace: true })
-  }, [selectedBrand, selectedGender, selectedCategory, selectedDiscount, selectedPrice, searchKeyword, loadProducts])
+  }, [loadProducts])
 
   /**
-   * 클라이언트 사이드 필터링 로직
-   * 
-   * API에서 1차적으로 필터링된 데이터를 받아오지만,
-   * 할인율(minDiscount)이나 가격대(maxPrice) 같은 세부 조건은
-   * 현재 로드된 상품 목록 내에서 즉각적으로 반응하도록 클라이언트에서도 한 번 더 검사합니다.
-   * 이를 통해 사용자가 필터를 조작할 때 서버 요청 없이도 빠른 피드백을 줄 수 있습니다.
+   * 클라이언트 사이드 "표시 필터링" 로직
+   *
+   * ⚠️ 변경 이력(중요):
+   * 이전에는 브랜드/성별/카테고리/할인율/가격/검색어를 클라이언트에서 한 번 더 걸렀습니다.
+   * 그러나 이 조건들은 이미 서버(fetchSaleProducts 파라미터)가 필터링해서 내려줍니다.
+   * 클라이언트가 다시 거르면 두 가지 문제가 생겼습니다.
+   *   1) 중복 로직(서버/클라 동시 관리) → 유지보수 어려움
+   *   2) 서버가 내려준 12개를 클라가 0개로 걸러 무한 스크롤이 멈추는 버그
+   * 그래서 서버가 책임지는 필터는 클라이언트에서 제거하고,
+   * 여기서는 "순수하게 화면 표시에만 필요한 최소 필터"만 남깁니다.
+   *   - hasValidImage: 깨진 이미지 URL을 가진 상품은 카드 품질을 위해 숨김
+   *   - excludeSoldOut: 사용자가 "품절 제외" 토글을 켰을 때만 품절 상품 숨김
    */
-  // useMemo: products/필터 상태가 바뀔 때만 필터링 계산을 다시 실행
+  // useMemo: products / excludeSoldOut가 바뀔 때만 재계산
   const filteredProducts = useMemo(() => {
-    const filtered = products.filter((product) => {
-      // 이미지 유효성 검사
-      const hasValidImage = product.imageUrl && !product.imageUrl.includes('undefined') && !product.imageUrl.includes('null')
+    return products.filter((product) => {
+      // 깨진 이미지 URL 방어 (undefined/null 문자열이 섞인 경우 제외)
+      const hasValidImage = Boolean(product.imageUrl)
+        && !product.imageUrl.includes('undefined')
+        && !product.imageUrl.includes('null')
 
-      // 브랜드 필터
-      const matchesBrand =
-        selectedBrand === 'all' ||
-        product.brandName === selectedBrand ||
-        product.brand === selectedBrand
+      // "품절 제외" 토글이 켜져 있으면, 재고가 명시적으로 false인 상품을 숨깁니다.
+      // (inStock이 undefined = 재고 정보 없음 → 숨기지 않음)
+      const passesSoldOut = !excludeSoldOut || product.inStock !== false
 
-      // 성별 필터
-      const matchesGender =
-        selectedGender === 'all' ||
-        product.gender === selectedGender ||
-        product.gender === 'UNISEX' // 공용은 모두 포함
-
-      // 카테고리 필터
-      const matchesCategory =
-        selectedCategory === 'all' ||
-        product.categoryGroup === selectedCategory
-
-      // 할인율 필터 (선택된 할인율 이상인지)
-      const matchesDiscount = product.discountRate >= selectedDiscount
-
-      // 가격대 필터 (선택된 가격 이하인지)
-      const matchesPrice = product.salePrice <= selectedPrice
-
-      // 검색어 필터
-      const normalizedQuery = searchKeyword.toLowerCase().trim()
-      const matchesSearch = normalizedQuery === ''
-        || product.name.toLowerCase().includes(normalizedQuery)
-        || (product.brand && product.brand.toLowerCase().includes(normalizedQuery))
-
-      return hasValidImage && matchesBrand && matchesGender && matchesCategory && matchesDiscount && matchesPrice && matchesSearch
+      return hasValidImage && passesSoldOut
     })
-
-    return filtered
-  }, [products, selectedBrand, selectedGender, selectedCategory, selectedDiscount, selectedPrice, searchKeyword])
+  }, [products, excludeSoldOut])
 
   const filteredCountRef = useRef(0)
   useEffect(() => {
@@ -596,10 +421,19 @@ export default function Home() {
   }, [filteredProducts.length])
 
   /**
-   * IntersectionObserver를 사용해 화면 하단에 숨겨둔 loadMoreRef 요소가 보이면
-   * 다음 페이지를 불러옵니다. (무한 스크롤)
+   * loadNextPage - 다음 페이지 로드 조건을 체크하고 loadProducts를 호출하는 함수
+   *
+   * 무한 스크롤에서 IntersectionObserver가 이 함수를 호출합니다.
+   *
+   * 로드하지 않는 조건:
+   * - isInitialLoading: 첫 로딩 중이면 스킵
+   * - isFetchingMore: 이미 추가 로딩 중이면 스킵 (중복 요청 방지)
+   * - !hasMore: 더 불러올 데이터가 없으면 스킵
+   * - filteredCountRef.current === 0: 화면에 상품이 없으면 스킵
+   *
+   * page + 1: 다음 페이지 번호 (0-indexed)
+   * replace: false: 기존 목록에 추가 (교체하지 않음)
    */
-  // 다음 페이지 로드 조건을 체크한 뒤 loadProducts를 호출합니다.
   const loadNextPage = useCallback(() => {
     if (
       isInitialLoading ||
@@ -613,40 +447,79 @@ export default function Home() {
     loadProducts({ pageToLoad: page + 1, replace: false })
   }, [hasMore, isFetchingMore, isInitialLoading, loadProducts, page])
 
+  /**
+   * IntersectionObserver 설정 — 무한 스크롤 구현
+   * ─────────────────────────────────────────────────────────
+   * IntersectionObserver란?
+   * 특정 DOM 요소가 뷰포트(사용자 화면)에 들어오거나 나가는 것을 감지하는 브라우저 API입니다.
+   * scroll 이벤트와 달리 성능이 좋습니다:
+   * - scroll 이벤트: 스크롤할 때마다 계속 호출 (초당 수십~수백 번)
+   * - IntersectionObserver: 요소가 뷰포트와 교차하는 순간만 콜백 호출
+   *
+   * Java 비유: Observer 패턴 — loadMoreRef 요소가 보이면 이벤트 발생
+   *
+   * 동작 방식:
+   * 1. 상품 목록 맨 아래에 보이지 않는 div(loadMoreRef)를 배치합니다.
+   * 2. IntersectionObserver가 이 div를 감시합니다.
+   * 3. 사용자가 스크롤하여 이 div가 화면에 들어오면 → loadNextPage() 호출
+   * 4. 다음 페이지 데이터를 로드하여 목록에 추가합니다.
+   *
+   * useEffect 의존성: [loadNextPage]
+   * → loadNextPage 함수가 바뀔 때마다 Observer를 새로 설정합니다.
+   *
+   * cleanup 함수: return () => observer.unobserve(target)
+   * → 컴포넌트가 사라지거나 의존성이 바뀌면 이전 Observer를 해제합니다.
+   * → 메모리 누수 방지를 위해 필수입니다.
+   * → Java의 @PreDestroy 또는 try-with-resources와 유사합니다.
+   *
+   * rootMargin: '400px 0px':
+   * - 상하로 400px의 여유를 두고 미리 트리거합니다.
+   * - 요소가 실제로 보이기 400px 전에 이미 다음 페이지를 로드합니다.
+   * - 사용자가 스크롤 하단에 도달하기 전에 미리 데이터를 불러와 자연스러운 무한 스크롤을 만듭니다.
+   *
+   * threshold: 0.1:
+   * - 요소의 10%가 뷰포트에 들어오면 콜백을 실행합니다.
+   * - 0이면 1px만 보여도, 1이면 100% 다 보여야 실행됩니다.
+   */
   useEffect(() => {
-    // 관찰 대상이 없으면 아무 것도 하지 않음
+    // loadMoreRef.current가 null이면 (DOM 요소가 없으면) 아무것도 하지 않음
     if (!loadMoreRef.current) {
       return undefined
     }
 
-    // 뷰포트 근처에 도달하면 다음 페이지 요청
+    // IntersectionObserver 생성
+    // entries: 관찰 중인 요소들의 교차 상태 배열 (여기서는 요소 1개)
     const observer = new IntersectionObserver(
       (entries) => {
-        const [entry] = entries
+        const [entry] = entries // 배열 구조분해 할당으로 첫 번째 항목만 꺼냄
         if (entry.isIntersecting) {
+          // 요소가 뷰포트에 들어왔을 때 다음 페이지 로드
           loadNextPage()
         }
       },
-      { rootMargin: '400px 0px', threshold: 0.1 }, // 미리 여유를 두고 요청하기 위해 여백을 주었습니다.
+      {
+        rootMargin: '400px 0px', // 상하 400px 여유 (미리 로드)
+        threshold: 0.1,          // 10% 이상 보이면 트리거
+      },
     )
 
     const target = loadMoreRef.current
-    observer.observe(target)
+    observer.observe(target) // 요소 감시 시작
 
+    // cleanup 함수: 이 Effect가 다시 실행되거나 컴포넌트가 unmount될 때 실행
+    // observer.unobserve(target): 해당 요소 감시 중단
     return () => observer.unobserve(target)
   }, [loadNextPage])
 
-  useEffect(() => {
-    if (
-      !isInitialLoading &&
-      hasMore &&
-      !isFetchingMore &&
-      products.length < PAGE_SIZE * 2 &&
-      filteredProducts.length > 0
-    ) {
-      loadProducts({ pageToLoad: page + 1, replace: false })
-    }
-  }, [filteredProducts.length, hasMore, isFetchingMore, isInitialLoading, loadProducts, page, products.length])
+  /**
+   * [제거됨] 화면 채우기 강제 로드 effect
+   *
+   * 이전에는 "products.length < PAGE_SIZE * 2"인 동안 다음 페이지를 강제로 더 불러왔습니다.
+   * 이는 클라이언트 과잉 필터링으로 화면이 비던 시절의 땜빵이었습니다.
+   * 이제 서버 필터링이 정확하므로, 콘텐츠가 짧으면 하단 sentinel(loadMoreRef)이
+   * 처음부터 뷰포트에 들어와 IntersectionObserver가 자연스럽게 다음 페이지를 로드합니다.
+   * → 중복 호출 위험을 줄이기 위해 이 effect를 제거했습니다.
+   */
 
   // 브랜드, 성별, 검색어 변경 핸들러
   const handleBrandChange = (brand: Brand | 'all') => {
@@ -669,12 +542,128 @@ export default function Home() {
     setSelectedPrice(price)
   }
 
-  // 검색 폼 제출: 입력값을 공백 제거 후 검색어로 적용
+  // 정렬 변경 핸들러: 정렬 값이 바뀌면 loadProducts가 재생성되어 자동으로 0페이지부터 다시 로드됩니다.
+  const handleSortChange = (value: string) => {
+    setSortValue(value)
+  }
+
+  // "품절 제외" 토글 핸들러 (클라이언트 표시 필터, 서버 재요청 없음)
+  const handleToggleSoldOut = () => {
+    setExcludeSoldOut(prev => !prev)
+  }
+
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * 필터 상태 ↔ URL 쿼리스트링 동기화 (#3)
+   * ═══════════════════════════════════════════════════════════════
+   * 왜 필요한가요?
+   * - 필터를 걸어둔 화면을 그대로 "공유/북마크"할 수 있습니다.
+   *   예: /?brand=ZARA&sort=price_asc&minDiscount=30
+   * - 새로고침/뒤로가기 시에도 필터가 유지됩니다.
+   *
+   * 동기화 방향은 두 가지입니다.
+   * 1) URL → 상태 (최초 1회): 진입 시 URL의 쿼리를 읽어 상태를 초기화
+   * 2) 상태 → URL (이후 계속): 사용자가 필터를 바꾸면 URL을 갱신
+   */
+
+  // (1) URL → 상태: router가 준비되면 쿼리를 읽어 상태에 한 번만 반영합니다.
+  useEffect(() => {
+    // router.isReady: 쿼리 파싱이 끝났는지 여부 (false일 때 query는 비어 있음)
+    if (!router.isReady || didHydrateFromUrl.current) {
+      return
+    }
+
+    // 쿼리 값은 string | string[] | undefined → 첫 값을 문자열로 정규화하는 헬퍼
+    const q = router.query
+    const getStr = (v: string | string[] | undefined): string => Array.isArray(v) ? v[0] : (v ?? '')
+
+    const brand = getStr(q.brand)
+    const gender = getStr(q.gender)
+    const category = getStr(q.category)
+    const sort = getStr(q.sort)
+    const minDiscount = Number(getStr(q.minDiscount))
+    const maxPrice = Number(getStr(q.maxPrice))
+    const keyword = getStr(q.q)
+    const soldout = getStr(q.soldout)
+
+    if (brand) setSelectedBrand(brand as Brand | 'all')
+    if (gender) setSelectedGender(gender as Gender | 'all')
+    if (category) setSelectedCategory(category as Category | 'all')
+    // 유효한 정렬 값일 때만 반영(잘못된 값으로 인한 오작동 방지)
+    if (sort && SORT_OPTIONS.some(o => o.value === sort)) setSortValue(sort)
+    if (Number.isFinite(minDiscount) && minDiscount > 0) setSelectedDiscount(minDiscount)
+    if (Number.isFinite(maxPrice) && maxPrice > 0) setSelectedPrice(maxPrice)
+    if (keyword) { setSearchKeyword(keyword); setSearchInput(keyword) }
+    if (soldout === 'exclude') setExcludeSoldOut(true)
+
+    // 초기화 완료 표시 → 이후에는 (2) 상태 → URL 방향만 동작합니다.
+    didHydrateFromUrl.current = true
+  }, [router.isReady, router.query])
+
+  // (2) 상태 → URL: 필터 상태가 바뀔 때마다 URL 쿼리를 갱신합니다.
+  useEffect(() => {
+    // 아직 URL → 상태 초기화가 끝나지 않았으면, 덮어쓰지 않습니다(초기값으로 URL 날아가는 것 방지).
+    if (!didHydrateFromUrl.current) {
+      return
+    }
+
+    // 기본값과 다른 항목만 쿼리에 담아 URL을 깔끔하게 유지합니다.
+    const query: Record<string, string> = {}
+    if (selectedBrand !== 'all') query.brand = selectedBrand
+    if (selectedGender !== 'all') query.gender = selectedGender
+    if (selectedCategory !== 'all') query.category = selectedCategory
+    if (sortValue !== DEFAULT_SORT_VALUE) query.sort = sortValue
+    if (selectedDiscount > 0) query.minDiscount = String(selectedDiscount)
+    if (Number.isFinite(selectedPrice)) query.maxPrice = String(selectedPrice)
+    if (searchKeyword) query.q = searchKeyword
+    if (excludeSoldOut) query.soldout = 'exclude'
+
+    // shallow: true → 데이터 재요청 없이 URL만 바꿉니다(스크롤/상태 유지).
+    // 기존 URL과 동일하면 굳이 replace하지 않아 불필요한 history 변경을 막습니다.
+    router.replace({ pathname: router.pathname, query }, undefined, { shallow: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBrand, selectedGender, selectedCategory, sortValue, selectedDiscount, selectedPrice, searchKeyword, excludeSoldOut])
+
+  // appliedSearchLabels: 자연어 검색에서 해석된 조건 칩들("유니클로", "5만원 이하" 등)
+  // 사용자에게 "이렇게 이해했어요"를 시각적으로 피드백하기 위한 상태입니다.
+  const [appliedSearchLabels, setAppliedSearchLabels] = useState<string[]>([])
+
+  /**
+   * 검색 폼 제출 — 자연어 검색 파싱 적용
+   *
+   * 입력 문장을 parseSearchQuery로 분석해
+   * 브랜드/성별/카테고리/최대가격/최소할인율 필터를 자동으로 채우고,
+   * 나머지 텍스트만 일반 검색어로 사용합니다.
+   * 예) "5만원 이하 30% 유니클로 니트"
+   *   → maxPrice=50000, minDiscount=30, brand=UNIQLO, category=TOP, keyword="니트"
+   */
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const trimmed = searchInput.trim()
-    setSearchKeyword(trimmed)
+
+    if (!trimmed) {
+      // 빈 검색: 키워드만 비웁니다(다른 필터는 유지).
+      setSearchKeyword('')
+      setAppliedSearchLabels([])
+      return
+    }
+
+    const parsed = parseSearchQuery(trimmed)
+
+    // 해석된 필터들을 상태에 반영합니다(없으면 기존 값 유지).
+    // 활성 브랜드(세일 데이터 제공)일 때만 브랜드 필터를 적용해 빈 결과를 방지합니다.
+    if (parsed.brand && parsed.brand !== 'all' && isActiveBrand(parsed.brand)) {
+      setSelectedBrand(parsed.brand)
+    }
+    if (parsed.gender) setSelectedGender(parsed.gender)
+    if (parsed.category) setSelectedCategory(parsed.category)
+    if (typeof parsed.maxPrice === 'number') setSelectedPrice(parsed.maxPrice)
+    if (typeof parsed.minDiscount === 'number') setSelectedDiscount(parsed.minDiscount)
+
+    // 남은 텍스트를 검색어로 사용하고, 입력창도 정리된 값으로 갱신합니다.
+    setSearchKeyword(parsed.keyword)
     setSearchInput(trimmed)
+    setAppliedSearchLabels(parsed.appliedLabels)
   }
 
   const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -721,87 +710,61 @@ export default function Home() {
         {/* 광고 영역 */}
       </div>
       <div className={styles.mainContent}>
-        <Head>
-          <title>ARCA - H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 세일 정보 | 매일 업데이트</title>
-          <meta name="description" content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 합리적인 쇼핑을 즐기세요." />
-          <meta name="google-site-verification" content="Jq8ncQ8slNfWXuqPL_ZZv8f10qrXEApKFkjkwDsy56k" />
-          <link rel="canonical" href="https://mion-spa-info.vercel.app" />
-
-          {/* Open Graph 메타 태그 */}
-          <meta property="og:title" content="ARCA - SPA 브랜드 세일 정보 | 매일 업데이트" />
-          <meta property="og:description" content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요." />
-          <meta property="og:type" content="website" />
-          <meta property="og:url" content="https://mion-spa-info.vercel.app" />
-
-          {/* Twitter Card */}
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content="ARCA - SPA 브랜드 세일 정보" />
-          <meta name="twitter:description" content="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 할인 상품을 한눈에 비교하세요." />
-
-          {/* 구조화된 데이터 (JSON-LD) */}
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                '@context': 'https://schema.org',
-                '@type': 'WebSite',
-                name: 'ARCA',
-                description: 'SPA 브랜드 세일 정보 큐레이션 서비스 — ARCA',
-                url: 'https://mion-spa-info.vercel.app',
-                potentialAction: {
-                  '@type': 'SearchAction',
-                  target: 'https://mion-spa-info.vercel.app/?search={search_term_string}',
-                  'query-input': 'required name=search_term_string',
-                },
-              }),
-            }}
-          />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                '@context': 'https://schema.org',
-                '@type': 'ItemList',
-                name: '할인 중인 SPA 브랜드 상품',
-                description: 'H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등의 세일 상품 모음',
-                numberOfItems: totalSaleCount || 0,
-                itemListElement: filteredProducts.slice(0, 10).map((product, index) => ({
-                  '@type': 'ListItem',
-                  position: index + 1,
-                  item: {
-                    '@type': 'Product',
-                    name: product.name,
-                    brand: {
-                      '@type': 'Brand',
-                      name: product.brand,
-                    },
-                    offers: {
-                      '@type': 'Offer',
-                      price: product.salePrice,
-                      priceCurrency: 'KRW',
-                      availability: 'https://schema.org/InStock',
-                      url: product.productUrl,
-                    },
+        <SEO
+          title="ARCA - H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 세일 정보 | 매일 업데이트"
+          description="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 합리적인 쇼핑을 즐기세요."
+          canonical="https://mion-spa-info.vercel.app"
+          googleSiteVerification="Jq8ncQ8slNfWXuqPL_ZZv8f10qrXEApKFkjkwDsy56k"
+          structuredData={[
+            {
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'ARCA',
+              description: 'SPA 브랜드 세일 정보 큐레이션 서비스 - ARCA',
+              url: 'https://mion-spa-info.vercel.app',
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: 'https://mion-spa-info.vercel.app/?search={search_term_string}',
+                'query-input': 'required name=search_term_string',
+              },
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'ItemList',
+              name: '할인 중인 SPA 브랜드 상품',
+              description: 'H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등의 세일 상품 모음',
+              numberOfItems: totalSaleCount || 0,
+              itemListElement: filteredProducts.slice(0, 10).map((product, index) => ({
+                '@type': 'ListItem',
+                position: index + 1,
+                item: {
+                  '@type': 'Product',
+                  name: product.name,
+                  brand: {
+                    '@type': 'Brand',
+                    name: product.brandName,
                   },
-                })),
-              }),
-            }}
-          />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                '@context': 'https://schema.org',
-                '@type': 'Organization',
-                name: 'ARCA',
-                url: 'https://mion-spa-info.vercel.app',
-                logo: 'https://mion-spa-info.vercel.app/favicon.ico',
-                description: 'ARCA — SPA 브랜드 할인 상품 정보를 제공하는 큐레이션 서비스',
-                sameAs: [],
-              }),
-            }}
-          />
-        </Head>
+                  offers: {
+                    '@type': 'Offer',
+                    price: product.salePrice,
+                    priceCurrency: 'KRW',
+                    availability: 'https://schema.org/InStock',
+                    url: product.productUrl,
+                  },
+                },
+              })),
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'ARCA',
+              url: 'https://mion-spa-info.vercel.app',
+              logo: 'https://mion-spa-info.vercel.app/favicon.ico',
+              description: 'ARCA - SPA 브랜드 할인 상품 정보를 제공하는 큐레이션 서비스',
+              sameAs: [],
+            },
+          ]}
+        />
 
         {/* 네비게이션 — Apple HIG sticky glassmorphism nav
             navScrolled 상태에 따라 stickyNavScrolled 클래스를 추가해 하단 border-bottom을 표시합니다.
@@ -838,7 +801,7 @@ export default function Home() {
                 <button
                   type="button"
                   className={styles.navSearchClear}
-                  onClick={() => { setSearchInput(''); setSearchKeyword(''); }}
+                  onClick={() => { setSearchInput(''); setSearchKeyword(''); setAppliedSearchLabels([]); }}
                   aria-label="검색어 지우기"
                 >
                   ✕
@@ -905,7 +868,9 @@ export default function Home() {
                 </div>
                 <div className={styles.heroMoodRow}>
                   <span>소재 선택</span>
-                  <strong dangerouslySetInnerHTML={{ __html: dailyMood.fabric }} />
+                  {/* dangerouslySetInnerHTML 제거: fabric은 순수 텍스트이므로 그대로 렌더해도
+                      충분하며, 불필요한 XSS 위험 표면을 없앱니다. */}
+                  <strong>{dailyMood.fabric}</strong>
                 </div>
                 <div className={styles.heroMoodRow}>
                   <span>포커스 아이템</span>
@@ -918,6 +883,32 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* 최대 할인율 TOP 스트립 — 가로 스크롤로 "지금 가장 많이 깎인" 상품을 먼저 노출
+            메인 그리드의 필터와 독립적으로 동작하는 추천 영역입니다. */}
+        {highlights.length > 0 && (
+          <section className={styles.highlightSection} aria-label="최대 할인율 상품">
+            <div className={styles.highlightHeader}>
+              <h2 className={styles.highlightTitle}>🔥 최대 할인율 TOP</h2>
+              <p className={styles.highlightSubtitle}>지금 가장 많이 할인된 상품이에요</p>
+            </div>
+            <div className={styles.highlightStrip}>
+              {highlights.map((product) => (
+                <div key={product.id} className={styles.highlightItem}>
+                  <ProductCard
+                    product={product}
+                    {...product}
+                    isFavorite={isFavorite(product.id)}
+                    onFavoriteToggle={toggleFavorite}
+                    isComparing={isComparing(product.id)}
+                    onCompareToggle={toggleCompare}
+                    compareDisabled={isCompareFull}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 메인 컨텐츠 */}
         <main className={styles.main} id="products">
@@ -992,6 +983,45 @@ export default function Home() {
             </div>
           </div>
 
+          {/* 자연어 검색 해석 결과 칩 — "이렇게 이해했어요"를 사용자에게 피드백
+              예: "유니클로", "5만원 이하", "30% 이상" */}
+          {appliedSearchLabels.length > 0 && (
+            <div className={styles.parsedChips} aria-label="검색 해석 결과">
+              <span className={styles.parsedChipsLabel}>이렇게 찾았어요:</span>
+              {appliedSearchLabels.map(label => (
+                <span key={label} className={styles.parsedChip}>{label}</span>
+              ))}
+            </div>
+          )}
+
+          {/* 결과/정렬 툴바 — 좌: 현재 표시 개수, 우: 품절 제외 토글 + 정렬 드롭다운
+              사용자가 "지금 몇 개가 보이는지", "어떤 순서로 볼지"를 한눈에 제어합니다. */}
+          <div className={styles.resultsToolbar}>
+            <span className={styles.resultsCount} aria-live="polite">
+              {isInitialLoading
+                ? '불러오는 중…'
+                : `${filteredProducts.length.toLocaleString()}개 상품`}
+            </span>
+
+            <div className={styles.toolbarActions}>
+              {/* 품절 제외 토글 — 켜지면 inStock === false 상품을 숨깁니다. */}
+              <button
+                type="button"
+                className={`${styles.soldOutToggle} ${excludeSoldOut ? styles.soldOutToggleActive : ''}`}
+                onClick={handleToggleSoldOut}
+                aria-pressed={excludeSoldOut}
+              >
+                <span className={styles.soldOutToggleCheck} aria-hidden="true">
+                  {excludeSoldOut ? '☑' : '☐'}
+                </span>
+                품절 제외
+              </button>
+
+              {/* 정렬 드롭다운 */}
+              <SortDropdown value={sortValue} onChange={handleSortChange} />
+            </div>
+          </div>
+
           {/* 초기 로딩 — shimmer 스켈레톤 카드 8개
               스피너 대신 shimmer 애니메이션으로 콘텐츠 영역을 미리 채웁니다.
               Array.from으로 길이 8짜리 배열을 만들어 map으로 렌더링합니다. */}
@@ -1040,6 +1070,9 @@ export default function Home() {
                         {...product}
                         isFavorite={isFavorite(product.id)}
                         onFavoriteToggle={toggleFavorite}
+                        isComparing={isComparing(product.id)}
+                        onCompareToggle={toggleCompare}
+                        compareDisabled={isCompareFull}
                         cardIndex={index}
                       />
                     ))
@@ -1097,6 +1130,13 @@ export default function Home() {
           </button>
         )
       }
+
+      {/* 상품 비교 트레이 — 비교함에 담긴 상품이 있을 때만 하단에 고정 표시됩니다. */}
+      <CompareTray
+        items={compareItems}
+        onRemove={removeCompare}
+        onClear={clearCompare}
+      />
     </div >
   )
 }

@@ -20,17 +20,18 @@
 // 컴포넌트 및 훅 임포트
 import { useRouter } from 'next/router'
 import { useState, useEffect, useRef } from 'react'
-import Head from 'next/head'
 import Link from 'next/link'
 import Image from 'next/image'
 import PriceHistoryChart from '../../components/PriceHistoryChart'
 import FavoriteButton from '../../components/FavoriteButton'
+import SEO from '../../components/SEO'
 import useFavorites from '../../hooks/useFavorites'
 import { fetchProductDetail } from '../../utils/api'
 import RecentlyViewed from '../../components/RecentlyViewed'
 import useRecentlyViewed from '../../hooks/useRecentlyViewed'
 import ShareButton from '../../components/ShareButton'
 import styles from '../../styles/ProductDetail.module.css'
+import { BRAND_METADATA } from '../../types'
 import type { Brand, Category, Gender, Product } from '../../types'
 
 /**
@@ -76,14 +77,7 @@ interface ProductDetail extends Product {
  * 브랜드 코드를 표시용 이름으로 변환
  */
 function getBrandDisplayName(brandCode: Brand): string {
-  const brandNames: Record<Brand, string> = {
-    HM: 'H&M',
-    ZARA: 'ZARA',
-    UNIQLO: 'UNIQLO',
-    MUJI: 'MUJI',
-    CHARLESKEITH: 'Charles & Keith',
-  }
-  return brandNames[brandCode] || brandCode
+  return BRAND_METADATA[brandCode]?.name || brandCode
 }
 
 /**
@@ -96,20 +90,6 @@ function getGenderDisplayMeta(genderCode: Gender): GenderMeta | null {
     UNISEX: { label: '공용', emoji: '🧥' },
   }
   return genderMap[genderCode] || null
-}
-
-// 값이 문자열/숫자일 수 있을 때 안전하게 숫자로 변환
-function coerceNumber(value: unknown): number {
-  if (typeof value === 'number' && !Number.isNaN(value)) {
-    return value
-  }
-
-  if (typeof value === 'string') {
-    const parsed = Number(value.replace(/,/g, ''))
-    return Number.isNaN(parsed) ? 0 : parsed
-  }
-
-  return 0
 }
 
 // 숫자 값을 "1,000원" 형태의 문자열로 변환
@@ -175,60 +155,18 @@ export default function ProductDetail() {
           throw new Error('상품 정보를 불러올 수 없습니다.')
         }
 
-        const product = productData.product
-        const originalPrice = coerceNumber(product.originalPrice)
-        const salePriceSource = (product as { currentPrice?: number }).currentPrice ?? product.salePrice
-        const salePrice = coerceNumber(salePriceSource)
-        const discountRate = typeof product.discountRate === 'number'
-          ? product.discountRate
-          : (originalPrice
-            ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
-            : 0)
-        const rawImageUrls = Array.isArray((product as { imageUrls?: string[] }).imageUrls)
-          ? (product as { imageUrls?: string[] }).imageUrls!.filter(Boolean)
-          : []
-        const fallbackImageUrl = product.imageUrl || '/placeholder-product.svg'
-        const imageUrls = rawImageUrls.length > 0 ? rawImageUrls : [fallbackImageUrl]
-        const imageUrl = rawImageUrls[0] || product.imageUrl || '/placeholder-product.svg'
-
-        // API 응답을 프론트엔드 형식으로 변환
-        // - 숫자/문자 타입을 정리하고, 없는 값은 기본값으로 채웁니다.
-        const normalizedProduct: ProductDetail = {
-          id: product.id ? String(product.id) : productId,
-          brand: product.brand,
-          brandCode: product.brand,
-          brandName: product.brand,
-          productCode: String(product.id ?? productId),
-          name: product.name,
-          description: undefined,
-          gender: product.gender,
-          mainCategory: product.category,
-          category: product.category,
-          categoryGroup: product.category,
-          subCategory: undefined,
-          originalPrice,
-          salePrice,
-          price: salePrice,
-          currentPrice: salePrice,
-          discountRate,
-          onSale: discountRate > 0,
-          imageUrl,
-          imageUrls,
-          productUrl: product.productUrl,
-          colors: [],
-          sizes: [],
-          inStock: undefined,
-          material: undefined,
-          tags: [],
-          vibeTags: [],
-          vibe: null,
-          saleStartDate: undefined,
-          saleEndDate: undefined,
-          viewCount: 0,
-          likeCount: 0,
-          createdAt: undefined,
-          updatedAt: undefined,
-        }
+        /**
+         * ⚠️ 변경 이력(버그 수정):
+         * 이전에는 여기서 product를 다시 만들면서 colors/sizes/inStock/tags/vibeTags/
+         * viewCount/likeCount/updatedAt 등을 전부 빈 값으로 덮어썼습니다.
+         * 그 결과 "상품 정보(색상/사이즈/소재/재고)"와 "조회수/좋아요" 영역이
+         * 데이터가 있어도 절대 표시되지 않는 버그가 있었습니다.
+         *
+         * fetchProductDetail()은 이미 normalizeProduct()로 모든 필드를 정리해서
+         * 내려주므로(NormalizedProduct), 여기서는 그대로 사용하면 됩니다.
+         * NormalizedProduct는 ProductDetail이 요구하는 모든 필드를 포함합니다.
+         */
+        const normalizedProduct = productData.product as ProductDetail
 
         setProduct(normalizedProduct)
 
@@ -290,16 +228,32 @@ export default function ProductDetail() {
         동적 SEO 메타 태그 설정 
         상품 정보를 기반으로 Open Graph 태그를 생성하여 SNS 공유 시 미리보기를 최적화합니다.
       */}
-      <Head>
-        <title>{product ? `${product.brand} ${product.name} - ARCA` : '상품 상세 - ARCA'}</title>
-        <meta name="description" content={product ? `${product.brand} ${product.name} ${product.discountRate}% 할인 중! 현재 가격: ${formatPriceValue(product.salePrice)}` : 'SPA 브랜드 세일 정보'} />
-
-        {/* Open Graph (Facebook, KakaoTalk 등) */}
-        <meta property="og:title" content={product ? `${product.brand} ${product.name} (${product.discountRate}% 할인)` : 'ARCA'} />
-        <meta property="og:description" content={product ? `정가 ${formatPriceValue(product.originalPrice)} → 할인가 ${formatPriceValue(product.salePrice)}` : 'SPA 브랜드 세일 정보를 확인하세요.'} />
-        <meta property="og:image" content={product?.imageUrl} />
-        <meta property="og:url" content={`https://mion-spa-info.vercel.app/product/${id}`} />
-      </Head>
+      <SEO
+        title={`${brandName} ${product.name} - ARCA`}
+        description={`${brandName} ${product.name} ${product.discountRate}% 할인 중! 현재 가격: ${formatPriceValue(product.salePrice)}`}
+        canonical={`https://mion-spa-info.vercel.app/product/${product.id}`}
+        ogImage={product.imageUrl}
+        ogType="product"
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          image: product.imageUrl,
+          brand: {
+            '@type': 'Brand',
+            name: brandName,
+          },
+          offers: {
+            '@type': 'Offer',
+            price: product.salePrice,
+            priceCurrency: 'KRW',
+            availability: product.inStock === false
+              ? 'https://schema.org/OutOfStock'
+              : 'https://schema.org/InStock',
+            url: product.productUrl,
+          },
+        }}
+      />
 
       <div className={styles.container}>
         {/* 뒤로 가기 헤더 */}
