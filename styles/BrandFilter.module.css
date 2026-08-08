@@ -1,125 +1,125 @@
 /*
- * BrandFilter.module.css — v4 Apple HIG 스타일
+ * BrandFilter.module.css — Ledger 시스템 "색인 탭"
  *
- * 변경 사항:
- * - filterContainer: 카드형 컨테이너 (배경 + 테두리 + 둥근 모서리)
- * - buttonGroup: flex-wrap: nowrap → 가로 스크롤 전용
- * - fadeLeft/fadeRight: 가로 스크롤 가능 영역을 시각적으로 표시하는 fade overlay
- * - selected: indigo → var(--color-text) (중립 다크)
+ * ═══════════════════════════════════════════════════════════════════════
+ * 무엇이 달라졌나
+ * ═══════════════════════════════════════════════════════════════════════
+ * 이전: 표면색 카드 안에 알약(999px) 칩이 가로로 늘어선 형태.
+ *       칩 하나하나가 배경 + 테두리 + hover 그림자 + 위로 뜨는 움직임을 가져
+ *       필터 줄이 화면에서 가장 시끄러운 영역이었습니다.
+ *
+ * 지금: 장부의 색인 탭입니다.
+ *       - 상자 없음. 아래 괘선 하나가 탭 줄 전체를 받칩니다
+ *       - 선택된 브랜드는 배경 반전이 아니라 "잉크색 밑줄"로 표시합니다
+ *         (탭 은유에 맞고, 반전 알약보다 훨씬 조용합니다)
+ *       - 로고는 회색조 + 낮은 대비가 기본이라 탭 줄이 컬러로 얼룩지지 않습니다
  */
 
-/* ── 카드 컨테이너 ── */
 .filterContainer {
-  background: var(--color-bg-secondary);
-  border-radius: 20px;
-  padding: 16px 18px;
-  border: 0.5px solid var(--color-border);
   width: 100%;
 }
 
-/* ── 헤더 — 라벨 + 전체 해제 버튼 ── */
+/* ── 헤더 — 라벨 + 전체 해제 ── */
 .filterHeader {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
-/* 브랜드 섹션 라벨 */
 .filterLabel {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--color-text-light);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
 }
 
-/* 전체 해제 버튼 */
 .clearBtn {
   margin-left: auto;
-  font-size: 12px;
-  color: var(--color-primary);
+  font-size: 11px;
+  color: var(--color-text-light);
   background: none;
   border: none;
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   font-family: var(--font-body);
-  font-weight: 500;
-  padding: 2px 4px;
-  border-radius: 4px;
-  transition: background var(--duration-fast);
+  font-weight: 600;
+  padding: 1px 0;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
 }
 
 .clearBtn:hover {
-  background: rgba(0, 113, 227, 0.08);
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
 }
 
-/* ── 스크롤 래퍼 — fade overlay를 위한 position: relative ── */
+/* ── 스크롤 래퍼 — fade overlay의 기준이자 탭 줄을 받치는 괘선 ── */
 .scrollWrapper {
   position: relative;
+  border-bottom: 1px solid var(--color-border);
 }
 
-/* ── 가로 스크롤 버튼 그룹 ── */
+/* ── 가로 스크롤 탭 줄 ── */
 .buttonGroup {
   display: flex;
   flex-wrap: nowrap;
-  /* 가로 스크롤 전용 — 줄바꿈 없음 */
   overflow-x: auto;
-  gap: 8px;
-  padding: 2px 0 4px;
+  gap: var(--space-5);
+  padding: 0;
   scrollbar-width: none;
-  /* Firefox 스크롤바 숨김 */
 }
 
 .buttonGroup::-webkit-scrollbar {
   display: none;
-  /* Chrome/Safari 스크롤바 숨김 */
 }
 
-/* ── Fade Overlay ── */
-/* position: absolute로 버튼 그룹 위에 겹쳐 pointer-events: none으로 클릭 통과 */
+/* ── Fade Overlay ──
+ * 지면색에서 투명으로 이어져 "옆으로 더 있다"는 사실을 알립니다.
+ * pointer-events: none이라 클릭은 그대로 통과합니다. */
 .fadeLeft,
 .fadeRight {
   position: absolute;
   top: 0;
-  bottom: 4px;
-  /* 스크롤바 영역 제외 */
-  width: 32px;
+  bottom: 1px;
+  width: 28px;
   pointer-events: none;
   z-index: 1;
 }
 
 .fadeLeft {
   left: 0;
-  background: linear-gradient(to right, var(--color-bg-secondary), transparent);
+  background: linear-gradient(to right, var(--color-bg), transparent);
 }
 
 .fadeRight {
   right: 0;
-  background: linear-gradient(to left, var(--color-bg-secondary), transparent);
+  background: linear-gradient(to left, var(--color-bg), transparent);
 }
 
-/* ── 브랜드 버튼 — pill 형태 ── */
+/*
+ * ── 브랜드 탭 ──
+ * 배경도 테두리도 없습니다. 아래쪽 2px 투명 보더가 선택 시 잉크색으로 켜집니다.
+ */
 .button {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 8px 18px;
-  font-size: 0.9rem;
+  gap: 7px;
+  padding: 8px 0 9px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--color-text);
-  /* v4: 연한 배경 */
-  background: var(--color-bg);
-  border-radius: 999px;
-  border: 0.5px solid var(--color-border);
+  font-family: var(--font-body);
+  color: var(--color-text-light);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   flex-shrink: 0;
-  /* 가로 스크롤 시 줄어들지 않음 */
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background var(--duration-fast) var(--ease-smooth),
-    border-color var(--duration-fast) var(--ease-smooth),
-    box-shadow var(--duration-fast) var(--ease-smooth),
-    transform var(--duration-fast) var(--ease-smooth);
+    color var(--duration-fast) var(--ease-smooth),
+    border-color var(--duration-fast) var(--ease-smooth);
 }
 
 .buttonWrapper {
@@ -129,61 +129,61 @@
   position: relative;
 }
 
+/* 곧 추가될 브랜드 — 점선 밑줄로 "아직 없음"을 표시합니다. */
 .buttonDisabled {
   cursor: not-allowed;
-  opacity: 0.45;
-  border-style: dashed;
+  opacity: 0.4;
+  border-bottom-style: dashed;
+  border-bottom-color: var(--color-border);
 }
 
 .button:hover:not(:disabled),
 .button:focus-visible:not(:disabled) {
-  border-color: rgba(0, 113, 227, 0.25);
-  box-shadow: var(--shadow-card);
-  transform: translateY(-1px);
+  color: var(--color-text);
+  border-bottom-color: var(--color-border);
 }
 
 .buttonDisabled:hover,
 .buttonDisabled:focus-visible {
-  transform: none;
-  border-color: var(--color-border);
-  box-shadow: none;
+  color: var(--color-text-light);
+  border-bottom-color: var(--color-border);
 }
 
-/* ── 선택된 브랜드 버튼 — 다크 중립 배경 ── */
+/* ── 선택된 브랜드 — 잉크색 밑줄 ── */
 .selected {
-  color: var(--color-bg);
-  background: var(--color-text);
-  border-color: transparent;
-  box-shadow: var(--shadow-card);
+  color: var(--color-text);
+  font-weight: 700;
+  border-bottom-color: var(--color-rule-strong);
 }
 
-/* 로고 이미지 컨테이너 */
+/* 로고 */
 .logoContainer {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 24px;
+  width: 38px;
+  height: 20px;
 }
 
-/* 브랜드 로고 이미지 — 기본 grayscale, 선택/호버 시 컬러 */
 .brandLogo {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  /* 회색조 + 낮은 대비가 기본입니다. */
   filter: grayscale(100%);
-  transition: filter var(--duration-base) var(--ease-smooth);
+  opacity: 0.55;
+  transition: opacity var(--duration-base) var(--ease-smooth);
 }
 
 .button:hover .brandLogo,
 .button:focus-visible .brandLogo,
 .selected .brandLogo {
-  filter: grayscale(0%);
+  opacity: 1;
 }
 
-/* 선택된 버튼의 로고: 다크 배경에서 반전 */
-.selected .brandLogo {
-  filter: grayscale(0%) invert(1) brightness(10);
+/* 다크 모드에서는 어두운 로고가 배경에 묻히므로 반전시킵니다. */
+:global([data-theme='dark']) .brandLogo {
+  filter: grayscale(100%) invert(1);
 }
 
 .brandName {
@@ -199,29 +199,30 @@
 
 .comingSoonTooltip {
   position: absolute;
-  bottom: calc(100% + 0.75rem);
+  bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  background: var(--color-bg-secondary);
-  color: var(--color-text);
-  padding: 0.5rem 0.875rem;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  background: var(--color-text);
+  color: var(--color-bg);
+  padding: 5px 9px;
+  border-radius: var(--radius-chip);
+  font-size: 11px;
+  font-weight: 600;
   white-space: nowrap;
-  box-shadow: var(--shadow-toast);
   text-align: center;
   pointer-events: none;
   z-index: 30;
   opacity: 0;
   visibility: hidden;
-  transition: opacity var(--duration-base) var(--ease-smooth), visibility var(--duration-base), transform var(--duration-base);
+  transition:
+    opacity var(--duration-base) var(--ease-smooth),
+    visibility var(--duration-base);
 }
 
 .comingSoonWrapper:hover .comingSoonTooltip,
 .comingSoonWrapper:focus-within .comingSoonTooltip {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) translateY(-4px);
 }
 
 .comingSoonTooltip::after {
@@ -232,22 +233,22 @@
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid var(--color-bg-secondary);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--color-text);
 }
 
-@media (max-width: 768px) {
-  .filterContainer {
-    padding: 12px 14px;
-  }
-
+@media (max-width: 640px) {
   .buttonGroup {
-    gap: 0.5rem;
+    gap: var(--space-4);
   }
 
   .button {
-    padding: 6px 14px;
-    font-size: 0.85rem;
+    font-size: 11px;
+  }
+
+  .logoContainer {
+    width: 30px;
+    height: 17px;
   }
 }

@@ -10,7 +10,15 @@ import type {
   NormalizedProduct,
 } from '../types';
 
-const FALLBACK_IMAGE = '/placeholder-product.svg';
+/**
+ * FALLBACK_IMAGE - 상품 이미지 URL이 없거나 깨졌을 때 카드에 대신 표시할 이미지
+ *
+ * 이전 값(placeholder-product.svg)은 구 디자인 시스템에서 남은 청보라 그라데이션 +
+ * 영문 "No Image" 텍스트라, 현재의 모노크롬 웜그레이 팔레트와 충돌했습니다.
+ * ARCA 팔레트(#F1F1EE 배경 / #DCDCD6 실루엣)에 맞춘 옷걸이 일러스트로 교체해
+ * 이미지가 깨진 카드도 그리드 안에서 튀지 않고 자연스럽게 섞이도록 했습니다.
+ */
+const FALLBACK_IMAGE = '/placeholder-product.jpg';
 
 export const CATEGORY_GROUPS: Record<Category, string[]> = {
   TOP: ['TOP', 'SHIRT', 'T_SHIRT', 'KNIT', 'SWEATSHIRT', 'DRESS', 'BLOUSE'],
@@ -21,7 +29,30 @@ export const CATEGORY_GROUPS: Record<Category, string[]> = {
 };
 
 const CATEGORY_CODES = Object.keys(CATEGORY_GROUPS) as Category[];
-const GENDER_CODES: readonly Gender[] = ['MAN', 'WOMAN', 'UNISEX'];
+
+/**
+ * GENDER_ALIASES - 백엔드/외부 데이터의 다양한 성별 표기를 프론트 표준 코드로 변환하는 맵
+ *
+ * 왜 필요한가요?
+ * 실제 백엔드(Heroku)는 성별을 'MEN'/'WOMEN'으로 내려주는데,
+ * 프론트의 Gender 타입은 'MAN'/'WOMAN'/'UNISEX'입니다.
+ * 이 매핑이 없으면 모든 상품이 기본값 'UNISEX(공용)'로 잘못 표시되고,
+ * 성별 필터도 아무 상품과 매칭되지 않습니다. (실제로 발생했던 버그)
+ */
+const GENDER_ALIASES: Record<string, Gender> = {
+  MAN: 'MAN',
+  MEN: 'MAN',       // 백엔드 실제 값
+  MALE: 'MAN',
+  M: 'MAN',
+  WOMAN: 'WOMAN',
+  WOMEN: 'WOMAN',   // 백엔드 실제 값
+  FEMALE: 'WOMAN',
+  W: 'WOMAN',
+  F: 'WOMAN',
+  UNISEX: 'UNISEX',
+  COMMON: 'UNISEX',
+  ALL: 'UNISEX',
+};
 
 const BRAND_ALIASES: Record<string, Brand> = {
   'H&M': 'HM',
@@ -96,10 +127,10 @@ export const normalizeBrand = (product: ApiProduct): Brand => {
 };
 
 export const normalizeGender = (value: unknown): Gender => {
+  // 'women ' → 'WOMEN' 처럼 공백 제거·대문자화 후 별칭 맵에서 표준 코드를 찾습니다.
   const normalized = normalizeCode(value).replace(/_/g, '');
-  return (GENDER_CODES as readonly string[]).includes(normalized)
-    ? normalized as Gender
-    : 'UNISEX';
+  // 별칭 맵에 없는 값(빈 문자열, 알 수 없는 코드)은 안전하게 'UNISEX'로 처리합니다.
+  return GENDER_ALIASES[normalized] ?? 'UNISEX';
 };
 
 export const normalizeCategory = (product: ApiProduct): {

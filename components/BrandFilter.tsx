@@ -89,7 +89,10 @@ const BRAND_ORDER: Brand[] = [
 ];
 
 const BRANDS: BrandItem[] = [
-  { code: 'all', name: '전체', emoji: '🛍️', status: 'active' },
+  // '전체' 칩의 이모지(🛍️)를 제거했습니다.
+  // 다른 칩은 모두 흑백 브랜드 로고인데 여기만 컬러 이모지가 들어가 톤이 어긋났고,
+  // "전체"라는 단어만으로 의미가 충분히 전달됩니다.
+  { code: 'all', name: '전체', status: 'active' },
   ...BRAND_ORDER.map((code) => ({
     ...BRAND_METADATA[code],
     bubblePosition: code === 'MANGO' ? 'bottom' : undefined,

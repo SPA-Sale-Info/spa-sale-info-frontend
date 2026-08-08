@@ -1,93 +1,89 @@
 /*
- * ProductCard.module.css — v4 Apple HIG 스타일
+ * ProductCard.module.css — ARCA "Ledger" 색인 항목
  *
- * 주요 변경사항:
- * - 배경: var(--color-bg) → var(--color-bg-secondary) (연한 회색)
- * - 테두리: 제거 (border: none)
- * - 이미지 비율: 4/5 → 3/4
- * - 할인 뱃지: 6px radius → 999px (완전 pill)
- * - salePrice: indigo gradient 제거, 일반 텍스트
- * - brandName: indigo 배경 제거, 심플 텍스트
- * - 카드 hover: 기존 indigo 색상 제거
- * - cardFadeUp: globals.css의 keyframe 사용
- * - vibe 태그: 이미지 위 absolute + glassmorphism
+ * ═══════════════════════════════════════════════════════════════════════
+ * 이전 디자인과 무엇이 달라졌나
+ * ═══════════════════════════════════════════════════════════════════════
+ * 이전: 12px 라운딩 이미지 + 여백 위에 떠 있는 카드. 항목끼리 경계가 없어
+ *       그리드가 "사진 모음"처럼 읽혔고, 가격은 본문 서체라 자릿수가 어긋났습니다.
+ *
+ * 지금: 각 항목이 장부의 한 행입니다.
+ *   - 항목 위에 괘선(border-top)이 그어져 표(表)처럼 읽힙니다
+ *   - 이미지는 각지게(2px) 지면에 그대로 놓입니다
+ *   - 색인 번호(01, 02 …)가 붙습니다
+ *   - 가격/할인율은 모노 등폭 + tabular-nums라 세로로 자릿수가 맞습니다
+ *   - 유일한 유채색인 Markdown Red는 할인율에만 쓰입니다
+ *
+ * 상호작용도 바뀌었습니다. hover 시 카드를 띄우지(translateY) 않습니다.
+ * 수십 개 항목이 마우스를 따라 들썩이면 목록을 훑기 어렵습니다.
+ * 대신 괘선이 진해지고 이미지가 아주 미세하게 확대됩니다.
  */
 
+/*
+ * .card
+ * position: relative가 핵심입니다. 상품명 링크의 ::after(카드를 덮는 투명
+ * 클릭 레이어)가 이 요소를 기준으로 inset: 0 만큼 펼쳐집니다.
+ */
 .card {
   position: relative;
   display: flex;
   flex-direction: column;
-  /* v4: 연한 회색 배경 */
-  background: var(--color-bg-secondary);
-  border-radius: 18px;
-  /* v4: 테두리 제거 */
-  border: none;
-  overflow: hidden;
-  cursor: pointer;
-  transition:
-    transform 220ms var(--ease-smooth),
-    box-shadow 220ms var(--ease-smooth);
-  /* v4: cardFadeUp 애니메이션 (globals.css에 정의) */
-  animation: cardFadeUp 0.5s var(--ease-out) both;
+  background: transparent;
+  /* 장부의 행을 여는 괘선 */
+  border-top: 1px solid var(--color-border);
+  padding-top: 10px;
+  transition: border-color var(--duration-fast) var(--ease-smooth);
+  animation: cardFadeUp 0.45s var(--ease-out) both;
 }
 
+/*
+ * @keyframes를 이 파일에 정의해야 하는 이유:
+ * CSS Modules가 .module.css 안의 animation-name을 스코프 처리하므로
+ * globals.css의 전역 keyframes와는 이름이 매칭되지 않습니다.
+ */
+@keyframes cardFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* hover — 행의 괘선이 잉크색으로 진해집니다(위치 이동 없음) */
 .card:hover,
 .card:focus-within {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-card);
+  border-top-color: var(--color-rule-strong);
 }
 
-/* 이미지 컨테이너 — v4: 3:4 비율 */
+/*
+ * 키보드 포커스 표시
+ * 스트레치 링크는 실제 <a>가 상품명 한 줄뿐이라 기본 포커스 링이 텍스트에만
+ * 얇게 걸립니다. 항목 단위로 이동하는 사용자에게는 "지금 어느 항목인지"가
+ * 보여야 하므로 링크가 포커스되면 항목 전체에 아웃라인을 그립니다.
+ */
+.card:has(.productNameLink:focus-visible) {
+  outline: 2px solid var(--color-text);
+  outline-offset: 4px;
+}
+
+/* ── 이미지 ── */
 .imageContainer {
   position: relative;
   width: 100%;
-  /* v4: 4/5 → 3/4 */
   aspect-ratio: 3 / 4;
-  background: var(--color-bg-tertiary);
+  background: var(--color-bg-secondary);
   overflow: hidden;
+  border-radius: var(--radius-card);
 }
 
 .image {
   object-fit: cover;
-  transition: transform 0.4s var(--ease-smooth);
+  transition: transform 0.5s var(--ease-smooth);
 }
 
 .card:hover .image,
 .card:focus-within .image {
-  /* v4: scale 1.05 → 1.04 (보다 절제된 줌) */
-  transform: scale(1.04);
+  transform: scale(1.02);
 }
 
-/* 할인 뱃지 — v4: 완전 pill (999px radius) */
-.discountBadge {
-  display: inline-block;
-  padding: 4px 10px;
-  background: var(--color-danger);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  /* v4: 완전 pill */
-  border-radius: 999px;
-  margin-right: 0.5rem;
-}
-
-/* 할인율 배지 — 이미지 좌상단 오버레이 (가장 강조되는 정보) */
-.discountBadgeOverlay {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
-  padding: 4px 10px;
-  background: var(--color-danger);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-}
-
-/* 품절 오버레이 — 이미지를 어둡게 덮고 "품절" 라벨을 가운데 표시 */
+/* 품절 — 지면 색 반투명 막을 덮고 라벨을 각진 상자로 표시합니다 */
 .soldOutOverlay {
   position: absolute;
   inset: 0;
@@ -95,164 +91,170 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(1px);
+  background: color-mix(in srgb, var(--color-bg) 62%, transparent);
 }
 
 .soldOutLabel {
-  padding: 6px 16px;
-  background: rgba(17, 24, 39, 0.82);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  border-radius: 999px;
-}
-
-/* 품절 카드는 전체적으로 살짝 채도를 낮춰 "지난 상품" 느낌을 줍니다. */
-.cardSoldOut .image {
-  filter: grayscale(0.3);
-}
-
-/* 찜 버튼 위치 */
-.favoriteButtonWrapper {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 3;
-}
-
-/* 비교 담기 버튼 — 찜 버튼 아래에 배치 (이미지 우상단 세로 정렬) */
-.compareButton {
-  position: absolute;
-  top: 3.6rem;
-  right: 1rem;
-  z-index: 3;
   padding: 4px 10px;
+  background: var(--color-text);
+  color: var(--color-bg);
   font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.12em;
+  border-radius: var(--radius-chip);
+}
+
+.cardSoldOut .image {
+  filter: grayscale(1);
+  opacity: 0.75;
+}
+
+/* 찜 버튼 — 이미지 우상단. z-index로 스트레치 링크 레이어(1)보다 위에 둡니다. */
+.favoriteButtonWrapper {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 3;
+}
+
+/*
+ * 비교 담기 버튼
+ * 알약(999px) + 반투명 blur 배경이던 것을, 지면색 위의 각진 미니 버튼으로 바꿨습니다.
+ * 기본 상태에서는 숨어 있다가 hover/포커스에서만 나타나 목록을 훑는 동안
+ * 이미지를 가리지 않습니다. 터치 기기에서는 항상 보이게 합니다(아래 미디어 쿼리).
+ */
+.compareButton {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  z-index: 3;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-family: var(--font-body);
   color: var(--color-text);
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 0.5px solid rgba(0, 0, 0, 0.08);
-  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-chip);
   cursor: pointer;
-  transition: all 150ms var(--ease-smooth);
+  opacity: 0;
+  transition:
+    opacity var(--duration-fast) var(--ease-smooth),
+    background var(--duration-fast) var(--ease-smooth),
+    color var(--duration-fast) var(--ease-smooth);
+}
+
+.card:hover .compareButton,
+.card:focus-within .compareButton,
+.compareButton:focus-visible {
+  opacity: 1;
 }
 
 .compareButton:hover:not(:disabled) {
-  background: #fff;
+  background: var(--color-text);
+  color: var(--color-bg);
 }
 
+/* 담긴 상태는 항상 보여야 합니다 — 지금 비교함에 있다는 사실이 정보입니다. */
 .compareButtonActive {
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
+  opacity: 1;
+  background: var(--color-text);
+  color: var(--color-bg);
 }
 
 .compareButton:disabled {
-  opacity: 0.4;
+  opacity: 0;
   cursor: not-allowed;
 }
 
-/* ── vibe 태그 오버레이 (v4 신규) ── */
-/* 이미지 하단에 absolute로 배치, glassmorphism pill */
-.vibeTagsOverlay {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  right: 10px;
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-  z-index: 2;
+.card:hover .compareButton:disabled {
+  opacity: 0.35;
 }
 
-.vibeTagOverlay {
-  font-size: 11px;
+/* 마우스가 없는 기기(터치)에서는 hover가 없으므로 항상 노출합니다. */
+@media (hover: none) {
+  .compareButton,
+  .card:hover .compareButton:disabled {
+    opacity: 1;
+  }
+}
+
+/* ── 정보 영역 ── */
+.info {
+  padding: 10px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 색인 행: [번호] [브랜드] [성별] */
+.meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+/* 색인 번호 — 모노 등폭. 목록에서 가장 약한 위계입니다. */
+.indexNumber {
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 500;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  color: var(--color-text-lighter);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* 브랜드 — 대문자 마이크로 캡스 (장부의 열 머리글 톤) */
+.brandName {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--color-text);
-  border: 0.5px solid rgba(0, 0, 0, 0.06);
   white-space: nowrap;
 }
 
-/* 정보 영역 */
-.info {
-  padding: 14px 16px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+/* 성별 — 배지가 아니라 주석. 배경 도형 없이 색으로만 낮춥니다. */
+.genderNote {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-lighter);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* v4: 브랜드명 — indigo 배경 제거, 심플 텍스트 */
-.brandName {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-text-light);
-  background: none;
-  border-radius: 0;
-  padding: 0;
-}
-
-.genderBadge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 0.12rem 0.5rem;
-  border-radius: 100px;
-  letter-spacing: 0.02em;
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-light);
-}
-
-.genderMen {
-  background: rgba(0, 113, 227, 0.10);
-  color: rgba(0, 113, 227, 1);
-}
-
-.genderWomen {
-  background: rgba(236, 72, 153, 0.12);
-  color: rgba(190, 24, 93, 1);
-}
-
-.genderUnisex {
-  background: rgba(16, 185, 129, 0.10);
-  color: rgba(4, 120, 87, 1);
-}
-
+/* 상품명 */
 .productName {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 550;
   color: var(--color-text);
   line-height: 1.4;
+  letter-spacing: -0.015em;
   margin: 0;
-  /* 2줄 이상은 말줄임표 */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* 상품명 링크 — 부모 색/굵기를 그대로 상속받아 텍스트처럼 보이게 합니다. */
+/*
+ * 상품명 링크 = "스트레치 링크".
+ * ::after가 항목 전체를 덮는 투명 레이어라 어디를 눌러도 상세로 이동하면서,
+ * 접근성 트리에는 링크 하나만 남습니다.
+ * z-index: 1 — 이미지 위, 찜/비교 버튼(3) 아래.
+ */
 .productNameLink {
   color: inherit;
   text-decoration: none;
+}
+
+.productNameLink::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 .productNameLink:hover {
@@ -260,71 +262,126 @@
   text-underline-offset: 2px;
 }
 
+/* 포커스 링은 항목 전체 아웃라인(.card:has)이 대신합니다. */
+.productNameLink:focus-visible {
+  outline: none;
+}
+
+/* ── 가격 행 ──
+ * Ledger 3번 규칙: 비교되는 숫자는 전부 모노 등폭입니다.
+ * baseline 정렬 + tabular-nums로 여러 항목의 가격 자릿수가 세로로 맞습니다. */
 .priceContainer {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: 6px;
   flex-wrap: wrap;
+  margin-top: 2px;
 }
 
-/* 할인가 — 가장 굵고 큰 텍스트 (구매 판단의 핵심) */
 .salePrice {
-  font-size: 16px;
-  font-weight: 800;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
   color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
 }
 
-/* 원가 — 취소선 + 흐린 색 (할인의 "before"를 보여줘 매력 전달) */
-.originalPrice {
+/* 할인율 — 화면에서 유일한 유채색 */
+.discountRate {
+  font-family: var(--font-mono);
   font-size: 13px;
+  font-weight: 700;
+  color: var(--color-discount);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+/* 원가 — 가장 약한 위계. 취소선 + 보조색 */
+.originalPrice {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-lighter);
+  text-decoration: line-through;
+  font-variant-numeric: tabular-nums;
+}
+
+.moodTag {
+  font-size: 11px;
   font-weight: 500;
   color: var(--color-text-light);
-  text-decoration: line-through;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-/* 카드 하단 행: 업데이트 시각(좌) + 외부 사이트 CTA(우) */
+/* ── 하단 행: 갱신 시각(좌) + 외부 몰 링크(우) ── */
 .cardFooter {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-  min-height: 22px;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  margin-top: 4px;
+  min-height: 16px;
 }
 
 .updatedAt {
-  font-size: 11px;
-  color: var(--color-text-light);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-lighter);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
-/* 외부 브랜드 사이트 이동 버튼 — 텍스트 링크 형태(공간 절약) */
+/* 외부 몰 이동 — position/z-index로 스트레치 링크 레이어 위에 올려
+ * 이 링크가 클릭을 정상적으로 받게 합니다. */
 .externalCta {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-primary);
+  position: relative;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-light);
   text-decoration: none;
   white-space: nowrap;
   margin-left: auto;
-  transition: opacity 150ms var(--ease-smooth);
+  border-bottom: 1px solid var(--color-border);
+  transition: color 150ms var(--ease-smooth), border-color 150ms var(--ease-smooth);
 }
 
 .externalCta:hover {
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
 }
 
-@media (max-width: 768px) {
-  .info {
-    padding: 10px 12px 12px;
-    gap: 0.4rem;
-  }
+/* ── 레거시 호환 ──
+ * 다른 화면(찜 목록/상세)에서 참조할 수 있어 클래스만 남겨둡니다.
+ * 현재 JSX에서는 사용하지 않습니다. */
+.discountBadge,
+.discountBadgeOverlay,
+.vibeTagsOverlay,
+.vibeTagOverlay,
+.genderBadge,
+.genderMen,
+.genderWomen,
+.genderUnisex {
+  display: none;
+}
 
+@media (max-width: 640px) {
   .productName {
-    font-size: 0.9rem;
+    font-size: 13px;
   }
 
   .salePrice {
-    font-size: 15px;
+    font-size: 13px;
+  }
+
+  .discountRate {
+    font-size: 12px;
   }
 }

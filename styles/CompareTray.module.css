@@ -2,35 +2,40 @@
  * CompareTray.module.css — 하단 비교 트레이 + 비교 표 모달 스타일
  */
 
-/* ── 하단 고정 트레이 ─────────────────────────────────────────── */
+/* ── 하단 플로팅 트레이 — Framer 시안: 좌하단에 떠 있는 라운드 카드 ── */
 .tray {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  right: auto;
   z-index: 50;
   background: var(--color-bg-secondary);
-  border-top: 1px solid var(--color-bg-tertiary);
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.10);
-  /* iOS 하단 안전영역 대응 */
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-toast);
   animation: trayUp 0.28s var(--ease-out, ease-out) both;
 }
 
 @keyframes trayUp {
-  from { transform: translateY(100%); }
+  from { transform: translateY(calc(100% + 32px)); }
   to { transform: translateY(0); }
 }
 
 .trayInner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0.75rem 1rem;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+/* 모바일: 좌우로 꽉 채운 플로팅 바 */
+@media (max-width: 768px) {
+  .tray {
+    left: 12px;
+    right: 12px;
+  }
 }
 
 .thumbs {
@@ -87,7 +92,7 @@
   color: var(--color-text-light);
   background: transparent;
   border: 1px solid var(--color-bg-tertiary);
-  border-radius: 999px;
+  border-radius: var(--radius-chip);
   cursor: pointer;
 }
 
@@ -95,14 +100,15 @@
   border-color: var(--color-text-light);
 }
 
+/* 비교하기 버튼 — 시안 추출값: 반전 pill(#F5F5F2 bg + #111113 글자) · radius 9px · 10×16 패딩 */
 .compareBtn {
-  padding: 0.45rem 1.1rem;
+  padding: 10px 16px;
   font-size: 13px;
-  font-weight: 700;
-  color: #fff;
+  font-weight: 600;
+  color: var(--color-on-primary);
   background: var(--color-primary);
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-chip);
   cursor: pointer;
   transition: opacity 150ms ease;
 }

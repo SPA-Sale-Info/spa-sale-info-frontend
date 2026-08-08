@@ -1,54 +1,106 @@
 /**
- * globals.css — Mat v4 Apple HIG 디자인 시스템
+ * globals.css — ARCA 디자인 시스템 "LEDGER"
  *
- * v4 디자인 철학:
- * - Apple Blue(#0071e3) 중심의 중립 팔레트
- * - Noto Sans KR(본문) + Noto Serif KR(로고) 한국어 폰트
- * - 8pt 그리드 간격 시스템
- * - Spring easing 기반 자연스러운 애니메이션
- * - 다크모드: 진짜 검정(#000) 기반
+ * ═══════════════════════════════════════════════════════════════════════
+ * 디자인 콘셉트: 장부(Ledger)
+ * ═══════════════════════════════════════════════════════════════════════
+ * ARCA는 상점이 아니라 "인하 기록 색인"입니다.
+ * 매일 갱신되는 3,700여 건의 인하 항목을 훑고, 숫자를 비교하고, 브랜드 몰로
+ * 빠져나가는 것이 사용자의 전부입니다. 그래서 화면의 은유를 매대가 아니라
+ * 장부/색인으로 잡았습니다.
+ *
+ * 다섯 가지 규칙:
+ *
+ * 1) 카드가 아니라 행(行)이다
+ *    항목을 떠 있는 상자에 담지 않습니다. 헤어라인으로 구분된 색인 항목으로
+ *    배치하고, 모서리는 거의 각지게(2px) 둡니다.
+ *
+ * 2) 구분은 그림자가 아니라 괘선(rule)이다
+ *    box-shadow는 화면에서 사실상 사라졌습니다. 위계는 선의 굵기와 여백,
+ *    그리고 글자 크기로만 만듭니다.
+ *
+ * 3) 숫자는 등폭 모노다
+ *    가격·할인율·건수·갱신 시각은 모두 모노 스택 + tabular-nums로 렌더합니다.
+ *    세로로 자릿수가 맞아떨어져야 여러 항목의 가격을 눈으로 비교할 수 있습니다.
+ *
+ * 4) 빨강은 인하폭에만 쓴다
+ *    Markdown Red는 할인율 외에는 어디에도 등장하지 않습니다.
+ *    한 화면에서 유일한 유채색이라 시선이 정확히 그리로 갑니다.
+ *
+ * 5) 항목에는 번호가 붙는다
+ *    01, 02, 03… 색인 번호가 "지금 3,705건 중 어디쯤인지"를 알려주고
+ *    아카이브라는 성격을 드러냅니다.
+ *
+ * ── 팔레트 (Higgsfield brandkit "Ledger" 승인본, revision 1) ──
+ *   Paper        #F6F5F1  배경
+ *   Ink          #15151A  본문
+ *   Rule         #D8D5CC  괘선
+ *   Markdown Red #C8102E  인하폭 전용
+ *   Margin       #6E6C64  보조 텍스트
+ *
+ * ── 타이포그래피 ──
+ *   Pretendard Variable (기존 공식 서체 유지 — 한글 글리프 커버리지 때문)
+ *   + 숫자 전용 시스템 모노 스택
+ *
+ * ※ 토큰 "이름"은 기존과 동일하게 유지했습니다.
+ *   다른 화면(찜/상세/비교 트레이 등)의 CSS가 이 이름들을 참조하고 있어,
+ *   값만 교체하면 앱 전체가 새 시스템으로 함께 이동합니다.
  */
 
 /* ── 디자인 토큰 ── */
 :root {
-  /* 색상: Apple Blue 기반 */
-  --color-primary: #0071e3;
-  --color-primary-light: #2997ff;
-  --color-primary-dark: #0077ed;
+  /* primary = 흑백 반전 색. 활성 칩/버튼은 색이 아니라 반전으로 표현합니다.
+   * primary 배경 위 글자는 반드시 --color-on-primary를 사용할 것. */
+  --color-primary: #15151a;      /* Ink */
+  --color-primary-light: #33333a;
+  --color-primary-dark: #000000;
+  --color-on-primary: #f6f5f1;   /* Paper */
 
-  /* secondary/accent 는 유지(찜·태그 등에 사용) */
-  --color-secondary: #ec4899;
-  --color-secondary-light: #f472b6;
-  --color-accent: #f59e0b;
-  --color-accent-light: #fbbf24;
+  /* Markdown Red — 화면에서 유일한 유채색. 인하폭 표기 전용입니다. */
+  --color-secondary: #c8102e;
+  --color-secondary-light: #e0243f;
+  --color-accent: #6e6c64;       /* Margin */
+  --color-accent-light: #9a978d;
 
-  /* 위험/삭제 */
-  --color-danger: #e0102b;
+  --color-danger: #c8102e;
+  --color-discount: #c8102e;
 
-  /* Apple-style neutral 배경 */
-  --color-bg: #ffffff;
-  --color-bg-secondary: #f5f5f7;
-  --color-bg-tertiary: #e8e8ed;
+  /* 지면 — Paper를 기준으로 두 단계 어둡게 파생 */
+  --color-bg: #f6f5f1;
+  --color-bg-secondary: #eeece6;
+  --color-bg-tertiary: #e3e0d8;
 
-  /* Glassmorphism surface (nav 등) */
-  --color-surface: rgba(255, 255, 255, 0.80);
+  /* 마스트헤드 표면 — 반투명 blur를 걷어내고 불투명 지면으로 되돌렸습니다.
+   * 뒤로 상품 사진이 비쳐 지나가면 헤더 글자의 대비가 스크롤 위치에 따라
+   * 계속 바뀌어 읽기 어려워집니다. */
+  --color-surface: #f6f5f1;
 
-  /* 텍스트 */
-  --color-text: #1d1d1f;
-  --color-text-light: #6e6e73;
-  --color-text-lighter: #a1a1a6;
+  /* 텍스트 3단계: 본문 Ink / 보조 Margin / 최약 */
+  --color-text: #15151a;
+  --color-text-light: #6e6c64;
+  --color-text-lighter: #9a978d;
 
-  /* 레거시 호환 (이전 --color-dark 계열 참조 컴포넌트용) */
-  --color-dark: #1d1d1f;
-  --color-dark-light: #3a3a3c;
+  /* 레거시 호환 (--color-dark 계열 참조 컴포넌트용) */
+  --color-dark: #15151a;
+  --color-dark-light: #33333a;
 
-  /* 보더 */
-  --color-border: rgba(0, 0, 0, 0.08);
+  /* 괘선 — Ledger 시스템의 핵심. 그림자를 대신해 모든 구분을 담당합니다. */
+  --color-border: #d8d5cc;       /* Rule */
+  --color-rule-strong: #15151a;  /* 섹션을 여는 굵은 괘선 */
 
-  /* 폰트 */
-  --font-heading: 'Noto Sans KR', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-  --font-serif: 'Noto Serif KR', Georgia, serif; /* 로고 "맛" 글자 */
+  /* 폰트 — Pretendard Variable 유지(한글 글리프 커버리지) */
+  --font-heading: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+  --font-body: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+  --font-serif: 'Pretendard Variable', Pretendard, Georgia, serif;
+
+  /* 숫자 전용 모노 스택.
+   * 웹폰트를 새로 받지 않고 OS 내장 등폭 서체만 사용해 네트워크 비용이 0입니다.
+   * 가격·할인율·건수를 이 스택 + tabular-nums로 렌더하면 자릿수가 세로로 맞습니다. */
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  /* 라운딩 — 장부에는 둥근 모서리가 없습니다. 거의 각지게 유지합니다. */
+  --radius-card: 2px;
+  --radius-chip: 2px;
 
   /* 8pt 그리드 간격 */
   --space-1: 4px;
@@ -73,24 +125,27 @@
   --space-2xl: 4rem;
   --space-3xl: 6rem;
 
-  /* v4 그림자 */
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
-  --shadow-fab:  0 4px 16px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
-  --shadow-toast: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  /* 그림자 — Ledger 시스템에서는 거의 쓰지 않습니다.
+   * 구분은 괘선(--color-border)이 담당합니다.
+   * 화면에서 실제로 떠 있어야 하는 요소(고정 트레이/맨위로 버튼)만
+   * 아주 옅은 그림자를 씁니다. 나머지 토큰은 값이 참조되는 다른 화면을
+   * 깨뜨리지 않기 위해 이름만 유지한 채 전부 none으로 낮췄습니다. */
+  --shadow-card: none;
+  --shadow-fab: 0 1px 3px rgba(21, 21, 26, 0.16);
+  --shadow-toast: 0 2px 10px rgba(21, 21, 26, 0.18);
 
-  /* 레거시 그림자 호환 */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.10);
-  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.12);
-  --shadow-2xl: 0 24px 56px rgba(0, 0, 0, 0.16);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: 0 1px 3px rgba(21, 21, 26, 0.10);
+  --shadow-xl: 0 2px 8px rgba(21, 21, 26, 0.12);
+  --shadow-2xl: 0 2px 8px rgba(21, 21, 26, 0.12);
 
-  /* Border Radius (레거시 호환 유지) */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
+  /* Border Radius — 전 구간을 각지게 낮췄습니다(레거시 이름 유지). */
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 3px;
+  --radius-2xl: 3px;
   --radius-full: 9999px;
 
   /* v4 이징 */
@@ -110,47 +165,57 @@
   --duration-enter: 600ms;
 
   /* Shimmer 스켈레톤 색상 */
-  --shimmer-from: #ebebef;
-  --shimmer-to: #d8d8de;
+  --shimmer-from: #eeece6;
+  --shimmer-to: #e0ddd4;
 }
 
-/* ── 다크 모드 ── */
+/* ── 다크 모드 ──
+ * Ledger를 야간 지면으로 옮긴 것입니다. 검정이 아니라 "잉크가 마른 종이의 반전"에
+ * 가깝도록 약간의 온기를 남긴 #16161A 계열을 씁니다.
+ * 다크에서는 Markdown Red를 그대로 쓰면 어두운 배경에서 탁해지므로
+ * 명도만 올린 값(#E23D4F)을 사용합니다(색상 역할은 동일). */
 [data-theme='dark'] {
-  --color-primary: #2997ff;
-  --color-primary-light: #409cff;
-  --color-primary-dark: #147ce5;
+  --color-primary: #f2f0ea;
+  --color-primary-light: #ffffff;
+  --color-primary-dark: #d5d2c9;
+  --color-on-primary: #16161a;
 
-  --color-secondary: #f472b6;
-  --color-secondary-light: #ec4899;
+  --color-secondary: #e23d4f;
+  --color-secondary-light: #ef5566;
+  --color-accent: #9a978d;
+  --color-accent-light: #b6b3a8;
 
-  --color-danger: #ff453a;
+  --color-danger: #e23d4f;
+  --color-discount: #e23d4f;
 
-  --color-bg: #000000;
-  --color-bg-secondary: #1c1c1e;
-  --color-bg-tertiary: #2c2c2e;
-  --color-surface: rgba(28, 28, 30, 0.80);
+  --color-bg: #16161a;
+  --color-bg-secondary: #1e1e23;
+  --color-bg-tertiary: #2a2a30;
+  --color-surface: #16161a;
 
-  --color-text: #f5f5f7;
-  --color-text-light: #98989d;
-  --color-text-lighter: #636366;
+  --color-text: #f2f0ea;
+  --color-text-light: #9a978d;
+  --color-text-lighter: #6e6c64;
 
-  --color-dark: #f5f5f7;
-  --color-dark-light: #e0e0e5;
+  --color-dark: #f2f0ea;
+  --color-dark-light: #dedbd2;
 
-  --color-border: rgba(255, 255, 255, 0.10);
+  /* 다크에서 괘선은 밝은 쪽으로 뒤집습니다. */
+  --color-border: #33333a;
+  --color-rule-strong: #f2f0ea;
 
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.40), 0 0 0 0.5px rgba(255, 255, 255, 0.06);
-  --shadow-fab:  0 4px 16px rgba(0, 0, 0, 0.50), 0 0 0 0.5px rgba(255, 255, 255, 0.06);
-  --shadow-toast: 0 8px 32px rgba(0, 0, 0, 0.50);
+  --shadow-card: none;
+  --shadow-fab: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --shadow-toast: 0 2px 10px rgba(0, 0, 0, 0.6);
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.30);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.40);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.50);
-  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.50);
-  --shadow-2xl: 0 24px 56px rgba(0, 0, 0, 0.60);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 2px 8px rgba(0, 0, 0, 0.55);
+  --shadow-2xl: 0 2px 8px rgba(0, 0, 0, 0.55);
 
-  --shimmer-from: #222224;
-  --shimmer-to: #2e2e30;
+  --shimmer-from: #1e1e23;
+  --shimmer-to: #2a2a30;
 }
 
 /* ── 기본 리셋 ── */
@@ -183,18 +248,35 @@ body {
   overflow-x: hidden;
 }
 
-/* ── 타이포그래피 ── */
+/* ── 타이포그래피 ──
+ * Pretendard Variable은 가변 폰트라 700/720 같은 중간 굵기가 실제로 렌더됩니다.
+ * 시안 추출값: H1 wght 720 · letter-spacing -0.055em · line-height 1.04 */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  font-weight: 700;
-  line-height: 1.2;
+  font-weight: 720;
+  line-height: 1.15;
   color: var(--color-text);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.035em;
+  /* 한국어 제목이 단어 중간에서 끊기지 않도록 단어 단위로 줄바꿈합니다.
+   * 예: "반값에 아카이브"가 "아 / 카이브"로 쪼개지는 것 방지 */
+  word-break: keep-all;
 }
 
-h1 { font-size: clamp(2.4rem, 5vw, 4.2rem); font-weight: 800; }
-h2 { font-size: clamp(1.8rem, 3.5vw, 3rem); }
-h3 { font-size: clamp(1.3rem, 2.5vw, 2rem); }
+h1 { font-size: clamp(2rem, 4.2vw, 3rem); letter-spacing: -0.05em; line-height: 1.06; }
+h2 { font-size: clamp(1.35rem, 2.4vw, 1.625rem); }
+h3 { font-size: clamp(1.05rem, 1.8vw, 1.25rem); }
+
+/* ── 숫자 표기 규칙 (Ledger 3번 규칙) ──
+ * 가격·할인율·건수·시각처럼 "비교되는 숫자"는
+ *   font-family: var(--font-mono);
+ *   font-variant-numeric: tabular-nums;
+ * 두 줄을 함께 씁니다. tabular-nums가 자릿수 폭을 고정해 여러 행의 가격이
+ * 세로로 정확히 맞아떨어집니다.
+ *
+ * 전역 유틸리티 클래스로 만들지 않은 이유:
+ * 이 프로젝트는 CSS Modules를 쓰므로, 전역 클래스를 JSX에 섞으면
+ * 스코프 규칙이 두 갈래로 갈라집니다. 각 모듈에서 직접 선언합니다.
+ * (적용처: ProductCard의 가격/할인율/색인번호, Home의 날짜줄/결과 수) */
 
 p {
   margin-bottom: 1rem;
@@ -244,15 +326,15 @@ img {
   background: var(--color-text-light);
 }
 
-/* ── 선택 영역 ── */
+/* ── 선택 영역 — 모노크롬 반전 (라이트: 검정 배경 / 다크: 백색 배경) ── */
 ::selection {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-on-primary);
 }
 
 /* ── 포커스 스타일 ── */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-text);
   outline-offset: 2px;
 }
 
@@ -268,13 +350,9 @@ img {
   padding: var(--space-3xl) 0;
 }
 
-/* 그라데이션 텍스트 유틸리티 (레거시 호환) */
-.gradient-text {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+/* [삭제됨] .gradient-text
+ * 어디에서도 참조되지 않는 죽은 유틸리티였고, Ledger 시스템은
+ * 그라데이션을 쓰지 않으므로 함께 제거했습니다. */
 
 /* ── 가로 스크롤 숨김 유틸리티 ── */
 .scroll-hide { scrollbar-width: none; }

@@ -19,8 +19,8 @@ export default function Favorites() {
   // "전체 삭제 확인" UI를 보여줄지 여부
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  // 페이지 타이틀은 찜 개수에 따라 동적으로 표시
-  const pageTitle = `찜한 상품 (${getFavoriteCount()}개) | 맛 프로젝트`;
+  // 페이지 타이틀은 찜 개수에 따라 동적으로 표시 (리브랜딩: 맛 프로젝트 → ARCA)
+  const pageTitle = `찜한 상품 (${getFavoriteCount()}개) | ARCA`;
 
   // 전체 삭제 버튼 클릭 시 동작
   const handleClearAll = () => {

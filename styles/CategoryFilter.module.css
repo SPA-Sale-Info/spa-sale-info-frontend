@@ -10,10 +10,10 @@
   align-items: center;
   flex-wrap: wrap;
   padding: 3px;
-  border-radius: 12px;
+  border-radius: var(--radius-chip);
   gap: 0;
   background: var(--color-bg-secondary);
-  border: 0.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
 }
 
 /* 슬라이딩 인디케이터 */
@@ -22,8 +22,9 @@
   top: 3px;
   height: calc(100% - 6px);
   background: var(--color-bg);
-  border-radius: 9px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.10);
+  border-radius: var(--radius-chip);
+  /* 그림자 제거 — Ledger는 구분을 선과 대비로만 만듭니다. */
+  border: 1px solid var(--color-border);
   pointer-events: none;
   z-index: 0;
 }
@@ -35,7 +36,7 @@
   padding: 7px 16px;
   border: none;
   background: transparent;
-  border-radius: 9px;
+  border-radius: var(--radius-chip);
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-light);
@@ -54,7 +55,7 @@
 @media (max-width: 768px) {
   .container {
     width: 100%;
-    border-radius: 12px;
+    border-radius: var(--radius-chip);
   }
 
   .button {

@@ -1,91 +1,107 @@
 /**
- * Favorites.module.css
+ * Favorites.module.css — ARCA 에디토리얼 스타일 (메인 페이지와 동일한 문법)
  *
- * 찜한 상품 페이지 스타일
+ * 메인 페이지와 맞춘 규칙:
+ * - 페이지 배경: 단일 배경색(--color-bg), 그라데이션 없음
+ * - 헤더: 메인 sticky nav와 같은 표면색 + blur + 헤어라인
+ * - 버튼: radius 9px pill, 주요 액션은 모노크롬 반전
+ * - 그리드: 메인 상품 그리드와 동일한 간격(행 32px / 열 20px)
+ * - 유채색은 찜/삭제 레드(--color-secondary/--color-danger) 하나만
  */
 
 .container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
+  background: var(--color-bg);
 }
 
-/* 헤더 영역 */
+/* ── 헤더 — 메인 sticky nav와 동일한 표면 처리 ── */
 .header {
-  background: var(--color-bg);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: var(--color-surface);
+  backdrop-filter: saturate(160%) blur(18px);
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
+  border-bottom: 0.5px solid var(--color-border);
+  box-shadow: none;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
 .headerContent {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
+/* 뒤로가기 — 박스 없는 텍스트 링크 */
 .backLink {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.25rem;
   color: var(--color-text-light);
   text-decoration: none;
   font-weight: 600;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  border-radius: 0;
+  transition: color var(--duration-fast) var(--ease-smooth);
 }
 
 .backLink:hover {
-  background: rgba(0, 113, 227, 0.08);
-  color: var(--color-primary);
+  background: transparent;
+  color: var(--color-text);
 }
 
+/* 페이지 타이틀 */
 .title {
   flex: 1;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--color-dark);
+  font-size: 1.25rem;
+  font-weight: 720;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin: 0;
 }
 
+/* 하트 — 서비스 유일의 유채색(레드) */
 .heartIcon {
-  color: #ff4757;
-  font-size: 2rem;
+  color: var(--color-secondary);
+  font-size: 1.25rem;
 }
 
 .headerActions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
+/* 액션 버튼 공통 — 칩과 동일한 radius 9px */
 .actionButton {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 0.9rem;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-chip);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--duration-fast) var(--ease-smooth);
 }
 
+/* 전체 삭제 — 중립 보더 + 레드 텍스트 (파괴적 동작 예고) */
 .clearButton {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid var(--color-border);
 }
 
 .clearButton:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--color-bg-secondary);
+  border-color: var(--color-danger);
 }
 
 .confirmActions {
@@ -93,76 +109,82 @@
   gap: 0.5rem;
 }
 
+/* 삭제 확정 — 레드 채움 (되돌릴 수 없는 동작임을 색으로 표시) */
 .confirmButton {
-  background: #dc2626;
-  color: white;
+  background: var(--color-danger);
+  color: #fff;
 }
 
 .confirmButton:hover {
-  background: #b91c1c;
+  opacity: 0.88;
+  background: var(--color-danger);
 }
 
+/* 취소 — 중립 표면 */
 .cancelButton {
-  background: rgba(148, 163, 184, 0.2);
+  background: var(--color-bg-secondary);
   color: var(--color-text);
 }
 
 .cancelButton:hover {
-  background: rgba(148, 163, 184, 0.3);
+  background: var(--color-bg-tertiary);
 }
 
-/* 메인 콘텐츠 */
+/* ── 메인 콘텐츠 ── */
 .main {
   flex: 1;
-  max-width: 1400px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem 1.5rem;
 }
 
-/* 요약 정보 */
+/* 요약 — 박스 없이 플레인 텍스트 (메인 결과 카운트와 동일한 톤) */
 .summary {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: var(--color-bg);
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  margin-bottom: 1.5rem;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
 }
 
 .summaryText {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--color-text-light);
 }
 
 .summaryText strong {
-  color: var(--color-primary);
+  color: var(--color-text);
   font-weight: 700;
 }
 
-/* 상품 그리드 */
+/* 상품 그리드 — 메인 그리드와 동일 규격 */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: 32px 20px;
   margin-bottom: 3rem;
 }
 
-/* 빈 상태 */
+/* ── 빈 상태 — 메인 emptyState와 동일한 문법 ── */
 .emptyState {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
+  min-height: 50vh;
   text-align: center;
-  padding: 3rem 2rem;
+  padding: 3rem 1.5rem;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-card);
+  border: 1px dashed var(--color-text-lighter);
 }
 
 .emptyIcon {
-  font-size: 6rem;
+  font-size: 3rem;
   color: var(--color-text-lighter);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -178,81 +200,76 @@
 }
 
 .emptyTitle {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--color-dark);
-  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  font-weight: 720;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  margin: 0 0 0.5rem 0;
 }
 
 .emptyDescription {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: var(--color-text-light);
-  margin: 0 0 2rem 0;
-  max-width: 500px;
+  margin: 0 0 1.5rem 0;
+  max-width: 420px;
 }
 
+/* 상품 둘러보기 — 모노크롬 반전 pill */
 .emptyButton {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 1rem 2rem;
+  padding: 0.8rem 1.5rem;
   background: var(--color-primary);
-  color: white;
+  color: var(--color-on-primary);
   text-decoration: none;
   font-weight: 600;
-  font-size: 1.05rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
-  transition: all var(--duration-base) var(--ease-smooth);
+  font-size: 0.95rem;
+  border-radius: var(--radius-chip);
+  box-shadow: none;
+  transition: transform var(--duration-fast) var(--ease-smooth), opacity var(--duration-fast) var(--ease-smooth);
 }
 
 .emptyButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 113, 227, 0.35);
-  background: var(--color-primary-dark);
+  opacity: 0.92;
+  box-shadow: none;
+  background: var(--color-primary);
 }
 
-/* 푸터 */
+/* ── 안내 푸터 ── */
 .footer {
-  background: var(--color-bg);
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
-  padding: 1.5rem 2rem;
+  background: transparent;
+  border-top: 0.5px solid var(--color-border);
+  padding: 1.5rem;
 }
 
 .footerText {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--color-text-light);
   text-align: center;
 }
 
-/* 모바일 반응형 */
+/* ── 모바일 반응형 ── */
 @media (max-width: 768px) {
   .headerContent {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
   }
 
   .backLink {
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
   }
 
   .title {
-    font-size: 1.5rem;
-    width: 100%;
-  }
-
-  .headerActions {
-    width: 100%;
-    justify-content: flex-end;
+    font-size: 1.1rem;
   }
 
   .actionButton {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.85rem;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.75rem;
   }
 
   .main {
@@ -260,38 +277,19 @@
   }
 
   .grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 12px;
   }
 
   .emptyIcon {
-    font-size: 4rem;
+    font-size: 2.5rem;
   }
 
   .emptyTitle {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
   }
 
   .emptyDescription {
-    font-size: 0.95rem;
-  }
-
-  .emptyButton {
-    font-size: 0.95rem;
-    padding: 0.8rem 1.5rem;
-  }
-
-  .summary {
-    padding: 0.75rem;
-  }
-
-  .summaryText {
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
+    font-size: 0.875rem;
   }
 }

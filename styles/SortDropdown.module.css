@@ -12,9 +12,11 @@
 }
 
 .label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-light);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-lighter);
   white-space: nowrap;
 }
 
@@ -24,24 +26,32 @@
   align-items: center;
 }
 
+/*
+ * [Ledger 개편] 알약(999px) + 회색 배경이던 select를
+ * 조건 줄의 다른 컨트롤과 같은 "밑줄 있는 텍스트" 형태로 맞췄습니다.
+ * 이 줄에는 상세 필터·품절 제외·정렬 세 개의 컨트롤이 나란히 있는데
+ * 정렬만 알약 상자면 혼자 떠 보입니다.
+ */
 .select {
   /* 네이티브 외형 제거 후 직접 스타일링 */
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  padding: 0.45rem 2rem 0.45rem 0.85rem;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 2px 16px 3px 0;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
   color: var(--color-text);
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-bg-tertiary);
-  border-radius: 999px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-rule-strong);
+  border-radius: 0;
   cursor: pointer;
-  transition: border-color 150ms var(--ease-smooth);
+  transition: opacity 150ms var(--ease-smooth);
 }
 
 .select:hover {
-  border-color: var(--color-text-lighter);
+  opacity: 0.65;
 }
 
 .select:focus-visible {
@@ -52,8 +62,8 @@
 /* 커스텀 드롭다운 화살표 — 클릭은 select가 받도록 pointer-events 차단 */
 .arrow {
   position: absolute;
-  right: 0.85rem;
-  font-size: 11px;
+  right: 2px;
+  font-size: 10px;
   color: var(--color-text-light);
   pointer-events: none;
 }
