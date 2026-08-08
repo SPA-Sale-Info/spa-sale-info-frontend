@@ -34,6 +34,7 @@
 import type {
   ApiProduct,
   Product,             // 상품 데이터 구조
+  NormalizedProduct,   // 정규화된 상품 구조 (카탈로그 캐시의 필터/정렬 매칭용)
   ProductDetailResponse, // 상품 상세 응답 구조 (가격 히스토리 포함)
   SearchProductsParams,  // 검색 파라미터 구조
   SaleCountResponse,     // 세일 개수 응답 구조
@@ -426,6 +427,247 @@ export interface SaleProductsResult {
   currentPage: number;    // 현재 페이지 번호 (0부터 시작)
 }
 
+// ============================================================================
+// 세일 상품 전체 카탈로그 캐시 — 클라이언트 사이드 필터링 엔진
+// ============================================================================
+//
+// ── 왜 이런 구조가 필요한가요? (2026-07-19 백엔드 전수 감사 결과) ──
+//
+// 백엔드가 실제로 지원하는 것:
+//   ✓ GET /products/sale?page&size&sort={필드},{방향}   — 페이지네이션 + 정렬만
+//     (정렬 허용 필드: discountRate, currentPrice, createdAt — viewCount는 400 거부)
+//   ✓ GET /products/brand/{brand}/sale                  — 브랜드 필터 (단, 정렬 무시)
+//   ✓ GET /products/{id}, /products/sale/count, /brands
+//
+// 백엔드가 지원하지 않는 것:
+//   ✗ 성별/카테고리/검색어/최대가격/최소할인율 필터 — sale 엔드포인트가 전부 무시
+//     (어떤 파라미터를 보내도 totalElements가 그대로이고 조건 위반 상품이 섞여 옴)
+//   ✗ /product/search — 어떤 파라미터로도 항상 0건 반환 (검색 인덱스 미구축)
+//   ✗ 브랜드 + 정렬 조합 — 브랜드 엔드포인트는 sort 파라미터를 무시
+//
+// ── 해결 전략: 하이브리드 ──
+// 1) 필터가 하나도 없는 기본 화면 → 서버 페이지네이션 + 서버 정렬 (가볍고 빠름)
+// 2) 필터가 하나라도 있으면 → 전체 카탈로그(~3,900개)를 한 번에 받아 캐시하고,
+//    필터·정렬·페이지네이션을 전부 클라이언트에서 수행
+//
+// 전체 데이터가 4천 개 미만이라 가능한 전략입니다:
+// - size=1000이 동작하므로 4번의 병렬 요청으로 전체 확보 (~1-2MB)
+// - 이후 모든 필터 변경은 네트워크 없이 즉시 반영 (서버 왕복보다 오히려 빠름)
+// - 페이지네이션이 "필터링 후"에 일어나므로, 과거에 있었던
+//   "서버 페이지 12개를 클라에서 필터링해 화면이 비는 버그"가 원천적으로 없습니다.
+//
+// Java 비유: @Cacheable("saleCatalog") + 스트림 필터링
+//   products.stream().filter(...).sorted(...).skip(page*size).limit(size)
+
+/** 카탈로그 요청 한 페이지 크기 — 백엔드가 size=1000까지 허용함을 확인했습니다. */
+const CATALOG_PAGE_SIZE = 1000;
+
+/** 카탈로그 캐시 유효 시간(5분) — 세일 데이터는 하루 단위로 갱신되므로 충분합니다. */
+const CATALOG_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * 캐시 항목: 원본(raw)과 정규화본(norm)을 쌍으로 보관합니다.
+ * - raw: 호출자(index.tsx)가 기대하는 원본 ApiProduct (반환용)
+ * - norm: 필터/정렬 매칭용 정규화 상품 (브랜드 별칭·성별 MEN→MAN·카테고리 그룹핑이 적용됨)
+ * 정규화를 캐시 시점에 1회만 수행해, 필터 변경 때마다 4천 개를 재정규화하는 낭비를 막습니다.
+ */
+interface CatalogEntry {
+  raw: ApiProduct;
+  norm: NormalizedProduct;
+}
+
+// 모듈 스코프 캐시 — 페이지를 새로고침하기 전까지 유지됩니다.
+// (React 상태가 아닌 모듈 변수인 이유: 어떤 컴포넌트에서 호출해도 공유되어야 하기 때문)
+let catalogCache: { entries: CatalogEntry[]; fetchedAt: number } | null = null;
+
+// 진행 중인 카탈로그 요청 — 동시에 여러 컴포넌트가 요청해도 실제 네트워크는 1번만 발생합니다.
+// (예: 필터 변경 + 무한 스크롤이 겹쳐도 중복 다운로드 없음)
+let catalogInFlight: Promise<CatalogEntry[]> | null = null;
+
+/**
+ * fetchSaleCatalog - 세일 상품 전체 카탈로그를 받아 캐시하는 함수
+ *
+ * 동작 순서:
+ * 1. 유효한 캐시가 있으면 즉시 반환 (네트워크 0회)
+ * 2. 이미 다운로드 중이면 그 Promise를 공유 (중복 요청 방지)
+ * 3. 첫 페이지(size=1000)로 전체 페이지 수를 파악한 뒤, 나머지를 병렬로 요청
+ */
+async function fetchSaleCatalog(): Promise<CatalogEntry[]> {
+  // 1) 캐시 히트: TTL 이내면 그대로 사용
+  if (catalogCache && Date.now() - catalogCache.fetchedAt < CATALOG_TTL_MS) {
+    return catalogCache.entries;
+  }
+
+  // 2) 진행 중 요청 공유 (Promise 재사용 패턴)
+  if (catalogInFlight) {
+    return catalogInFlight;
+  }
+
+  catalogInFlight = (async () => {
+    // 3-1) 첫 페이지로 totalPages 파악
+    const firstUrl = `${API_BASE_URL}${API_ENDPOINTS.PRODUCTS_SALE}?page=0&size=${CATALOG_PAGE_SIZE}`;
+    const first = await fetchAPI<PagedResponse<ApiProduct>>(firstUrl);
+
+    // 3-2) 나머지 페이지를 병렬 요청 (Promise.all — Java의 CompletableFuture.allOf와 유사)
+    const restPageNumbers = Array.from(
+      { length: Math.max(0, (first.totalPages ?? 1) - 1) },
+      (_, i) => i + 1,
+    );
+    const restPages = await Promise.all(
+      restPageNumbers.map((pageNo) => {
+        const url = `${API_BASE_URL}${API_ENDPOINTS.PRODUCTS_SALE}?page=${pageNo}&size=${CATALOG_PAGE_SIZE}`;
+        return fetchAPI<PagedResponse<ApiProduct>>(url).then((p) => p.content ?? []);
+      }),
+    );
+
+    // 3-3) 전체 병합 + 정규화 1회 수행
+    const allRaw = [...(first.content ?? []), ...restPages.flat()];
+    const normalized: CatalogEntry[] = allRaw.map((raw) => ({
+      raw,
+      norm: normalizeProduct(raw),
+    }));
+
+    // 3-4) 중복 제거 — 백엔드 데이터 품질 이슈 대응 (2026-07-19 감사에서 발견)
+    //   a) 같은 id의 문서가 통째로 중복 저장된 경우
+    //   b) 같은 상품이 다른 id의 별도 문서로 여러 번 크롤링된 경우
+    //      → "브랜드|상품명|판매가" 시그니처로 대표 1건만 남깁니다.
+    // 카탈로그 단계에서 제거해야 totalElements/페이지 수가 중복 제거 후 기준으로
+    // 일관되게 계산됩니다. (화면에서 지우면 페이지마다 개수가 들쭉날쭉해짐)
+    const seenKeys = new Set<string>();
+    const entries = normalized.filter(({ norm }) => {
+      const keys = [norm.id, `${norm.brand}|${norm.name}|${norm.salePrice}`];
+      if (keys.some((key) => seenKeys.has(key))) return false;
+      keys.forEach((key) => seenKeys.add(key));
+      return true;
+    });
+
+    catalogCache = { entries, fetchedAt: Date.now() };
+    return entries;
+  })().finally(() => {
+    // 성공/실패와 무관하게 in-flight 표시를 해제해, 실패 시 다음 호출이 재시도할 수 있게 합니다.
+    catalogInFlight = null;
+  });
+
+  return catalogInFlight;
+}
+
+/**
+ * SERVER_SORT_FIELD_MAP - 프론트 논리 정렬 키 → 백엔드 실제 필드명 변환 맵
+ *
+ * 백엔드는 Spring 표준 `?sort={필드},{방향}` 형식만 인식합니다.
+ * (기존에 보내던 sortBy/sortDirection 파라미터는 조용히 무시되고 있었습니다!)
+ * 허용 필드 화이트리스트: discountRate | currentPrice | createdAt
+ */
+const SERVER_SORT_FIELD_MAP: Record<SortBy, string> = {
+  discount: 'discountRate',
+  price: 'currentPrice',
+  createdAt: 'createdAt',
+};
+
+/**
+ * compareForSort - 클라이언트 정렬용 비교 함수 생성기
+ *
+ * @param sortBy - 논리 정렬 키 (discount | price | createdAt)
+ * @param direction - asc | desc
+ * @returns Array.prototype.sort에 넘길 비교 함수
+ *
+ * Java 비유: Comparator.comparing(Product::getDiscountRate).reversed()
+ */
+function compareForSort(sortBy: SortBy, direction: SortDirection) {
+  // 각 정렬 키에서 비교할 숫자 값을 뽑는 함수
+  const pick = (entry: CatalogEntry): number => {
+    switch (sortBy) {
+      case 'price':
+        return entry.norm.salePrice ?? 0;
+      case 'createdAt':
+        // ISO 날짜 문자열 → epoch 밀리초. 없으면 0(가장 오래된 것으로 취급).
+        return entry.norm.createdAt ? new Date(entry.norm.createdAt).getTime() : 0;
+      case 'discount':
+      default:
+        return entry.norm.discountRate ?? 0;
+    }
+  };
+
+  const sign = direction === 'asc' ? 1 : -1;
+
+  return (a: CatalogEntry, b: CatalogEntry): number => {
+    const diff = (pick(a) - pick(b)) * sign;
+    if (diff !== 0) return diff;
+    // 동점이면 id로 안정 정렬 — 페이지를 나눠 잘라도 순서가 흔들리지 않게 합니다.
+    // (순서가 흔들리면 무한 스크롤에서 같은 상품이 중복/누락될 수 있습니다)
+    return a.norm.id.localeCompare(b.norm.id);
+  };
+}
+
+/**
+ * matchesFilters - 정규화된 상품이 주어진 필터 조건을 모두 만족하는지 검사
+ *
+ * 모든 조건은 AND로 결합됩니다 (브랜드 AND 성별 AND 카테고리 AND ...).
+ */
+function matchesFilters(
+  entry: CatalogEntry,
+  filters: {
+    brands?: Brand[];
+    genders?: Gender[];
+    categories?: Category[];
+    keyword?: string;
+    maxPrice?: number;
+    minDiscountRate?: number;
+  },
+): boolean {
+  const p = entry.norm;
+
+  // 브랜드: 정규화된 브랜드 코드로 비교 (별칭 처리 완료 상태)
+  if (filters.brands && filters.brands.length > 0 && !filters.brands.includes(p.brand)) {
+    return false;
+  }
+
+  // 성별: 선택한 성별 + '공용(UNISEX)' 상품을 함께 보여줍니다.
+  // (여성 필터에서 공용 상품을 숨기면 실제 입을 수 있는 옷이 누락되기 때문)
+  if (filters.genders && filters.genders.length > 0) {
+    const genderOk = filters.genders.includes(p.gender) || p.gender === 'UNISEX';
+    if (!genderOk) return false;
+  }
+
+  // 카테고리: 정규화 단계에서 이미 그룹(TOP/BOTTOM/OUTER/SHOES/ETC)으로 변환되어 있습니다.
+  // (백엔드의 DRESS→TOP, SKIRT→BOTTOM, UNKNOWN→ETC 매핑 포함)
+  if (filters.categories && filters.categories.length > 0 && !filters.categories.includes(p.category)) {
+    return false;
+  }
+
+  // 최대 가격: 판매가 기준
+  if (typeof filters.maxPrice === 'number' && p.salePrice > filters.maxPrice) {
+    return false;
+  }
+
+  // 최소 할인율
+  if (typeof filters.minDiscountRate === 'number' && p.discountRate < filters.minDiscountRate) {
+    return false;
+  }
+
+  // 검색어: 공백으로 토큰을 나눠 "모든 토큰이 어딘가에 포함"되어야 매칭 (AND 검색)
+  // 검색 대상: 상품명 + 브랜드명 + 설명 + 태그 + 소분류
+  // 백엔드 검색 API(/product/search)가 항상 0건을 반환해 사용할 수 없으므로
+  // 클라이언트에서 직접 검색합니다.
+  if (filters.keyword) {
+    const haystack = [
+      p.name,
+      p.brandName,
+      p.description ?? '',
+      (p.tags ?? []).join(' '),
+      p.subCategory ?? '',
+    ]
+      .join(' ')
+      .toLowerCase();
+
+    const tokens = filters.keyword.toLowerCase().split(/\s+/).filter(Boolean);
+    const allMatch = tokens.every((token) => haystack.includes(token));
+    if (!allMatch) return false;
+  }
+
+  return true;
+}
+
 /**
  * fetchSaleProducts - 페이지네이션을 지원하는 세일 상품 조회 함수
  *
@@ -453,90 +695,58 @@ export async function fetchSaleProducts(params: {
   minDiscountRate?: number;
   page?: number;
   size?: number;
-  // 정렬 기준: 백엔드의 정렬 컬럼명 (discount | price | createdAt)
+  // 정렬 기준: 논리 정렬 키 (discount | price | createdAt)
   sortBy?: SortBy;
   // 정렬 방향: 오름차순(asc) | 내림차순(desc)
   sortDirection?: SortDirection;
 }): Promise<SaleProductsResult> {
+  const page = params.page ?? 0;
+  const size = params.size ?? 12;
+  const sortBy: SortBy = params.sortBy ?? 'discount';
+  const sortDirection: SortDirection = params.sortDirection ?? 'desc';
+
+  /**
+   * 라우팅 결정: 필터가 하나라도 있으면 클라이언트 엔진, 없으면 서버 페이지네이션
+   *
+   * 백엔드 전수 감사(파일 상단 주석 참고) 결과, 서버는 필터를 전혀 지원하지 않으므로
+   * 필터가 있는 요청을 서버에 그대로 보내면 "조건과 무관한 상품"이 내려옵니다.
+   * → 필터가 있으면 전체 카탈로그를 받아 클라이언트에서 처리합니다.
+   */
+  const hasClientSideWork =
+    (params.brands?.length ?? 0) > 0 ||
+    (params.genders?.length ?? 0) > 0 ||
+    (params.categories?.length ?? 0) > 0 ||
+    Boolean(params.keyword) ||
+    (typeof params.maxPrice === 'number' && Number.isFinite(params.maxPrice)) ||
+    (typeof params.minDiscountRate === 'number' && params.minDiscountRate > 0);
+
+  // ──────────────────────────────────────────────────────────────
+  // 경로 A: 필터 없음 → 서버 페이지네이션 + 서버 정렬 (가장 가벼운 경로)
+  // ──────────────────────────────────────────────────────────────
+  if (!hasClientSideWork) {
     /**
-     * 쿼리 파라미터 구성
-     * ?? 연산자(Nullish coalescing): 왼쪽이 null 또는 undefined이면 오른쪽 값을 사용합니다.
-     * params.page ?? 0: params.page가 없으면(undefined) 0을 사용합니다.
-     * Java 비유: Optional.ofNullable(params.getPage()).orElse(0)
+     * 서버 정렬은 Spring 표준 `?sort={필드},{방향}` 형식입니다.
+     * 예: ?sort=discountRate,desc → 할인율 높은순
+     *
+     * ⚠ 과거에 보내던 sortBy/sortDirection 파라미터는 서버가 조용히 무시했습니다.
+     *   (그래서 정렬 드롭다운이 무동작이었음 — 2026-07-19 감사에서 발견)
      */
     const queryParams: Record<string, unknown> = {
-      page: params.page ?? 0,
-      size: params.size ?? 12,
+      page,
+      size,
+      sort: `${SERVER_SORT_FIELD_MAP[sortBy]},${sortDirection}`,
     };
 
-    /**
-     * 배열 파라미터 처리
-     * params.brands && params.brands.length > 0: 배열이 존재하고 비어있지 않을 때만 추가
-     * .join(','): 배열을 콤마 구분 문자열로 변환합니다.
-     * ['HM', 'ZARA'] → 'HM,ZARA'
-     *
-     * Java 비유: String.join(",", brands)
-     */
-    if (params.brands && params.brands.length > 0) {
-      queryParams.brands = params.brands.join(',');
-    }
-    if (params.genders && params.genders.length > 0) {
-      queryParams.genders = params.genders.join(',');
-    }
-    if (params.categories && params.categories.length > 0) {
-      queryParams.categories = params.categories.join(',');
-    }
-    // 검색어가 있을 때만 keyword 파라미터 추가
-    if (params.keyword) {
-      queryParams.keyword = params.keyword;
-    }
-    if (typeof params.maxPrice === 'number' && Number.isFinite(params.maxPrice)) {
-      queryParams.maxPrice = params.maxPrice;
-    }
-    if (typeof params.minDiscountRate === 'number' && params.minDiscountRate > 0) {
-      queryParams.minDiscountRate = params.minDiscountRate;
-    }
-
-    /**
-     * 정렬 파라미터
-     * 백엔드(Spring)는 보통 sortBy(컬럼) + sortDirection(방향)으로 정렬을 받습니다.
-     * 예: ?sortBy=discount&sortDirection=desc → 할인율 높은순
-     *
-     * 왜 서버 정렬인가요?
-     * 무한 스크롤은 페이지 단위로 12개씩만 받으므로, 클라이언트에서 정렬하면
-     * "현재 화면에 로드된 일부"만 정렬됩니다. 전체 데이터 기준 정렬은 서버만 가능합니다.
-     */
-    if (params.sortBy) {
-      queryParams.sortBy = params.sortBy;
-      queryParams.sortDirection = params.sortDirection ?? 'desc';
-    }
-
-    // 최종 URL: "https://..." 또는 "/api/v1/products/sale?page=0&size=12&..."
     const queryString = buildQueryString(queryParams);
     const url = `${API_BASE_URL}${API_ENDPOINTS.PRODUCTS_SALE}${queryString}`;
 
     /**
      * PagedResponse<ApiProduct>: Spring의 Page<T> 구조와 동일합니다.
-     * {
-     *   content: [...],      // 현재 페이지 데이터
-     *   totalPages: 10,      // 전체 페이지 수
-     *   totalElements: 120,  // 전체 데이터 수
-     *   last: false,         // 마지막 페이지 여부
-     *   number: 0,           // 현재 페이지 번호
-     *   ...
-     * }
-     *
-     * ApiProduct로 원본 계약을 받고, 화면에서는 normalizeProduct()로 변환합니다.
+     * { content: [...], totalPages, totalElements, last, number, ... }
      */
     const pagedData = await fetchAPI<PagedResponse<ApiProduct>>(url);
 
-    /**
-     * PagedResponse에서 필요한 정보만 추출하여 반환합니다.
-     * !pagedData.last: last가 false(마지막이 아님)이면 hasMore는 true
-     *                  last가 true(마지막 페이지)이면 hasMore는 false
-     *
-     * Java 비유: boolean hasMore = !page.isLast();
-     */
+    // Java 비유: boolean hasMore = !page.isLast();
     return {
       products: pagedData.content,
       totalPages: pagedData.totalPages,
@@ -544,6 +754,47 @@ export async function fetchSaleProducts(params: {
       hasMore: !pagedData.last,
       currentPage: pagedData.number,
     };
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // 경로 B: 필터 있음 → 전체 카탈로그 캐시에서 필터·정렬·페이지네이션
+  // ──────────────────────────────────────────────────────────────
+  // 첫 호출만 네트워크 비용(~4요청)이 들고, 이후 5분간은 모든 필터 조작이
+  // 네트워크 없이 즉시 처리됩니다. (서버 왕복 1번보다 빠른 체감 속도)
+  const catalog = await fetchSaleCatalog();
+
+  // 1) 필터링 — 모든 조건 AND 결합 (matchesFilters 참고)
+  const filtered = catalog.filter((entry) =>
+    matchesFilters(entry, {
+      brands: params.brands,
+      genders: params.genders,
+      categories: params.categories,
+      keyword: params.keyword,
+      maxPrice: params.maxPrice,
+      minDiscountRate: params.minDiscountRate,
+    }),
+  );
+
+  // 2) 정렬 — 전체 필터 결과 기준 (동점은 id로 안정 정렬)
+  //    스프레드([...])로 복사 후 정렬해 캐시 원본 순서를 보존합니다.
+  const sorted = [...filtered].sort(compareForSort(sortBy, sortDirection));
+
+  // 3) 페이지네이션 — "필터링·정렬이 끝난 결과"를 잘라내므로
+  //    서버 페이지를 클라에서 거르던 시절의 빈 화면 버그가 발생하지 않습니다.
+  const start = page * size;
+  const pageEntries = sorted.slice(start, start + size);
+  const totalElements = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(totalElements / size));
+
+  return {
+    // 호출자(index.tsx)는 원본 ApiProduct를 기대하므로 raw를 반환합니다.
+    // (index.tsx가 normalizeProducts로 다시 정규화 — 기존 데이터 흐름 유지)
+    products: pageEntries.map((entry) => entry.raw),
+    totalPages,
+    totalElements,
+    hasMore: start + size < totalElements,
+    currentPage: page,
+  };
 }
 
 /**

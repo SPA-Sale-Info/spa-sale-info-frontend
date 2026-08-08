@@ -53,8 +53,19 @@
   background: rgba(255, 240, 245, 0.92);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  /* v4: pop 애니메이션 (globals.css의 @keyframes pop) */
   animation: pop 0.4s var(--ease-spring);
+}
+
+/*
+ * ⚠️ [버그 수정] CSS Modules는 animation-name을 스코프 처리하므로
+ * globals.css의 전역 @keyframes pop과는 이름이 매칭되지 않았습니다.
+ * (찜 버튼을 눌러도 튕기는 반응이 없던 원인)
+ * 모듈 안에서 쓰는 keyframes는 같은 모듈에 정의합니다.
+ */
+@keyframes pop {
+  0%, 100% { transform: scale(1); }
+  35%      { transform: scale(1.30); }
+  70%      { transform: scale(0.94); }
 }
 
 .favoriteButton.active .heartIcon {

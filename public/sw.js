@@ -1,9 +1,12 @@
-const CACHE_NAME = 'spa-sale-archive-v1'
+// 캐시 이름에 버전을 올려야 기존 사용자의 브라우저가 옛 자산을 버리고 새로 받아갑니다.
+// (activate 단계에서 CACHE_NAME이 다른 캐시를 전부 삭제하도록 되어 있습니다)
+const CACHE_NAME = 'spa-sale-archive-v2'
 const STATIC_ASSETS = [
     '/',
     '/manifest.json',
     '/favicon.ico',
-    '/placeholder-product.svg'
+    // 상품 이미지 폴백 — 구 SVG에서 브랜드 팔레트에 맞춘 JPG로 교체되었습니다.
+    '/placeholder-product.jpg'
 ]
 
 /**

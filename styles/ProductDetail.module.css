@@ -1,44 +1,52 @@
 /**
- * ProductDetail.module.css
+ * ProductDetail.module.css — ARCA 에디토리얼 스타일 (메인 페이지와 동일한 문법)
  *
- * 상품 상세 페이지 스타일
+ * 메인 페이지(Framer 시안)와 맞춘 규칙:
+ * - 페이지 배경: 단일 배경색(--color-bg), 그라데이션 없음
+ * - 카드 표면: --color-bg-secondary + radius 12px + 그림자 없음
+ * - 버튼/칩: radius 9px, 활성·주요 버튼은 모노크롬 반전(--color-primary + --color-on-primary)
+ * - 할인율: 배지가 아닌 레드(--color-discount) 플레인 텍스트
+ * - 이미지: 3:4 비율 + radius 12px (상품 카드와 동일)
+ * - 유채색은 할인/찜 레드 단 하나만 사용
  */
 
 .container {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
-  padding: 2rem;
+  background: var(--color-bg);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-/* 헤더 */
+/* ── 헤더: 뒤로가기 + 공유/찜 액션 ── */
 .header {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+/* 뒤로가기 — 박스 없는 텍스트 링크 (에디토리얼 톤) */
 .backLink {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: var(--color-bg);
+  padding: 0.5rem 0.25rem;
+  background: transparent;
   color: var(--color-text-light);
   text-decoration: none;
   font-weight: 600;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  transition: color var(--duration-fast) var(--ease-smooth);
 }
 
 .backLink:hover {
-  background: var(--color-bg-secondary);
-  color: var(--color-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  color: var(--color-text);
+  transform: none;
+  box-shadow: none;
 }
 
 .headerActions {
@@ -46,108 +54,109 @@
   gap: 0.75rem;
 }
 
-/* 메인 콘텐츠 */
+/* ── 메인 콘텐츠: 좌 이미지 / 우 정보 2컬럼 ── */
 .content {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(2rem, 4vw, 3.5rem);
 }
 
-/* 이미지 섹션 */
+/* ── 이미지 섹션 ── */
 .imageSection {
   position: sticky;
   top: 2rem;
   height: fit-content;
 }
 
+/* 상품 카드와 동일한 3:4 + radius 12px */
 .imageContainer {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
-  background: var(--color-bg);
-  border-radius: 24px;
+  aspect-ratio: 3 / 4;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-card);
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow: none;
+  border: none;
 }
 
 .productImage {
   object-fit: cover;
-  transition: transform 0.5s ease;
 }
 
-.imageContainer:hover .productImage {
-  transform: scale(1.05);
-}
-
+/* (레거시 호환) 구형 오버레이 배지 — JSX에서는 더 이상 사용하지 않습니다.
+ * 할인율은 가격 행의 레드 텍스트(.discountRate)로 이동했습니다. */
 .discountBadge {
   position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
-  padding: 0.75rem 1.25rem;
-  background: rgba(220, 38, 38, 0.95);
-  color: white;
-  font-size: 1.1rem;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--color-discount);
+  color: #fff;
+  font-size: 0.9rem;
   font-weight: 700;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  border-radius: 999px;
   z-index: 2;
 }
 
-/* 정보 섹션 */
+/* ── 정보 섹션 ── */
 .infoSection {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
-/* 메타 정보 */
+/* 메타 정보: 브랜드 + 성별 */
 .meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.6rem;
 }
 
+/* 브랜드 — 상품 카드의 brandName과 동일한 문법 (11px·자간 넓게·대문자·보조색) */
 .brandBadge {
   display: inline-flex;
   align-items: center;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-primary);
-  background: rgba(0, 113, 227, 0.08);
-  border-radius: 100px;
-  border: 1px solid rgba(0, 113, 227, 0.15);
+  color: var(--color-text-light);
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
 }
 
+/* 성별/카테고리 — 중립 표면 pill */
 .genderBadge,
 .categoryBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.85rem;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  background: var(--color-bg-tertiary);
+  background: var(--color-bg-secondary);
   color: var(--color-text-light);
-  border-radius: 100px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  border: none;
 }
 
-/* 상품명 */
+/* 상품명 — 에디토리얼 헤드라인 */
 .productName {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--color-dark);
-  line-height: 1.3;
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  font-weight: 720;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  color: var(--color-text);
   margin: 0;
 }
 
-/* Vibe 태그 */
+/* Vibe(무드) 태그 — 중립 표면 칩 */
 .vibeTags {
   display: flex;
   flex-wrap: wrap;
@@ -155,157 +164,181 @@
 }
 
 .vibeTag {
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(168, 85, 247, 0.05));
-  color: #7c3aed;
-  font-weight: 600;
-  font-size: 0.9rem;
-  border-radius: 8px;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  padding: 0.35rem 0.75rem;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-light);
+  font-weight: 500;
+  font-size: 0.8rem;
+  border-radius: var(--radius-chip);
+  border: none;
 }
 
-/* 가격 섹션 */
+/* ── 가격 섹션 — 박스 없이 플레인 (메인 카드의 가격 행 확대판) ── */
 .priceSection {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 2rem;
-  background: var(--color-bg);
-  border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
+/* 현재가 — 그라데이션 제거, 큰 볼드 텍스트 */
 .currentPrice {
-  font-size: 3rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: clamp(1.9rem, 3.4vw, 2.5rem);
+  font-weight: 720;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  background: none;
+  -webkit-text-fill-color: initial;
+  font-variant-numeric: tabular-nums;
 }
 
 .originalPrice {
-  font-size: 1.5rem;
-  color: var(--color-text-lighter);
+  font-size: 1.1rem;
+  color: var(--color-text-light);
   text-decoration: line-through;
+  font-variant-numeric: tabular-nums;
 }
 
-/* 액션 버튼 */
+/* 할인율 — 시안 문법: 레드 플레인 텍스트 */
+.discountRate {
+  font-size: 1.25rem;
+  font-weight: 720;
+  color: var(--color-discount);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── CTA 버튼 ── */
 .actions {
   display: flex;
   gap: 1rem;
 }
 
+/* 구매하기 — 모노크롬 반전 버튼 (라이트: 검정 / 다크: 백색) */
 .purchaseButton {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 1.5rem 2rem;
+  gap: 0.6rem;
+  padding: 1rem 1.5rem;
   background: var(--color-primary);
-  color: white;
+  color: var(--color-on-primary);
   text-decoration: none;
-  font-weight: 700;
-  font-size: 1.15rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 113, 227, 0.25);
-  transition: all var(--duration-base) var(--ease-smooth);
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: var(--radius-chip);
+  box-shadow: none;
+  transition: transform var(--duration-fast) var(--ease-smooth), opacity var(--duration-fast) var(--ease-smooth);
 }
 
 .purchaseButton:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 113, 227, 0.35);
-  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+  opacity: 0.92;
+  box-shadow: none;
+  background: var(--color-primary);
 }
 
 .buttonIcon {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
 }
 
-/* 차트 섹션 */
+/* ── 차트 섹션 ── */
 .chartSection {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
-/* 상품 스펙 */
+/* ── 상품 스펙 — 표면 카드 + 헤어라인 행 (무드보드 카드와 동일 문법) ── */
 .productSpecs {
-  background: var(--color-bg);
-  border-radius: 16px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-card);
   padding: 1.5rem;
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  margin-top: 1rem;
+  border: none;
+  margin-top: 0.5rem;
 }
 
 .specsTitle {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--color-dark);
-  margin: 0 0 1.25rem 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-light);
+  margin: 0 0 0.75rem 0;
 }
 
 .specItem {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .specItem:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
 
 .specLabel {
-  min-width: 120px;
-  font-weight: 600;
+  min-width: auto;
+  font-weight: 400;
   color: var(--color-text-light);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .specValue {
   flex: 1;
-  color: var(--color-dark);
-  font-size: 0.95rem;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: right;
 }
 
 .inStock {
-  color: #16a34a;
+  color: var(--color-text);
   font-weight: 600;
 }
 
 .outOfStock {
-  color: #dc2626;
+  color: var(--color-discount);
   font-weight: 600;
 }
 
-/* 상품 설명 */
+/* ── 상품 설명 ── */
 .descriptionSection {
-  background: var(--color-bg);
-  border-radius: 16px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-card);
   padding: 1.5rem;
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  margin-top: 1rem;
+  border: none;
+  margin-top: 0.5rem;
 }
 
 .descriptionTitle {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--color-dark);
-  margin: 0 0 1rem 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-light);
+  margin: 0 0 0.75rem 0;
 }
 
 .descriptionText {
   color: var(--color-text);
-  line-height: 1.8;
+  font-size: 0.95rem;
+  line-height: 1.7;
   margin: 0;
   white-space: pre-line;
 }
 
-/* 추가 정보 */
+/* ── 추가 정보 ── */
 .additionalInfo {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -313,16 +346,15 @@
 
 .infoCard {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   padding: 1.5rem;
-  background: var(--color-bg);
-  border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-card);
+  border: none;
 }
 
 .infoIcon {
-  font-size: 2rem;
-  line-height: 1;
+  display: none; /* 이모지 아이콘 제거 — 에디토리얼 톤 유지 */
 }
 
 .infoContent {
@@ -330,46 +362,50 @@
 }
 
 .infoTitle {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--color-dark);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-light);
   margin: 0 0 0.75rem 0;
 }
 
 .infoList {
   margin: 0;
-  padding-left: 1.25rem;
+  padding-left: 1.1rem;
   color: var(--color-text-light);
-  line-height: 1.8;
+  font-size: 0.85rem;
+  line-height: 1.7;
 }
 
 .infoList li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
-/* 통계 카드 */
+/* ── 통계 카드 (조회수/좋아요) ── */
 .statsCard {
   display: flex;
   gap: 1rem;
-  padding: 1.5rem;
-  background: var(--color-bg);
-  border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  padding: 1.25rem 1.5rem;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-card);
+  border: none;
 }
 
 .statItem {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 0.5rem;
-  padding: 1rem;
-  background: var(--color-bg-tertiary);
-  border-radius: 12px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
 }
 
 .statIcon {
-  font-size: 1.5rem;
+  display: none; /* 이모지 제거 */
 }
 
 .statLabel {
@@ -378,12 +414,13 @@
 }
 
 .statValue {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--color-dark);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
 }
 
-/* 로딩 & 에러 상태 */
+/* ── 로딩 & 에러 상태 ── */
 .loadingContainer,
 .errorContainer {
   display: flex;
@@ -393,15 +430,17 @@
   min-height: 60vh;
   text-align: center;
   padding: 3rem;
+  color: var(--color-text-light);
 }
 
+/* 스피너 — 모노크롬 */
 .loadingSpinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(0, 113, 227, 0.15);
-  border-top-color: var(--color-primary);
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-text);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.9s linear infinite;
   margin-bottom: 1.5rem;
 }
 
@@ -412,36 +451,39 @@
 }
 
 .errorIcon {
-  font-size: 4rem;
+  font-size: 3rem;
   margin-bottom: 1rem;
 }
 
 .errorContainer h2 {
-  font-size: 1.5rem;
-  color: var(--color-dark);
+  font-size: 1.25rem;
+  color: var(--color-text);
   margin-bottom: 1.5rem;
 }
 
+/* 홈으로 돌아가기 — 반전 pill */
 .backButton {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 1rem 2rem;
+  padding: 0.8rem 1.5rem;
   background: var(--color-primary);
-  color: white;
+  color: var(--color-on-primary);
   text-decoration: none;
   font-weight: 600;
-  border-radius: 12px;
-  transition: all var(--duration-base) var(--ease-smooth);
+  font-size: 0.95rem;
+  border-radius: var(--radius-chip);
+  transition: transform var(--duration-fast) var(--ease-smooth), opacity var(--duration-fast) var(--ease-smooth);
 }
 
 .backButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 113, 227, 0.3);
-  background: var(--color-primary-dark);
+  opacity: 0.92;
+  box-shadow: none;
+  background: var(--color-primary);
 }
 
-/* 모바일 반응형 */
+/* ── 반응형 ── */
 @media (max-width: 1024px) {
   .content {
     grid-template-columns: 1fr;
@@ -451,6 +493,9 @@
   .imageSection {
     position: relative;
     top: 0;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
   }
 }
 
@@ -460,37 +505,32 @@
   }
 
   .header {
-    margin-bottom: 1.5rem;
-  }
-
-  .backLink {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.9rem;
+    margin-bottom: 1rem;
   }
 
   .productName {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   .currentPrice {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   .originalPrice {
-    font-size: 1.2rem;
+    font-size: 1rem;
+  }
+
+  .discountRate {
+    font-size: 1.05rem;
   }
 
   .purchaseButton {
-    font-size: 1rem;
-    padding: 1.25rem 1.5rem;
-  }
-
-  .priceSection {
-    padding: 1.5rem;
+    font-size: 0.95rem;
+    padding: 0.9rem 1.25rem;
   }
 
   .infoCard {
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 }

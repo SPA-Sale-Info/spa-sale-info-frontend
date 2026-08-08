@@ -36,3 +36,14 @@ next-env.d.ts
 # AI assistant conversation logs
 CLAUDE.md
 GEMINI.md
+
+# AI agent skills (전역 설치 사용 - ~/.agents 및 ~/.claude/skills)
+.agents/
+.claude/skills/
+.claude/settings.local.json
+skills-lock.json
+
+# Higgsfield brandkit 작업 디렉터리
+# 팔레트/타이포 승인 상태와 리뷰용 HTML 보드가 생성되는 곳입니다.
+# 최종 결과(디자인 토큰)는 styles/globals.css에 반영되므로 산출물은 추적하지 않습니다.
+brandkit/

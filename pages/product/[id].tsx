@@ -82,23 +82,26 @@ function getBrandDisplayName(brandCode: Brand): string {
 
 /**
  * 성별 표시 메타 정보
+ * 에디토리얼 톤 유지를 위해 이모지 없이 텍스트 라벨만 사용합니다.
+ * (메인 페이지 상품 카드의 성별 배지와 동일한 문법)
  */
 function getGenderDisplayMeta(genderCode: Gender): GenderMeta | null {
   const genderMap: Record<Gender, GenderMeta> = {
-    MAN: { label: '남성', emoji: '👔' },
-    WOMAN: { label: '여성', emoji: '👗' },
-    UNISEX: { label: '공용', emoji: '🧥' },
+    MAN: { label: '남성', emoji: '' },
+    WOMAN: { label: '여성', emoji: '' },
+    UNISEX: { label: '공용', emoji: '' },
   }
   return genderMap[genderCode] || null
 }
 
-// 숫자 값을 "1,000원" 형태의 문자열로 변환
+// 숫자 값을 "₩1,000" 형태의 문자열로 변환
+// 메인 페이지 상품 카드(ProductCard)의 가격 표기(₩19,900)와 통일했습니다.
 function formatPriceValue(value: number | null | undefined): string {
   if (typeof value !== 'number' || Number.isNaN(value)) {
     return '가격 정보 없음'
   }
 
-  return `${value.toLocaleString('ko-KR')}원`
+  return `₩${value.toLocaleString('ko-KR')}`
 }
 
 /**
@@ -288,23 +291,18 @@ export default function ProductDetail() {
                 priority
               />
 
-              {/* 할인 뱃지 */}
-              {product.discountRate > 0 && (
-                <div className={styles.discountBadge}>
-                  {product.discountRate}% OFF
-                </div>
-              )}
+              {/* Framer 시안 문법: 할인율은 이미지 오버레이 배지가 아니라
+                  가격 행의 레드 텍스트("-75%")로 표시합니다. → 아래 priceSection 참고 */}
             </div>
           </div>
 
           {/* 오른쪽: 상품 정보 영역 */}
           <div className={styles.infoSection}>
-            {/* 브랜드 & 성별 */}
+            {/* 브랜드 & 성별 — 메인 카드와 동일: 대문자 브랜드 라벨 + 중립 성별 pill */}
             <div className={styles.meta}>
               <div className={styles.brandBadge}>{brandName}</div>
               {genderMeta && (
                 <div className={styles.genderBadge}>
-                  <span>{genderMeta.emoji}</span>
                   <span>{genderMeta.label}</span>
                 </div>
               )}
@@ -320,7 +318,7 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {/* 가격 정보 */}
+            {/* 가격 정보 — "₩14,900 ₩59,900 -75%" 한 줄 구성 (메인 카드의 확대판) */}
             <div className={styles.priceSection}>
               <div className={styles.currentPrice}>
                 {formatPriceValue(product.salePrice)}
@@ -330,18 +328,23 @@ export default function ProductDetail() {
                   {formatPriceValue(product.originalPrice)}
                 </div>
               )}
+              {product.discountRate > 0 && (
+                <div className={styles.discountRate} aria-label={`${product.discountRate}퍼센트 할인`}>
+                  -{product.discountRate}%
+                </div>
+              )}
             </div>
 
             {/* CTA 버튼 */}
             <div className={styles.actions}>
+              {/* 반전 pill 버튼 — 이모지 없이 텍스트만 (에디토리얼 톤) */}
               <a
                 href={product.productUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.purchaseButton}
               >
-                <span className={styles.buttonIcon}>🛒</span>
-                <span>{brandName}에서 구매하기</span>
+                <span>{brandName}에서 구매하기 →</span>
               </a>
             </div>
 
@@ -361,27 +364,28 @@ export default function ProductDetail() {
               <div className={styles.productSpecs}>
                 <h3 className={styles.specsTitle}>상품 정보</h3>
 
+                {/* 라벨(좌)·값(우) 헤어라인 행 — 히어로 무드보드 카드와 동일한 문법 */}
                 {(product.colors?.length ?? 0) > 0 && (
                   <div className={styles.specItem}>
-                    <div className={styles.specLabel}>🎨 색상</div>
+                    <div className={styles.specLabel}>색상</div>
                     <div className={styles.specValue}>
-                      {product.colors?.join(', ')}
+                      {product.colors?.join(' · ')}
                     </div>
                   </div>
                 )}
 
                 {(product.sizes?.length ?? 0) > 0 && (
                   <div className={styles.specItem}>
-                    <div className={styles.specLabel}>📏 사이즈</div>
+                    <div className={styles.specLabel}>사이즈</div>
                     <div className={styles.specValue}>
-                      {product.sizes?.join(', ')}
+                      {product.sizes?.join(' · ')}
                     </div>
                   </div>
                 )}
 
                 {product.material && (
                   <div className={styles.specItem}>
-                    <div className={styles.specLabel}>🧵 소재</div>
+                    <div className={styles.specLabel}>소재</div>
                     <div className={styles.specValue}>
                       {product.material}
                     </div>
@@ -390,7 +394,7 @@ export default function ProductDetail() {
 
                 {product.inStock !== undefined && (
                   <div className={styles.specItem}>
-                    <div className={styles.specLabel}>📦 재고</div>
+                    <div className={styles.specLabel}>재고</div>
                     <div className={styles.specValue}>
                       {product.inStock ? (
                         <span className={styles.inStock}>재고 있음</span>

@@ -133,13 +133,18 @@ export type Category = 'TOP' | 'BOTTOM' | 'OUTER' | 'SHOES' | 'ETC';
 
 /**
  * SortBy - 정렬 기준 컬럼
- * 백엔드에 전달하는 정렬 컬럼명입니다.
+ * 프론트에서 사용하는 논리적 정렬 키입니다.
+ * utils/api.ts에서 백엔드 실제 필드명으로 변환됩니다.
+ * (discount → discountRate, price → currentPrice, createdAt → createdAt)
  * - discount: 할인율
  * - price: 판매가
  * - createdAt: 등록일(최신순)
- * - popular: 인기(조회수/찜수 기반, 백엔드 지원 시)
+ *
+ * ※ 'popular'(인기순)는 제거했습니다: 백엔드가 viewCount 정렬을 지원하지 않고
+ *   ("지원하지 않는 세일 상품 정렬입니다" 400 응답), 실제 데이터에도
+ *   viewCount가 채워진 상품이 거의 없어(전체 3,928개 중 4개) 의미가 없기 때문입니다.
  */
-export type SortBy = 'discount' | 'price' | 'createdAt' | 'popular';
+export type SortBy = 'discount' | 'price' | 'createdAt';
 
 /**
  * SortDirection - 정렬 방향 (오름/내림차순)
@@ -171,7 +176,8 @@ export const SORT_OPTIONS: SortOption[] = [
   { value: 'price_asc', label: '가격 낮은순', sortBy: 'price', sortDirection: 'asc' },
   { value: 'price_desc', label: '가격 높은순', sortBy: 'price', sortDirection: 'desc' },
   { value: 'createdAt_desc', label: '최신 등록순', sortBy: 'createdAt', sortDirection: 'desc' },
-  { value: 'popular_desc', label: '인기순', sortBy: 'popular', sortDirection: 'desc' },
+  // '인기순'은 백엔드 미지원 + viewCount 데이터 부재로 제거되었습니다 (SortBy 주석 참고).
+  // URL에 남아있는 ?sort=popular_desc는 index.tsx에서 기본 정렬로 안전하게 폴백됩니다.
 ];
 
 /**

@@ -1,1880 +1,1140 @@
 /*
- * Home.module.css - SPA 할인 정보 대시보드를 위한 모던 랜딩 페이지 스타일링
- * 
- * 이 파일은 CSS Modules를 사용하여 각 클래스가 고유한 이름을 가지도록 컴파일됩니다.
- * 각 속성(Property)에 대한 상세한 설명을 주석으로 달았습니다.
+ * Home.module.css — ARCA 메인 지면 "LEDGER"
+ *
+ * ═══════════════════════════════════════════════════════════════════════
+ * 지면 구조
+ * ═══════════════════════════════════════════════════════════════════════
+ *   ┌ masthead ─────────────────────────────────────┐
+ *   │ ARCA / SPA Sale Archive   [검색]    ♥  ☾      │
+ *   │ 발행 · 수록 · 브랜드 · 최대 인하  ← 날짜줄     │
+ *   ╞═══════════════════════════════════════════════╡ ← 굵은 괘선
+ *   │ lead : 활자 블록 7        │  1번 항목 5       │
+ *   ├───────────────────────────────────────────────┤
+ *   │ band : 낙폭 상위 02~10 가로 밴드              │
+ *   ├───────────────────────────────────────────────┤
+ *   │ index : 브랜드 탭 / 조건 줄 / 번호 붙은 색인   │
+ *   └───────────────────────────────────────────────┘
+ *
+ * 섹션마다 리듬을 다르게 뒀습니다.
+ *   - lead  : 비대칭 2단, 큰 활자
+ *   - band  : 가로 스크롤, 낮은 높이
+ *   - index : 조밀한 다열 그리드
+ * 모든 섹션을 같은 max-width 박스에 같은 간격으로 반복하면 화면이
+ * "위에서 아래로 흐르는 카드 더미"가 되어 버립니다.
+ *
+ * 색·간격·라운딩은 전부 globals.css의 토큰을 씁니다.
+ * 하드코딩 색을 쓰면 다크 모드에서 그 부분만 굳어버립니다.
  */
 
-/* 
- * .container
- * 페이지 전체를 감싸는 최상위 컨테이너입니다.
- * 화면 중앙 정렬과 기본 배경색을 담당합니다.
- */
+/* ══════════════════════════════════════════════════════════════════════
+   골격
+   ══════════════════════════════════════════════════════════════════════ */
+
 .container {
-  /* 최소 높이를 뷰포트 높이(100vh)로 설정하여 콘텐츠가 적어도 화면을 꽉 채우게 합니다 */
   min-height: 100vh;
-
-  /* 패딩을 반응형으로 설정합니다. clamp(최소, 권장, 최대) 함수를 사용합니다.
-   * - 최소 1.5rem (약 24px)
-   * - 권장 3vw (뷰포트 너비의 3%)
-   * - 최대 2.5rem (약 40px)
-   * 화면 크기에 따라 적절한 여백이 자동으로 적용됩니다. */
-  padding: clamp(1.5rem, 3vw, 2.5rem);
-
-  /* 배경색을 CSS 변수(--color-bg-secondary)로 설정합니다.
-   * 다크 모드 지원을 위해 변수를 사용합니다. */
-  background: var(--color-bg-secondary);
-
-  /* Flexbox 레이아웃을 활성화합니다. 자식 요소들을 유연하게 배치할 수 있습니다. */
+  background: var(--color-bg);
   display: flex;
-
-  /* 자식 요소(mainContent)를 가로축(주축) 기준으로 중앙에 정렬합니다. */
   justify-content: center;
 }
 
-/* 
- * .leftAd, .rightAd
- * 좌우 광고 영역입니다. 현재 디자인에서는 사용하지 않으므로 숨깁니다.
- */
+/* 좌우 광고 자리 — 현재 미사용 */
 .leftAd,
 .rightAd {
-  /* 요소를 화면에서 완전히 제거합니다. 공간도 차지하지 않습니다. */
   display: none;
 }
 
-/* 
- * .mainContent
- * 실제 콘텐츠가 들어가는 중앙 영역입니다.
+/*
+ * 지면 폭 1240px.
+ * 좌우 패딩은 여기서 한 번만 주고 내부 섹션은 자기 패딩을 갖지 않습니다.
+ * (섹션마다 패딩을 따로 주면 정렬선이 조금씩 어긋납니다)
  */
 .mainContent {
-  /* 너비를 부모(.container)의 100%로 설정하여 가용 공간을 모두 씁니다. */
   width: 100%;
-
-  /* 최대 너비를 1120px로 제한합니다. 
-   * 화면이 아주 커져도 콘텐츠가 너무 퍼지지 않고 중앙에 모이게 합니다. */
-  max-width: 1120px;
-
-  /* Flexbox를 사용하여 내부 섹션들을 배치합니다. */
+  max-width: 1240px;
+  padding: 0 var(--space-8);
   display: flex;
-
-  /* 자식 요소들을 세로 방향(열)으로 쌓습니다. (기본값은 가로 방향) */
   flex-direction: column;
-
-  /* 자식 요소들 사이의 간격을 반응형으로 설정합니다.
-   * clamp를 사용하여 화면 크기에 따라 2rem ~ 3.5rem 사이로 조절됩니다. */
-  gap: clamp(2rem, 4vw, 3.5rem);
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   마스트헤드
+   ══════════════════════════════════════════════════════════════════════ */
+
 /*
- * ── Sticky Nav (v4 Apple HIG) ──
- * 전체 너비 sticky 헤더: backdrop-filter blur(20px) + saturate(180%)로 glassmorphism을 구현합니다.
- * 스크롤 전에는 border-bottom이 투명하고, 스크롤 후(stickyNavScrolled)에만 나타납니다.
+ * 불투명 지면 위의 제호입니다. blur·반투명을 쓰지 않습니다.
+ * sticky를 유지하되 스크롤하면 날짜줄이 접히고 제호 줄만 남아 얇아집니다.
  */
-.stickyNav {
+.masthead {
   position: sticky;
   top: 0;
   z-index: 50;
-  height: 52px;
   background: var(--color-surface);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 0.5px solid transparent;
-  transition: border-color var(--duration-base) var(--ease-smooth);
+  /* 지면 좌우 패딩을 상쇄해 괘선만 화면 끝까지 닿게 합니다. */
+  margin: 0 calc(var(--space-8) * -1);
+  padding: 0 var(--space-8);
+  border-bottom: 2px solid var(--color-rule-strong);
 }
 
-/* 스크롤 10px 이상 시 border-bottom 표시 */
-.stickyNavScrolled {
-  border-bottom-color: var(--color-border);
-}
-
-/*
- * .navInner
- * nav 내부 3-column 그리드: [로고(auto)] [검색창(1fr)] [액션(auto)]
- * 최대 너비 1160px, 가로 패딩 24px
- */
-.navInner {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 0 var(--space-6);
-  height: 100%;
+.mastheadInner {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-6);
+  padding: var(--space-4) 0 var(--space-3);
 }
 
-/*
- * .logo — ARCA 브랜드 로고
- * 이니셜 "A"에서 풀 네임 "ARCA"가 부드럽게 펼쳐지는 프리미엄 모노그램 애니메이션
- * baseline 정렬로 Noto Serif KR의 세리프 느낌을 활용합니다.
- */
+/* ── 제호 ── */
 .logo {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 1px;
   text-decoration: none;
   flex-shrink: 0;
-  gap: 0;
 }
 
-/*
- * ── Nav 검색창 ──
- * 중앙 컬럼을 차지하는 pill형 검색 입력창
- * focus-within 시 primary 색상으로 테두리 강조
- */
-.navSearchForm {
+.logoSegment {
+  display: inline-flex;
+  align-items: baseline;
+  overflow: hidden;
+}
+
+.logoChar,
+.logoWord {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+/* max-width 0 → 5rem으로 늘리며 "RCA"가 펼쳐집니다. */
+.logoWord {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width var(--duration-slow) var(--ease-smooth),
+    opacity var(--duration-slow) var(--ease-smooth);
+}
+
+.logoWordVisible {
+  max-width: 5rem;
+  opacity: 1;
+}
+
+/* 제호 부제 — 색인의 성격을 밝히는 한 줄 */
+.logoTagline {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-text-lighter);
+  white-space: nowrap;
+}
+
+/* ── 검색 ──
+ * 알약(pill)이 아니라 아래 괘선만 있는 입력 줄입니다.
+ * 장부의 기입란처럼 보이고, 상자를 하나 줄여 화면이 조용해집니다. */
+.searchForm {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  background: var(--color-bg-secondary);
-  border-radius: 10px;
-  border: 0.5px solid var(--color-border);
-  padding: 0 var(--space-3);
-  height: 36px;
-  transition:
-    border-color var(--duration-fast) var(--ease-smooth),
-    box-shadow var(--duration-fast) var(--ease-smooth);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 2px 6px;
+  max-width: 440px;
+  width: 100%;
+  justify-self: center;
+  transition: border-color var(--duration-fast) var(--ease-smooth);
 }
 
-.navSearchForm:focus-within {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+/* 포커스는 밑줄이 잉크색으로 진해지는 것으로 표현합니다(글로우 없음). */
+.searchForm:focus-within {
+  border-bottom-color: var(--color-rule-strong);
 }
 
-.navSearchIcon {
-  font-size: 14px;
-  color: var(--color-text-light);
+.searchIcon {
+  color: var(--color-text-lighter);
   flex-shrink: 0;
-  line-height: 1;
 }
 
-.navSearchInput {
+.searchInput {
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-text);
   outline: none;
   min-width: 0;
   font-family: var(--font-body);
 }
 
-.navSearchInput::placeholder {
-  color: var(--color-text-lighter);
-}
-
-.navSearchClear {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--color-text-light);
-  padding: 0 4px;
-  line-height: 1;
-  flex-shrink: 0;
-  transition: color var(--duration-fast);
-}
-
-.navSearchClear:hover {
-  color: var(--color-text);
-}
-
-/*
- * ── Nav 오른쪽 액션 영역 ──
- */
-.navActions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex-shrink: 0;
-}
-
-/* 찜 목록 링크 — 원형 아이콘 버튼 */
-.navIconBtn {
-  position: relative;
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  color: var(--color-text);
-  text-decoration: none;
-  transition: background var(--duration-fast) var(--ease-smooth);
-}
-
-.navIconBtn:hover {
-  background: var(--color-bg-secondary);
-}
-
-/* 찜 개수 뱃지 */
-.navBadge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
-  border: 1.5px solid var(--color-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-/* 레거시 호환 — 기존 코드에서 참조하는 클래스 (사용 없어도 빌드 오류 방지) */
-.navContent { display: none; }
-.navLinks { display: none; }
-.themeToggleWrapper { display: contents; }
-
-.navLinks {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.navLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.55rem 0.9rem;
-  background: var(--color-bg);
-  border: 1px solid var(--color-bg-tertiary);
-  border-radius: 10px;
-  color: var(--color-text);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-}
-
-.navLink:hover {
-  color: var(--color-primary);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
-}
-
-/* 
- * .themeToggleWrapper
- * 테마 토글 버튼을 감싸는 래퍼입니다. 네비게이션 박스 우측에 위치합니다.
- */
-.themeToggleWrapper {
-  /* 공간이 부족해도 이 요소의 크기가 줄어들지 않도록 강제합니다. */
-  flex-shrink: 0;
-}
-
-/* 
- * .logo
- * 사이트 로고 스타일입니다.
- */
-.logo {
-  /* Flexbox를 사용하여 로고 텍스트와 아이콘 등을 정렬합니다. */
-  display: flex;
-
-  /* 세로축 중앙 정렬 */
-  align-items: center;
-
-  /* 글자 사이 간격 */
-  gap: 0.35rem;
-
-  /* 글자 크기를 1.25rem(약 20px)으로 설정합니다. */
-  font-size: 1.25rem;
-
-  /* 글자 두께를 700(Bold)으로 설정합니다. */
-  font-weight: 700;
-}
-
-/* ARCA 로고 — 이니셜 "A"에서 "RCA"가 펼쳐지는 프리미엄 reveal 효과 */
-.logoSegment { display: inline-flex; align-items: baseline; overflow: hidden; }
-.logoChar {
-  color: var(--color-text);
-  font-family: var(--font-serif);
-  font-weight: 900;
-  font-size: 20px;
-  letter-spacing: 0.04em;
-}
-.logoWord {
-  max-width: 0;
-  opacity: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  transition: max-width 0.4s var(--ease-smooth), opacity 0.4s var(--ease-smooth);
-  font-family: var(--font-serif);
-  font-weight: 900;
-  font-size: 20px;
-  letter-spacing: 0.04em;
-  color: var(--color-text);
-}
-.logoWordVisible { max-width: 4rem; opacity: 1; }
-
-/* 레거시 찜 링크 클래스 — v4에서 navIconBtn/navBadge로 이전되었으나 빌드 오류 방지용으로 유지 */
-.favoritesLink { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--color-text); }
-.favoritesLink:hover { color: var(--color-primary); }
-.heartIcon { font-size: 1.2rem; }
-.favoritesText { color: var(--color-text); }
-.favoritesBadge {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 1.5rem; height: 1.5rem; padding: 0 0.4rem;
-  background: var(--color-primary); color: white;
-  border-radius: 12px; font-size: 0.75rem; font-weight: 700;
-}
-
-/* 
- * .hero
- * 페이지 상단의 메인 배너(Hero) 섹션입니다.
- */
-.hero {
-  /* 배경색 */
-  background: var(--color-bg);
-
-  /* 테두리 */
-  border: 1px solid var(--color-bg-tertiary);
-
-  /* 모서리 24px 둥글게 */
-  border-radius: 24px;
-
-  /* 반응형 패딩 적용 */
-  padding: clamp(2rem, 4vw, 3.5rem);
-
-  /* 큰 그림자 효과 적용 */
-  box-shadow: var(--shadow-lg);
-}
-
-/* 
- * .heroContent
- * Hero 섹션 내부의 레이아웃을 잡습니다.
- */
-.heroContent {
-  /* Grid 레이아웃 사용 */
-  display: grid;
-
-  /* 2개의 열로 나눕니다. 
-   * 첫 번째 열(텍스트)은 1.15 비율, 두 번째 열(이미지)은 0.85 비율로 공간을 나눕니다.
-   * minmax(0, ...)은 콘텐츠가 넘칠 때 레이아웃이 깨지는 것을 방지합니다. */
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-
-  /* 열 사이의 간격을 반응형으로 설정 */
-  gap: clamp(2rem, 6vw, 3.5rem);
-
-  /* 세로축 중앙 정렬 */
-  align-items: center;
-}
-
-/* Hero 텍스트 영역 */
-.heroText {
-  /* Flexbox 사용 */
-  display: flex;
-
-  /* 세로 방향으로 배치 */
-  flex-direction: column;
-
-  /* 요소 간격 1.5rem */
-  gap: 1.5rem;
-}
-
-/* 
- * .heroKicker
- * 제목 위에 작게 들어가는 강조 문구입니다.
- */
-.heroKicker {
-  /* 인라인 Flexbox */
-  display: inline-flex;
-
-  /* 세로 중앙 정렬 */
-  align-items: center;
-
-  /* 간격 */
-  gap: 0.5rem;
-
-  /* 글자 크기 작게 */
-  font-size: 0.85rem;
-
-  /* 자간을 넓게(0.24em) 설정하여 세련된 느낌 */
-  letter-spacing: 0.24em;
-
-  /* 대문자로 변환 */
-  text-transform: uppercase;
-
-  /* 두께 600 */
-  font-weight: 600;
-
-  /* 포인트 색상 사용 */
-  color: var(--color-primary);
-}
-
-/* Kicker 앞의 장식용 가로선 */
-.heroKicker::before {
-  content: '';
-  /* 내용 없음 */
-  display: inline-block;
-  /* 블록 성질을 가짐 */
-  width: 28px;
-  /* 너비 28px */
-  height: 1px;
-  /* 높이 1px */
-  background: currentColor;
-  /* 부모의 글자색(Primary)을 상속받아 배경색으로 사용 */
-}
-
-/* Hero 메인 제목 */
-.heroTitle {
-  /* 반응형 글자 크기: 최소 2.4rem ~ 최대 3.2rem */
-  font-size: clamp(2.4rem, 4vw, 3.2rem);
-
-  /* 자간을 약간 좁게(-0.03em) 하여 타이틀의 밀도감을 높임 */
-  letter-spacing: -0.03em;
-}
-
-/* Hero 부제목 */
-.heroSubtitle {
-  /* 글자 크기 */
-  font-size: 1.05rem;
-
-  /* 밝은 텍스트 색상 */
-  color: var(--color-text-light);
-
-  /* 한 줄이 너무 길어지지 않도록 최대 너비 제한 */
-  max-width: 520px;
-}
-
-/* 체크리스트 컨테이너 */
-.heroChecklist {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-/* 체크리스트 아이템 */
-.heroChecklistItem {
-  display: grid;
-
-  /* 아이콘 영역(48px)과 텍스트 영역(나머지)으로 분할 */
-  grid-template-columns: 48px 1fr;
-
-  /* 상단 정렬 */
-  align-items: start;
-
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  border-radius: 12px;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-bg-tertiary);
-}
-
-/* 체크리스트 강조 텍스트 */
-.heroChecklistItem span {
-  font-weight: 700;
-  color: var(--color-primary);
-  letter-spacing: 0.08em;
-}
-
-/* 체크리스트 설명 텍스트 */
-.heroChecklistItem p {
-  margin: 0;
-  color: var(--color-text);
-}
-
-/* 인사이트(통계) 영역 */
-.heroInsights {
-  margin-top: 1.5rem;
-  display: grid;
-
-  /* 카드의 최소 너비를 200px로 설정하고, 공간이 남으면 자동으로 열을 늘림 (반응형 그리드) */
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-
-  gap: 1rem;
-}
-
-/* 인사이트 카드 */
-.heroInsightCard {
-  padding: 1.25rem 1.5rem;
-  border-radius: 16px;
-  background: var(--color-bg-secondary);
-  color: var(--color-text);
-  box-shadow: var(--shadow-md);
-}
-
-/* 인사이트 라벨 */
-.heroInsightLabel {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-light);
-}
-
-/* 인사이트 숫자 */
-.heroInsightCard strong {
-  display: block;
-  /* 줄바꿈 */
-  font-size: 1.4rem;
-  margin: 0.5rem 0;
-}
-
-/* 인사이트 부가 설명 */
-.heroInsightCard small {
-  font-size: 0.85rem;
-  color: var(--color-text-light);
-}
-
-/* 숫자 카운팅 애니메이션용 클래스 */
-.countNumber {
-  /* 숫자의 너비를 고정폭(tabular)으로 설정하여 숫자가 바뀔 때 흔들림 방지 */
-  font-variant-numeric: tabular-nums;
-
-  transition: all 0.3s ease;
-  display: inline-block;
-
-  /* 최소 너비를 확보하여 숫자가 없을 때도 공간 유지 */
-  min-width: 6ch;
-}
-
-/* Hero 우측 비주얼 영역 */
-.heroVisual {
-  display: flex;
-  justify-content: center;
-}
-
-/* 무드보드 스타일 카드 */
-.heroMoodBoard {
-  width: 100%;
-  max-width: 320px;
-  border-radius: var(--radius-2xl);
-  border: 1px solid rgba(15, 23, 42, 0.2);
-  padding: 1.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-
-  /* 매우 부드럽고 깊은 그림자 효과 */
-  box-shadow: 0 35px 65px -40px rgba(15, 23, 42, 0.7);
-}
-
-.heroMoodTitle {
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: inherit;
-}
-
-.heroMoodRow {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.heroMoodRow span {
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
-  color: inherit;
-  opacity: 0.85;
-}
-
-.heroMoodRow strong {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: inherit;
-}
-
-.heroMoodNote {
-  font-size: 0.9rem;
-  line-height: 1.6;
-  color: inherit;
-  opacity: 0.9;
-}
-
-/* 
- * .main
- * Hero 섹션 아래의 주요 콘텐츠 영역입니다.
- */
-.main {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(2rem, 4vw, 3rem);
-}
-
-/* 섹션 헤더 (제목, 검색창 등 포함) */
-.sectionHeader {
-  display: flex;
-  justify-content: space-between;
-
-  /* 하단 정렬하여 텍스트 베이스라인을 맞춤 */
-  align-items: flex-end;
-
-  gap: 1.5rem;
-
-  /* 공간이 부족하면 줄바꿈 */
-  flex-wrap: wrap;
-}
-
-.sectionTitle {
-  font-size: clamp(1.75rem, 3vw, 2.3rem);
-}
-
-.sectionSubtitle {
-  font-size: 1rem;
-  color: var(--color-text-light);
-  max-width: 440px;
-}
-
-/* 검색바 래퍼 */
-.searchBarWrap {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  padding: 0;
-}
-
-/* 검색 폼 */
-.searchForm {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  padding: 0.75rem 1rem;
-
-  /* 둥근 알약 모양 */
-  border-radius: 100px;
-
-  background: var(--color-bg);
-  border: 1px solid var(--color-bg-tertiary);
-  box-shadow: var(--shadow-sm);
-}
-
-/* 검색 입력 필드 */
-.searchInput {
-  flex: 1;
-  /* 남은 공간 차지 */
-  border: none;
-  /* 기본 테두리 제거 */
-  background: transparent;
-  /* 배경 투명 */
-  font-size: 1rem;
-  color: var(--color-text);
-}
-
-/* 플레이스홀더 스타일 */
 .searchInput::placeholder {
   color: var(--color-text-lighter);
 }
 
-/* 검색 버튼 (v4: Apple Blue) */
-.searchButton {
-  padding: 0.5rem 1.25rem;
-  border-radius: 100px;
-  border: none;
-  background: var(--color-primary);
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--duration-base) var(--ease-smooth);
-  box-shadow: 0 2px 6px rgba(0, 113, 227, 0.25);
-  font-family: var(--font-body);
-}
-
-.searchButton:hover,
-.searchButton:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 113, 227, 0.35);
-  background: var(--color-primary-dark);
-}
-
-/* 
- * .filterToggleButton
- * 모바일에서 필터 패널을 여는 플로팅 버튼입니다.
- */
-/* filterToggleButton (v4: FAB 스타일, Apple Blue) */
-.filterToggleButton {
-  position: fixed;
-  bottom: 6rem;
-  right: 1.5rem;
-  z-index: 100;
+.searchClear {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  background: var(--color-text);
-  color: var(--color-bg);
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   border: none;
-  border-radius: 100px;
-  box-shadow: var(--shadow-fab);
+  background: none;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95rem;
-  font-family: var(--font-body);
-  transition: transform var(--duration-base) var(--ease-spring), box-shadow var(--duration-base);
-}
-
-.filterToggleButton:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-fab);
-}
-
-.filterToggleIcon {
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
-.filterToggleText {
-  font-weight: 600;
-}
-
-/* 
- * .filterOverlay
- * 모바일에서 필터 패널이 열렸을 때 뒤에 깔리는 어두운 배경입니다.
- */
-.filterOverlay {
-  position: fixed;
-
-  /* 상하좌우 0으로 설정하여 전체 화면 덮기 */
-  inset: 0;
-
-  /* 반투명 검은색 */
-  background: rgba(0, 0, 0, 0.5);
-
-  z-index: 40;
-
-  /* 배경 블러 처리 */
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-
-  /* 페이드인 애니메이션 */
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-/* 
- * .filterPanel
- * 필터 옵션들이 들어있는 패널입니다.
- * 모바일에서는 바텀 시트(Bottom Sheet) 형태로, PC에서는 일반 패널로 동작합니다.
- */
-.filterPanel {
-  /* 모바일 기본값: 화면 하단에 고정 */
-  position: fixed;
-
-  /* 초기 상태: 화면 아래로 숨김 (-100%) */
-  bottom: -100%;
-
-  left: 0;
-  right: 0;
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem;
-
-  /* 최대 높이를 화면의 85%로 설정 (dvh: 동적 뷰포트 높이 사용) */
-  max-height: 85vh;
-  max-height: 85dvh;
-
-  /* 내용이 넘치면 스크롤 */
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  /* iOS 부드러운 스크롤 */
-  overscroll-behavior: contain;
-  /* 스크롤 체이닝 방지 */
-  touch-action: pan-y;
-  /* 수직 스크롤 허용 */
-
-  /* 하단 여백 확보 (스크롤 시 잘림 방지) */
-  padding-bottom: calc(3rem + env(safe-area-inset-bottom));
-
-  /* 상단 모서리만 둥글게 */
-  border-radius: 20px 20px 0 0;
-
-  background: var(--color-bg);
-  border: 1px solid var(--color-bg-tertiary);
-  box-shadow: var(--shadow-xl);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-
-  /* 위치 변화 애니메이션 */
-  transition: bottom 0.3s ease;
-}
-
-/* 필터 패널이 열렸을 때 */
-.filterPanelVisible {
-  /* 화면 하단에 붙임 */
-  bottom: 0;
-}
-
-.brandFilterGroup {
-  width: 100%;
-}
-
-.filterGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.filterRow {
-  display: grid;
-  /* 2열 그리드 */
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem;
-}
-
-.filterLabel {
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: 12px;
   color: var(--color-text-light);
-  text-transform: uppercase;
+  flex-shrink: 0;
+  transition: color var(--duration-fast);
 }
 
-.sortButtons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.sortButton {
-  flex: 1;
-  /* 버튼 크기 균등 분할 */
-  padding: 0.65rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-text-light);
-  background: var(--color-bg);
-  border: 1px solid var(--color-bg-tertiary);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.sortButton:hover {
-  background: var(--color-bg-secondary);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-/* 활성화된 정렬 버튼 */
-.sortButtonActive {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: white;
-  font-weight: 600;
-}
-
-.sortButtonActive:hover {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: white;
-  opacity: 0.9;
-}
-
-/* 로딩 상태 */
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 2.5rem;
-  border-radius: var(--radius-xl);
-  border: 1px dashed var(--color-text-lighter);
-  color: var(--color-text-light);
-  background: var(--color-bg);
-}
-
-/* 로딩 스피너 (v4: Apple Blue) */
-.loadingSpinner {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 3px solid rgba(0, 113, 227, 0.20);
-  border-top-color: var(--color-primary);
-  animation: spin 0.9s linear infinite;
-}
-
-.loadingText {
-  font-weight: 500;
-}
-
-/* 에러 상태 */
-.errorState {
-  display: grid;
-  gap: 0.6rem;
-  justify-items: center;
-  padding: 2.5rem;
-  border-radius: var(--radius-xl);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  background: rgba(254, 226, 226, 0.6);
-  color: #b91c1c;
-  text-align: center;
-}
-
-.errorTitle {
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-.errorDescription {
-  color: rgba(153, 27, 27, 0.8);
-  line-height: 1.6;
-  max-width: 420px;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 상품 목록 그리드 (v4: 240px 최소 너비, 20px 간격) */
-.productsGrid {
-  display: grid;
-  gap: 20px;
-  /* v4: 8pt 그리드 기준 2.5단위 */
-  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
-}
-
-/* ── 최대 할인율 TOP 스트립 ───────────────────────────────────── */
-.highlightSection {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 0;
-}
-
-.highlightHeader {
-  margin-bottom: 1rem;
-}
-
-.highlightTitle {
-  font-size: 1.25rem;
-  font-weight: 800;
+.searchClear:hover {
   color: var(--color-text);
+}
+
+/* ── 우측 액션 ── */
+.mastheadActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.iconLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+  color: var(--color-text);
+  text-decoration: none;
+  padding: 4px;
+  transition: opacity var(--duration-fast);
+}
+
+.iconLink:hover {
+  opacity: 0.6;
+}
+
+/*
+ * 찜 개수 — 빨간 원형 배지가 아니라 모노 숫자입니다.
+ * Ledger 4번 규칙상 빨강은 인하폭 전용이고, 배지 남발도 피합니다.
+ */
+.iconLinkCount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 날짜줄 ── */
+.dateline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+  padding: var(--space-2) 0 var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.datelineItem {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+/* 라벨 — 장부 열 머리글 톤 */
+.datelineItem dt {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-lighter);
+}
+
+.datelineItem dd {
   margin: 0;
 }
 
-.highlightSubtitle {
-  font-size: 0.9rem;
-  color: var(--color-text-light);
-  margin: 0.25rem 0 0;
+/* 값 — 전부 모노 등폭 */
+.datelineFigure {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
-/* 가로 스크롤 컨테이너 */
-.highlightStrip {
+/* 최대 인하만 Markdown Red */
+.datelineAccent {
+  color: var(--color-discount);
+  font-weight: 700;
+}
+
+/*
+ * 스크롤하면 날짜줄을 접어 제호만 남깁니다.
+ * 목록을 훑는 동안 헤더가 화면을 덜 차지하도록 하되,
+ * 맨 위로 돌아오면 발행 정보가 다시 펼쳐집니다.
+ */
+.mastheadScrolled .dateline {
+  display: none;
+}
+
+.mastheadScrolled .mastheadInner {
+  padding: var(--space-2) 0;
+}
+
+.mastheadScrolled .logoTagline {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   리드 — 1면
+   ══════════════════════════════════════════════════════════════════════ */
+
+/*
+ * 비대칭 2단(7:5). 대칭 2단은 어느 쪽이 주인공인지 알려주지 않습니다.
+ * 좌측 활자 블록이 넓고 우측 실물 항목이 좁게 들어가, 시선이
+ * 제목 → 항목 순으로 흐릅니다.
+ */
+.lead {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: var(--space-12);
+  align-items: start;
+  padding: var(--space-12) 0 var(--space-10);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.leadText {
   display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
+  flex-direction: column;
 }
 
-/* 각 항목 고정 너비 (ProductCard가 이 너비를 채움) */
-.highlightItem {
+.leadTitle {
+  font-size: clamp(2.2rem, 4.4vw, 3.4rem);
+  font-weight: 780;
+  letter-spacing: -0.052em;
+  line-height: 1.02;
+  margin: 0 0 var(--space-5);
+}
+
+/* 리드 본문 — 제목보다 확실히 작고 조용하게 */
+.leadStanding {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--color-text-light);
+  max-width: 34em;
+  margin: 0 0 var(--space-6);
+}
+
+/*
+ * 오늘의 시선 — 위쪽 괘선으로 본문과 분리한 주석 줄입니다.
+ * 카드로 감싸지 않고 선 하나로만 구분해 위계를 낮춥니다.
+ */
+/*
+ * margin-top을 auto로 두면 이 줄이 좌측 단 맨 아래로 밀려납니다.
+ * 우측 단(사진)이 더 길기 때문에 제목과 주석 사이에 300px 넘는 빈 구멍이
+ * 생겨 "덜 채워진 화면"처럼 보였습니다. 본문 바로 아래에 붙입니다.
+ */
+.leadNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px var(--space-3);
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.leadNoteLabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-lighter);
+}
+
+.leadNote strong {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.leadNote span:not(.leadNoteLabel):not(.leadNoteMood) {
+  color: var(--color-text-light);
+}
+
+.leadNoteMood {
+  font-size: 12px;
+  color: var(--color-text-lighter);
+}
+
+/* ── 1번 항목 ──
+ * max-width가 반드시 필요합니다.
+ * 우측 단(1240px 지면에서 약 470px)을 그대로 채우면 3:4 이미지가 620px 넘게
+ * 자라서 리드 하나가 화면 한 장을 통째로 먹습니다. 1면의 사진은 제목보다
+ * 커서는 안 되므로 280px로 묶고, 남는 폭은 여백으로 둡니다. */
+.leadFeature {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 220px;
+  margin-left: auto;
+}
+
+.leadFeatureLabel {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-light);
+}
+
+/* 01 — 리드 항목의 색인 번호. 유일하게 크게 쓰는 번호입니다. */
+.leadFeatureRank {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-discount);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* 데이터 도착 전 자리표시 — 3:4 비율을 미리 잡아 레이아웃이 튀지 않게 합니다. */
+.leadFeaturePlaceholder {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-card);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   밴드 — 낙폭 상위 (가로)
+   ══════════════════════════════════════════════════════════════════════ */
+
+.band {
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.bandHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+/*
+ * 섹션 제목 — 리드 제목과 확실히 다른 위계입니다.
+ * 큰 활자를 반복하지 않고, 작고 넓은 자간의 라벨로 처리해
+ * "여기는 부속 목록"임을 알립니다.
+ */
+.bandTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+.bandHint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-lighter);
+  white-space: nowrap;
+}
+
+/*
+ * 가로 스크롤 목록.
+ * ul/li로 마크업해 스크린리더가 "목록, 항목 N개"로 안내합니다.
+ */
+.bandStrip {
+  display: flex;
+  gap: var(--space-5);
+  overflow-x: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 var(--space-2);
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.bandStrip::-webkit-scrollbar {
+  display: none;
+}
+
+.bandItem {
   flex: 0 0 auto;
-  width: 200px;
+  width: 168px;
   scroll-snap-align: start;
 }
 
-@media (max-width: 768px) {
-  .highlightItem {
-    width: 160px;
-  }
-}
+/* ══════════════════════════════════════════════════════════════════════
+   색인 — 전체 목록
+   ══════════════════════════════════════════════════════════════════════ */
 
-/* ── 자연어 검색 해석 칩 ──────────────────────────────────────── */
-.parsedChips {
+.index {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0.25rem 0 0.75rem;
+  flex-direction: column;
+  padding: var(--space-10) 0 var(--space-20);
 }
 
-.parsedChipsLabel {
-  font-size: 12px;
-  font-weight: 600;
+.indexHeader {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+
+.indexTitle {
+  margin: 0;
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 780;
+  letter-spacing: -0.04em;
+}
+
+.indexSubtitle {
+  margin: 0;
+  font-size: 13px;
   color: var(--color-text-light);
 }
 
-.parsedChip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.7rem;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-primary);
-  background: rgba(0, 113, 227, 0.08);
-  border: 1px solid rgba(0, 113, 227, 0.18);
-  border-radius: 999px;
+/* 브랜드 탭 줄 */
+.browseBar {
+  padding-bottom: var(--space-4);
 }
 
-/* ── 결과/정렬 툴바 ───────────────────────────────────────────── */
+/* ── 조건 줄 (결과 수 / 필터 / 정렬) ──
+ * 위아래 괘선으로 닫힌 한 줄입니다. 목록을 훑는 동안 계속 필요하므로
+ * 마스트헤드 아래에 sticky로 붙입니다. 배경은 반투명이 아니라 지면색
+ * 그대로라 뒤 이미지가 비치지 않습니다. */
 .resultsToolbar {
+  position: sticky;
+  /* 스크롤 시 날짜줄이 접힌 마스트헤드 높이(약 50px)에 딱 붙입니다.
+   * 값이 크면 두 줄 사이로 상품 이미지가 스쳐 지나가 지저분해집니다. */
+  top: 50px;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-3);
   flex-wrap: wrap;
-  margin: 0.5rem 0 1.25rem;
+  padding: var(--space-3) 0;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-rule-strong);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .resultsCount {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-light);
+}
+
+/* 숫자만 모노 + 잉크색 — 이 줄의 핵심 정보입니다. */
+.resultsCount strong {
+  font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 700;
   color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin-right: 2px;
 }
 
 .toolbarActions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
-}
-
-/* 품절 제외 토글 버튼 (체크박스 형태) */
-.soldOutToggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.85rem;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-light);
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-bg-tertiary);
-  border-radius: 999px;
-  cursor: pointer;
-  transition: all 150ms var(--ease-smooth);
-}
-
-.soldOutToggle:hover {
-  border-color: var(--color-text-lighter);
-}
-
-.soldOutToggleActive {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  background: rgba(0, 113, 227, 0.08);
-}
-
-.soldOutToggleCheck {
-  font-size: 14px;
-  line-height: 1;
-}
-
-/* 빈 상태 (상품 없음) */
-.emptyState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 3rem 1.5rem;
-  border-radius: var(--radius-2xl);
-  background: var(--color-bg-secondary);
-  border: 1px dashed var(--color-text-lighter);
-  color: var(--color-text-light);
-  text-align: center;
-
-  /* 그리드의 모든 열을 차지하도록 설정 */
-  grid-column: 1 / -1;
-}
-
-.emptyIcon {
-  font-size: 2rem;
-}
-
-.emptyTitle {
-  font-size: 1.25rem;
-  color: var(--color-dark);
-  font-weight: 600;
-}
-
-.emptyDescription {
-  text-align: center;
-  line-height: 1.6;
-}
-
-/* 푸터 */
-.footer {
-  margin-top: clamp(2.5rem, 5vw, 4rem);
-  padding-bottom: 1rem;
-}
-
-.footerContent {
-  display: grid;
-  gap: 1rem;
-  justify-items: center;
-  text-align: center;
-  padding: 2.5rem 1.5rem;
-  border-radius: var(--radius-2xl);
-  background: var(--color-bg-secondary);
-  color: var(--color-text-light);
-}
-
-.footerTitle {
-  font-size: 1.35rem;
-  color: var(--color-text);
-}
-
-.footerText {
-  font-size: 0.95rem;
-  color: var(--color-text-light);
-  max-width: 460px;
-}
-
-.footerLinks {
-  display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.footerLink {
-  font-weight: 500;
-  color: var(--color-text-light);
-  padding: 0.4rem 0.85rem;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-bg-tertiary);
-  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
-}
-
-.footerLink:hover,
-.footerLink:focus-visible {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  background: var(--color-bg-tertiary);
-}
-
-/* 
- * 미디어 쿼리: PC 화면 (769px 이상)
- * 모바일 전용 UI를 숨기고 PC 레이아웃을 적용합니다.
- */
-@media (min-width: 769px) {
-  .filterToggleButton {
-    display: none;
-    /* 플로팅 버튼 숨김 */
-  }
-
-  .filterOverlay {
-    display: none;
-    /* 오버레이 숨김 */
-  }
-
-  /* 필터 패널을 바텀 시트에서 일반 사이드바/상단 바로 변경 */
-  .filterPanel {
-    position: relative !important;
-    /* 고정 위치 해제 */
-    bottom: auto !important;
-    left: auto !important;
-    right: auto !important;
-    z-index: 15;
-    max-height: none !important;
-    /* 높이 제한 해제 */
-    overflow: visible !important;
-    /* 스크롤 해제 */
-    border-radius: 20px;
-    margin-bottom: 2rem;
-    padding: 1.5rem !important;
-    opacity: 1 !important;
-    background: var(--color-bg);
-    border: 1px solid var(--color-bg-tertiary);
-    box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    display: flex !important;
-    flex-direction: column;
-    gap: 1.5rem;
-    transition: none;
-    /* 애니메이션 제거 */
-  }
-
-
-}
-
-/* 
- * 미디어 쿼리: 태블릿/노트북 (1024px 이하)
- */
-@media (max-width: 1024px) {
-  .heroContent {
-    grid-template-columns: 1fr;
-    /* 1열로 변경 */
-  }
-
-  .heroVisual {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    /* 3열로 변경 */
-  }
-
-  .sectionHeader {
-    align-items: flex-start;
-    /* 좌측 정렬 */
-  }
-
-  .searchForm {
-    flex-direction: column;
-    /* 세로 배치 */
-    align-items: stretch;
-    /* 너비 꽉 채우기 */
-    border-radius: var(--radius-xl);
-  }
-
-  .searchButton {
-    width: 100%;
-    /* 버튼 너비 100% */
-  }
-}
-
-/* 
- * 미디어 쿼리: 모바일 (768px 이하)
- */
-@media (max-width: 768px) {
-  .navLinks {
-    display: none;
-    /* 네비게이션 링크 숨김 */
-  }
-
-  .hero {
-    padding: 2rem;
-  }
-
-  .heroVisual {
-    grid-template-columns: 1fr;
-    /* 1열로 변경 */
-  }
-
-  .heroStats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    /* 2열로 변경 */
-  }
-
-  .sectionHeader {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .productsGrid {
-    grid-template-columns: repeat(2, 1fr);
-    /* 2열 고정 */
-    gap: 1rem;
-  }
-
-  .footerContent {
-    padding: 2rem 1.25rem;
-  }
-
-  .filterPanel {
-    gap: 1rem;
-    padding: 1.25rem;
-  }
-
-  .filterRow {
-    grid-template-columns: 1fr;
-    /* 1열로 변경 */
-    gap: 1rem;
-  }
-
-  /* 검색바를 상단에 고정 (Sticky) */
-  .searchBarWrap {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    padding: 0.75rem 1.25rem 1rem;
-    margin: 0 -1.25rem 0.5rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-
-    /* 배경에 그라데이션을 주어 자연스럽게 섞이도록 함 */
-    background: linear-gradient(180deg, #f8fafc 0%, rgba(248, 250, 252, 0.95) 80%, transparent 100%);
-
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-  }
-
-  .filterToggleButton {
-    bottom: 5rem;
-    right: 1rem;
-    padding: 0.65rem 1.1rem;
-    font-size: 0.9rem;
-  }
-}
-
-/* 
- * 미디어 쿼리: 작은 모바일 (540px 이하)
- */
-@media (max-width: 540px) {
-  .container {
-    padding: 1.25rem;
-  }
-
-  .heroStats {
-    grid-template-columns: 1fr;
-    /* 1열로 변경 */
-  }
-
-  .primaryCTA {
-    width: 100%;
-  }
-
-  .filterPanel {
-    padding: 1.25rem;
-  }
 }
 
 /*
- * .scrollTopButton (v4 FAB 스타일)
- * 맨 위로 가기 버튼: 진한 배경 + var(--shadow-fab) 그림자
+ * 조건 줄의 버튼
+ * 테두리 상자가 아니라 "밑줄 있는 텍스트 컨트롤"입니다.
+ * 이 줄에만 컨트롤이 3개인데 전부 상자로 두르면 줄 자체가 시끄러워집니다.
  */
-.scrollTopButton {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  width: 44px;
-  height: 44px;
+.toolbarButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-family: var(--font-body);
+  color: var(--color-text-light);
+  background: none;
   border: none;
-  border-radius: 999px;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color var(--duration-fast) var(--ease-smooth),
+    border-color var(--duration-fast) var(--ease-smooth);
+}
+
+.toolbarButton:hover {
+  color: var(--color-text);
+  border-bottom-color: var(--color-border);
+}
+
+/* 활성 — 잉크색 + 실선 밑줄 */
+.toolbarButtonActive {
+  color: var(--color-text);
+  border-bottom-color: var(--color-rule-strong);
+}
+
+/* 품절 제외 체크박스 — 문자(☑/☐) 대신 CSS로 그립니다.
+ * 기호 문자는 OS 폰트마다 크기·정렬이 달라 줄 높이가 흔들립니다. */
+.toolbarCheck {
+  width: 11px;
+  height: 11px;
+  border: 1px solid currentColor;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.toolbarButtonActive .toolbarCheck::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 3px;
+  height: 6px;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+/* 활성 필터 개수 — 모노 숫자 (원형 배지 아님) */
+.toolbarCount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-discount);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * 상세 필터 접이식 영역
+ *
+ * ⚠️ [hidden] 규칙이 반드시 필요합니다.
+ * 브라우저 기본 [hidden] { display: none }은 여기서 주는 display: grid에
+ * 명시도로 밀립니다. 같은 클래스에 [hidden] 조합을 명시해야
+ * 닫힌 패널이 탭 순서와 접근성 트리에서 실제로 빠집니다.
+ */
+.detailFilters {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailFilters[hidden] {
+  display: none;
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.filterLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-light);
+}
+
+/* ── 적용된 조건 ── */
+.activeFilters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.activeFiltersLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-lighter);
+}
+
+.activeFiltersList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 조건 칩 — 각진 아웃라인. 누르면 그 조건만 풀립니다. */
+.activeFilterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-chip);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+
+.activeFilterChip:hover {
   background: var(--color-text);
   color: var(--color-bg);
-  font-size: 1.1rem;
+}
+
+.activeFilterChipRemove {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.resetButton {
+  margin-left: auto;
+  padding: 2px 0;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  color: var(--color-text-light);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
+}
+
+.resetButton:hover {
+  color: var(--color-text);
+  border-bottom-color: var(--color-text);
+}
+
+/* ── 검색 해석 칩 ── */
+.parsedChips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: var(--space-3) 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.parsedChipsLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-lighter);
+  margin-right: 2px;
+}
+
+.parsedChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-chip);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   색인 그리드
+   ══════════════════════════════════════════════════════════════════════
+   auto-fill + minmax(168px, 1fr): 1240px 지면에서 6열까지 늘어납니다.
+   세일 목록은 "한 화면에서 몇 건을 훑을 수 있는가"가 핵심이라 밀도를 높였습니다.
+   행 간격(40px)이 열 간격(20px)보다 넉넉한 이유: 각 항목 위에 괘선이
+   그어지므로 세로로 숨 쉴 공간이 있어야 표처럼 읽힙니다.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.productsGrid {
+  display: grid;
+  gap: var(--space-10) var(--space-5);
+  grid-template-columns: repeat(auto-fill, minmax(min(168px, 100%), 1fr));
+  padding-top: var(--space-8);
+}
+
+/* ── 스켈레톤 ──
+ * 실제 항목과 같은 그리드·비율을 써야 로딩이 끝나는 순간 레이아웃이
+ * 튀지 않습니다(누적 레이아웃 이동 방지). */
+.skeletonGrid {
+  display: grid;
+  gap: var(--space-10) var(--space-5);
+  grid-template-columns: repeat(auto-fill, minmax(min(168px, 100%), 1fr));
+  padding-top: var(--space-8);
+}
+
+.skeletonCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  padding-top: 10px;
+}
+
+.skeletonImage {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-card);
+  background: linear-gradient(90deg,
+      var(--shimmer-from) 25%,
+      var(--shimmer-to) 50%,
+      var(--shimmer-from) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+/*
+ * ⚠️ @keyframes를 이 파일에 정의하는 이유
+ * CSS Modules는 .module.css 안의 animation-name을 스코프 처리합니다.
+ * `animation: shimmer`는 `Home_shimmer__해시`로 컴파일되므로,
+ * globals.css의 전역 @keyframes shimmer와는 이름이 맞지 않습니다.
+ */
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+.skeletonBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeletonLine {
+  height: 10px;
+  background: linear-gradient(90deg,
+      var(--shimmer-from) 25%,
+      var(--shimmer-to) 50%,
+      var(--shimmer-from) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   빈 상태 / 에러
+   ══════════════════════════════════════════════════════════════════════ */
+
+/*
+ * 빈 상태 — 그리드 전 열을 차지합니다.
+ * 상자 대신 위아래 괘선으로 "여기 원래 항목이 들어올 자리"를 표시합니다.
+ */
+.emptyState {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.emptyTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.emptyDescription {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-light);
+  max-width: 36em;
+}
+
+.emptyActionButton {
+  margin-top: var(--space-2);
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-family: var(--font-body);
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-chip);
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--ease-smooth);
+}
+
+.emptyActionButton:hover {
+  opacity: 0.82;
+}
+
+/*
+ * 에러 — 상자·연분홍 배경 없이 왼쪽 세로 괘선만 Markdown Red로 씁니다.
+ */
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-6) 0 var(--space-6) var(--space-5);
+  margin-top: var(--space-8);
+  border-left: 2px solid var(--color-danger);
+}
+
+.errorTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.errorDescription {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-light);
+  max-width: 40em;
+}
+
+.errorRetryButton {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-chip);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+
+.errorRetryButton:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.loadMoreError {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
+  margin-top: var(--space-8);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.loadMoreErrorText {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-light);
+}
+
+/* 목록 끝 — 무한 스크롤이 "고장난 게 아니라 끝난 것"임을 알립니다. */
+.listEnd {
+  margin: var(--space-12) 0 0;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-lighter);
+}
+
+.loadMoreSentinel {
+  width: 100%;
+  height: 200px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   맨 위로
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* 원형 FAB 대신 각진 작은 상자입니다. 화면에서 유일하게 떠 있는 요소라
+ * 아주 옅은 그림자만 허용합니다. */
+.scrollTopButton {
+  position: fixed;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-chip);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-fab);
   cursor: pointer;
-  transition: transform var(--duration-base) var(--ease-spring);
-  z-index: 90;
-}
-
-@media (max-width: 768px) {
-  .scrollTopButton {
-    right: 1rem;
-    bottom: 12rem;
-    /* 필터 버튼과 겹치지 않게 위로 올림 */
-    width: 2.75rem;
-    height: 2.75rem;
-    font-size: 1.1rem;
-  }
+  transition: background var(--duration-fast), color var(--duration-fast);
+  z-index: 40;
 }
 
 .scrollTopButton:hover,
 .scrollTopButton:focus-visible {
-  transform: translateY(-4px);
-  box-shadow: 0 25px 50px -25px rgba(15, 23, 42, 0.65);
+  background: var(--color-text);
+  color: var(--color-bg);
 }
 
-/* 
- * 컴플라이언스(법적 고지) 섹션 스타일
- * 나머지 스타일들도 위와 동일한 방식으로 상세 주석이 적용됩니다.
- */
-.complianceSection {
-  margin-top: 3rem;
-  padding: clamp(2.5rem, 5vw, 4rem);
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
+/* ══════════════════════════════════════════════════════════════════════
+   반응형
+   ══════════════════════════════════════════════════════════════════════ */
 
-.complianceKicker {
-  font-size: 0.85rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-.complianceHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.complianceHeaderMain {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.complianceHeaderMain h2 {
-  font-size: clamp(1.75rem, 3vw, 2.4rem);
-  margin: 0;
-}
-
-.complianceToggle {
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: #fff;
-  border-radius: 999px;
-  padding: 0.5rem 1.25rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-dark);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
-}
-
-.complianceToggle span {
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.complianceToggle:hover,
-.complianceToggle:focus-visible {
-  background: rgba(0, 113, 227, 0.08);
-  border-color: rgba(0, 113, 227, 0.4);
-  transform: translateY(-1px);
-}
-
-.complianceSummary {
-  font-size: 1rem;
-  color: var(--color-text);
-  margin: 0;
-  line-height: 1.6;
-}
-
-.complianceBody {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: max-height 0.45s ease, opacity 0.3s ease, transform 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-}
-
-.complianceBodyOpen {
-  max-height: 4000px;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.complianceIntro {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.complianceIntro p {
-  font-size: 1rem;
-  line-height: 1.75;
-  color: var(--color-text);
-  margin: 0;
-}
-
-.qualityGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
-}
-
-.qualityCard {
-  padding: 1.75rem;
-  border-radius: 20px;
-  background: rgba(248, 250, 252, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.qualityCard h3 {
-  font-size: 1.15rem;
-  margin: 0;
-  color: var(--color-dark);
-}
-
-.qualityCard p {
-  margin: 0;
-  color: var(--color-text);
-  line-height: 1.6;
-}
-
-.qualityCard small {
-  color: var(--color-text-light);
-  line-height: 1.6;
-}
-
-.complianceDetail {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  gap: 1.5rem;
-}
-
-.complianceCard {
-  padding: 1.5rem;
-  border-radius: 20px;
-  background: rgba(15, 23, 42, 0.85);
-  color: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(15, 23, 42, 0.2);
-}
-
-.complianceTitle {
-  margin: 0 0 1rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.complianceList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 0.75rem;
-}
-
-.complianceList li {
-  line-height: 1.6;
-  position: relative;
-  padding-left: 1.5rem;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.complianceList li::before {
-  content: '•';
-  position: absolute;
-  left: 0;
-  color: var(--color-primary);
-  font-weight: 700;
-}
-
-.reviewChecklist {
-  display: grid;
-  gap: 1rem;
-}
-
-.reviewItem {
-  padding: 1.5rem;
-  border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(248, 250, 252, 0.8);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.reviewItem strong {
-  font-size: 1rem;
-  color: var(--color-dark);
-}
-
-.reviewItem p {
-  margin: 0;
-  color: var(--color-text);
-  line-height: 1.6;
-}
-
-@media (max-width: 768px) {
-  .complianceHeaderMain {
-    flex-direction: column;
-    align-items: flex-start;
+/* ── 태블릿 ── */
+@media (max-width: 1024px) {
+  .mainContent {
+    padding: 0 var(--space-6);
   }
 
-  .complianceDetail {
+  .masthead {
+    margin: 0 calc(var(--space-6) * -1);
+    padding: 0 var(--space-6);
+  }
+
+  /* 리드를 1단으로 접고 1번 항목을 제목 아래로 내립니다.
+     좁은 화면에서 7:5를 유지하면 우측 항목이 너무 작아집니다. */
+  .lead {
     grid-template-columns: 1fr;
+    gap: var(--space-8);
+    padding: var(--space-10) 0 var(--space-8);
+  }
+
+  /* 1단에서는 좌측 정렬로 되돌립니다(우측 정렬은 2단일 때만 의미가 있습니다). */
+  .leadFeature {
+    max-width: 260px;
+    margin-left: 0;
+  }
+
+  .leadNote {
+    margin-top: var(--space-6);
   }
 }
 
-.aboutSection {
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 24px;
-  padding: clamp(2.5rem, 5vw, 4rem);
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
-  margin-top: 3rem;
-}
-
-.aboutContent {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.aboutTitle {
-  font-size: clamp(1.75rem, 3vw, 2.25rem);
-  font-weight: 700;
-  color: var(--color-dark);
-  margin-bottom: 1.5rem;
-  line-height: 1.3;
-}
-
-.aboutSubtitle {
-  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
-  font-weight: 600;
-  color: var(--color-dark);
-  margin-top: 2.5rem;
-  margin-bottom: 1.25rem;
-  line-height: 1.4;
-}
-
-.aboutText {
-  font-size: 1rem;
-  line-height: 1.75;
-  color: var(--color-text);
-  margin-bottom: 1.5rem;
-}
-
-.featureGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-  margin: 2rem 0;
-}
-
-.featureItem {
-  padding: 1.5rem;
-  background: rgba(248, 250, 252, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  border-radius: 16px;
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
-}
-
-.featureItem:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-}
-
-.featureTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: 0.75rem;
-}
-
-.featureDescription {
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: var(--color-text);
-}
-
-/* 
- * .howToList
- * 사용 방법 리스트 스타일
- */
-.howToList {
-  font-size: 1rem;
-  line-height: 1.75;
-  color: var(--color-text);
-  margin: 1.5rem 0;
-  padding-left: 1.5rem;
-}
-
-.howToList li {
-  margin-bottom: 0.75rem;
-}
-
-/* 
- * Footer Enhanced Styles
- * 푸터 영역의 확장 스타일입니다.
- */
-.footer {
-  /* 배경색을 아주 어두운 색(거의 검정)으로 설정 */
-  background: rgba(15, 23, 42, 0.98);
-
-  /* 모서리 둥글게 */
-  border-radius: 24px;
-
-  /* 패딩 */
-  padding: clamp(2.5rem, 5vw, 3.5rem);
-
-  /* 위쪽 여백 */
-  margin-top: 3rem;
-
-  /* 텍스트 색상 (밝은 회색) */
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.footerContent {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.footerTitle {
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 2rem;
-}
-
-.footerSection {
-  margin-bottom: 2rem;
-}
-
-.footerSubtitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 1rem;
-}
-
-.footerDescription {
-  font-size: 0.9375rem;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.footerList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.footerList li {
-  font-size: 0.9375rem;
-  line-height: 1.8;
-  color: rgba(255, 255, 255, 0.75);
-  padding-left: 1.25rem;
-  position: relative;
-}
-
-.footerList li::before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  color: var(--color-primary);
-}
-
-.footerLinks {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  margin-top: 2rem;
-}
-
-.footerLink {
-  font-size: 0.9375rem;
-  color: rgba(255, 255, 255, 0.85);
-  text-decoration: none;
-  transition: color var(--transition-base);
-}
-
-.footerLink:hover {
-  color: var(--color-primary);
-}
-
-.footerText {
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* 
- * 모바일 미디어 쿼리 (768px 이하)
- * 소개 섹션 및 푸터의 모바일 스타일을 정의합니다.
- */
-@media (max-width: 768px) {
-  .aboutSection {
-    padding: 2rem 1.5rem;
-    margin-top: 2rem;
+/* ── 모바일 ── */
+@media (max-width: 640px) {
+  .mainContent {
+    padding: 0 var(--space-4);
   }
 
-  .featureGrid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .masthead {
+    margin: 0 calc(var(--space-4) * -1);
+    padding: 0 var(--space-4);
   }
 
-  .featureItem {
-    padding: 1.25rem;
-  }
-
-  .footer {
-    padding: 2rem 1.5rem;
-    margin-top: 2rem;
-  }
-
-  .footerLinks {
-    flex-direction: column;
-    gap: 1rem;
-  }
-}
-
-/*
- * ── Skeleton Loading (v4 shimmer 애니메이션) ──
- * 초기 로딩 시 실제 카드와 동일한 레이아웃으로 로딩 상태를 표현합니다.
- * shimmer 애니메이션은 globals.css에 정의되어 있습니다.
- */
-
-/* 스켈레톤 그리드 — productsGrid와 동일한 레이아웃 */
-.skeletonGrid {
-  display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
-}
-
-/* 스켈레톤 카드 */
-.skeletonCard {
-  border-radius: 18px;
-  overflow: hidden;
-  background: var(--color-bg-secondary);
-}
-
-/* 스켈레톤 이미지 영역 — 3:4 비율, shimmer 애니메이션 */
-.skeletonImage {
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  background: linear-gradient(
-    90deg,
-    var(--shimmer-from) 25%,
-    var(--shimmer-to) 50%,
-    var(--shimmer-from) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease infinite;
-}
-
-/* 스켈레톤 텍스트 영역 */
-.skeletonBody {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* 스켈레톤 텍스트 줄 — width는 인라인 style로 개별 지정 */
-.skeletonLine {
-  height: 13px;
-  border-radius: 7px;
-  background: linear-gradient(
-    90deg,
-    var(--shimmer-from) 25%,
-    var(--shimmer-to) 50%,
-    var(--shimmer-from) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease infinite;
-}
-
-/* 모바일에서 nav 검색창 숨기기 — 모바일은 필터 패널 내 검색 사용 */
-@media (max-width: 480px) {
-  .navSearchForm {
-    display: none;
-  }
-  /* nav를 2-column으로 전환 (로고 | 액션) */
-  .navInner {
+  /*
+   * 마스트헤드를 2행으로 재구성합니다.
+   *   1행: [제호] [액션]
+   *   2행: [검색 — 가로 전체]
+   * 이전 버전에서 480px 이하 검색창이 display: none으로 사라져
+   * 작은 화면에서는 검색 자체가 불가능했던 문제를 막기 위한 구조입니다.
+   */
+  .mastheadInner {
     grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'logo actions'
+      'search search';
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
   }
-}
 
-/* 모바일 scrollTopButton 위치 조정 */
-@media (max-width: 768px) {
-  .scrollTopButton {
-    right: 1rem;
-    bottom: 12rem;
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
+  .logo { grid-area: logo; }
+  .mastheadActions { grid-area: actions; }
+
+  .searchForm {
+    grid-area: search;
+    max-width: none;
+  }
+
+  /* 날짜줄은 좁은 화면에서 두 줄로 흐르므로 간격을 줄입니다. */
+  .dateline {
+    gap: 4px var(--space-4);
+  }
+
+  /* 마스트헤드가 2행이라 sticky 조건 줄의 기준 위치도 내려갑니다.
+   * 스크롤 시 날짜줄이 접힌 마스트헤드 높이(약 85px)에 맞춰 붙입니다. */
+  .resultsToolbar {
+    top: 85px;
+  }
+
+  .leadTitle {
+    font-size: clamp(1.9rem, 8vw, 2.4rem);
+  }
+
+  /*
+   * 모바일에서 1면 사진을 화면 폭 전체로 두면 3:4 비율 때문에 500px 가까이
+   * 자라고, 그만큼 전체 색인이 1,700px 아래로 밀려납니다.
+   * 본문 단 안에 끼운 사진처럼 180px로 묶어 목록에 훨씬 빨리 닿게 합니다.
+   */
+  .leadFeature {
+    max-width: 180px;
+  }
+
+  .bandItem {
+    width: 140px;
+  }
+
+  /* 모바일 2열 고정 — 3열은 이미지가 너무 작아 옷을 식별할 수 없습니다. */
+  .productsGrid,
+  .skeletonGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8) var(--space-4);
+  }
+
+  .filterRow {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .resetButton {
+    margin-left: 0;
+  }
+
+  .toolbarActions {
+    gap: var(--space-3);
+  }
+
+  .loadMoreSentinel {
+    height: 120px;
   }
 }

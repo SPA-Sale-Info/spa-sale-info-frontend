@@ -1,13 +1,15 @@
 .container {
     margin-top: 4rem;
     padding-top: 2rem;
-    border-top: 1px solid var(--color-bg-tertiary);
+    border-top: 1px solid var(--color-border);
 }
 
+/* 섹션 타이틀 — 메인 페이지 섹션 제목과 동일한 굵기/자간 */
 .title {
     font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--color-dark);
+    font-weight: 720;
+    letter-spacing: -0.03em;
+    color: var(--color-text);
     margin-bottom: 1.5rem;
 }
 
@@ -60,11 +62,11 @@
     position: relative;
     width: 100%;
     aspect-ratio: 3/4;
-    border-radius: 12px;
+    border-radius: var(--radius-card);
     overflow: hidden;
     background: var(--color-bg-secondary);
     margin-bottom: 0.75rem;
-    border: 1px solid var(--color-bg-tertiary);
+    border: none;
 }
 
 .image {
@@ -76,16 +78,17 @@
     transform: scale(1.05);
 }
 
+/* 미니 카드의 할인 배지 — 하드코딩 색 제거, 할인 레드 토큰 사용 */
 .discountBadge {
     position: absolute;
     top: 6px;
     right: 6px;
-    background: #ff4757;
-    color: white;
+    background: var(--color-discount);
+    color: #fff;
     font-size: 0.7rem;
     font-weight: 700;
     padding: 2px 6px;
-    border-radius: 4px;
+    border-radius: var(--radius-chip);
 }
 
 .info {
@@ -125,8 +128,9 @@
 .price {
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--color-dark);
+    color: var(--color-text);
     margin-top: 0.25rem;
+    font-variant-numeric: tabular-nums;
 }
 
 @media (min-width: 768px) {

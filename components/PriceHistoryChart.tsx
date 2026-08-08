@@ -13,15 +13,15 @@ interface PriceHistoryChartProps {
 }
 
 /**
- * 숫자를 한국 원화 형식으로 포맷
+ * 숫자를 "₩1,000" 형태로 포맷
+ * 메인 페이지 상품 카드·상세 페이지의 가격 표기와 통일했습니다.
  */
-// 가격 표시용 포맷 함수
 function formatPrice(price: number | null | undefined): string {
   if (typeof price !== 'number' || Number.isNaN(price)) {
     return '가격 정보 없음';
   }
 
-  return `${price.toLocaleString('ko-KR')}원`;
+  return `₩${price.toLocaleString('ko-KR')}`;
 }
 
 function PriceHistoryChart({ originalPrice, salePrice }: PriceHistoryChartProps) {
@@ -52,10 +52,11 @@ function PriceHistoryChart({ originalPrice, salePrice }: PriceHistoryChartProps)
 
   return (
     <div className={styles.container}>
+      {/* 카드 타이틀 — 다른 표면 카드(상품 정보/구매 안내)와 동일한 대문자 라벨 문법 */}
       <div className={styles.header}>
-        <h3 className={styles.title}>💰 가격 분석</h3>
+        <h3 className={styles.title}>가격 분석</h3>
         <p className={styles.subtitle}>
-          원가 대비 <strong>{chartData.discountPercent}%</strong> 할인된 가격입니다
+          원가 대비 <strong>{chartData.discountPercent}%</strong> 할인된 가격이에요
         </p>
       </div>
 
@@ -92,9 +93,8 @@ function PriceHistoryChart({ originalPrice, salePrice }: PriceHistoryChartProps)
           </div>
         </div>
 
-        {/* 할인 정보 카드 */}
+        {/* 절약 금액 강조 행 — 이모지 없이 레드 텍스트로만 강조 (에디토리얼 톤) */}
         <div className={styles.discountInfo}>
-          <div className={styles.discountIcon}>🎉</div>
           <div className={styles.discountText}>
             <div className={styles.discountAmount}>{formatPrice(chartData.discount)} 절약</div>
             <div className={styles.discountLabel}>원가 대비 할인 금액</div>
@@ -102,33 +102,30 @@ function PriceHistoryChart({ originalPrice, salePrice }: PriceHistoryChartProps)
         </div>
       </div>
 
-      {/* 가격 정보 상세 */}
+      {/* 가격 정보 상세 — 원가 → 할인가 → 할인율 요약 행 */}
       <div className={styles.priceDetails}>
         <div className={styles.detailItem}>
-          <div className={styles.detailIcon}>🏷️</div>
           <div className={styles.detailContent}>
             <div className={styles.detailLabel}>원가</div>
             <div className={styles.detailValue}>{formatPrice(originalPrice)}</div>
           </div>
         </div>
 
-        <div className={styles.detailDivider}>→</div>
+        <div className={styles.detailDivider} aria-hidden="true">→</div>
 
         <div className={styles.detailItem}>
-          <div className={styles.detailIcon}>💎</div>
           <div className={styles.detailContent}>
             <div className={styles.detailLabel}>할인가</div>
-            <div className={`${styles.detailValue} ${styles.saleValue}`}>{formatPrice(salePrice)}</div>
+            <div className={styles.detailValue}>{formatPrice(salePrice)}</div>
           </div>
         </div>
 
-        <div className={styles.detailDivider}>→</div>
+        <div className={styles.detailDivider} aria-hidden="true">→</div>
 
         <div className={styles.detailItem}>
-          <div className={styles.detailIcon}>📊</div>
           <div className={styles.detailContent}>
             <div className={styles.detailLabel}>할인율</div>
-            <div className={`${styles.detailValue} ${styles.discountValue}`}>{chartData.discountPercent}%</div>
+            <div className={`${styles.detailValue} ${styles.discountValue}`}>-{chartData.discountPercent}%</div>
           </div>
         </div>
       </div>

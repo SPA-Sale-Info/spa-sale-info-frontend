@@ -153,11 +153,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* 소셜 미디어 섹션 (준비 중) */}
-        <div className={styles.social}>
-          <p className={styles.socialText}>소셜 미디어 준비 중입니다 🎉</p>
-        </div>
-
         {/* 하단 정보 영역 — 운영자 정보, 저작권, 면책 조항 */}
         <div className={styles.bottom}>
           <div className={styles.info}>
@@ -200,7 +195,8 @@ export default function Footer() {
              * ©: 저작권 기호 (Copyright symbol)
              * HTML에서는 &copy;, JSX에서는 ©를 직접 쓸 수 있습니다.
              */}
-            <p>© {currentYear} ARCA. All rights reserved.</p>
+            {/* Framer 시안 카피: 저작권 + 가격 정보 기준 안내를 한 줄로 */}
+            <p>© {currentYear} ARCA. 모든 가격 정보는 각 브랜드 공식몰 기준입니다.</p>
           </div>
 
           {/* 면책 조항 (Disclaimer) */}

@@ -11,13 +11,13 @@ export default function Document() {
   return (
     <Html lang="ko">
       <Head>
-        {/* Google Fonts — Noto Sans KR(본문) + Noto Serif KR(로고) */}
-        {/* preconnect로 DNS·TCP 연결을 미리 수행해 폰트 로딩 지연 최소화 */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Pretendard Variable — Framer 시안과 동일한 가변 폰트
+            dynamic-subset: 한글 글리프를 조각으로 나눠 쓰는 글자만 내려받아 초기 로딩이 가볍습니다.
+            preconnect로 DNS·TCP 연결을 미리 수행해 폰트 로딩 지연 최소화 */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Noto+Serif+KR:wght@600;700;900&display=swap"
           rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
         />
 
         {/* 문서 공통 메타 태그 */}

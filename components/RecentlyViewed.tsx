@@ -128,7 +128,8 @@ export default function RecentlyViewed({ products }: RecentlyViewedProps) {
     if (typeof price !== 'number' || Number.isNaN(price)) {
       return '가격 정보 없음';
     }
-    return `${price.toLocaleString('ko-KR')}원`;
+    // 메인 카드·상세 페이지의 가격 표기(₩19,900)와 통일
+    return `₩${price.toLocaleString('ko-KR')}`;
   };
 
   /**

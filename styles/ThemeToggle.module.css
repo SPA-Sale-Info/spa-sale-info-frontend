@@ -1,28 +1,35 @@
+/*
+ * ThemeToggle.module.css — Ledger 시스템
+ *
+ * [개편] 이전에는 회색 배경의 정원형(border-radius: 50%) 버튼이었습니다.
+ * 마스트헤드에 그것 하나만 동그란 알약처럼 떠 있어 각진 지면과 어긋났고,
+ * hover 시 위로 뜨는 움직임(translateY)과 그림자도 이 시스템에는 과합니다.
+ *
+ * 지금은 배경 없는 아이콘 컨트롤입니다. 옆의 찜(♥) 링크와 같은 방식으로
+ * 불투명도만 바뀌며, 화면에 상자를 하나 더 만들지 않습니다.
+ */
 .toggleButton {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    background: var(--color-bg-tertiary);
+    /* 44×44 미만이면 모바일에서 누르기 어렵습니다. 시각적으로는 아이콘만
+     * 보이지만 터치 영역은 넉넉하게 확보합니다. */
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: var(--radius-chip);
+    background: transparent;
     color: var(--color-text);
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    transition: opacity var(--duration-fast) var(--ease-smooth);
 }
 
 .toggleButton:hover {
-    background: var(--color-bg-secondary);
-    color: var(--color-primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-.toggleButton:active {
-    transform: translateY(0);
+    opacity: 0.6;
 }
 
 .icon {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 17px;
+    height: 17px;
 }

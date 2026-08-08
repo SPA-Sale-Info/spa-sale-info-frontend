@@ -28,7 +28,6 @@
  */
 
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import Image from 'next/image';
 
 import styles from '../styles/ProductCard.module.css';
@@ -63,17 +62,28 @@ interface ProductCardProps {
   compareDisabled?: boolean;     // 비교함이 가득 차서 더 담을 수 없을 때 true
   cardIndex?: number;            // 진입 애니메이션 순서용 인덱스
   vibeTags?: string[];           // 이미지 위 오버레이 바이브 태그 (예: ['AURALEE 맛'])
+
+  /**
+   * indexNumber - 색인 번호 (Ledger 디자인 시스템 5번 규칙)
+   *
+   * 목록에서 이 항목이 몇 번째인지를 "01, 02, 03…" 형태로 보여줍니다.
+   * 3,700여 건짜리 아카이브에서 "지금 어디쯤 보고 있는지"를 알려주고,
+   * 상점이 아니라 색인이라는 화면의 성격을 드러내는 장치입니다.
+   * 값이 없으면(찜 목록 등 순위가 의미 없는 화면) 번호를 렌더하지 않습니다.
+   */
+  indexNumber?: number;
 }
 
 /**
- * formatPrice - 숫자를 한국 원화 형식("12,900원")으로 포맷합니다.
+ * formatPrice - 숫자를 원화 기호 형식("₩12,900")으로 포맷합니다.
+ * Framer 시안의 가격 표기(₩19,900)와 통일했습니다.
  * 숫자가 아니면 "가격 정보 없음"을 반환합니다.
  */
 function formatPrice(price: number | null | undefined): string {
   if (typeof price !== 'number' || Number.isNaN(price)) {
     return '가격 정보 없음';
   }
-  return `${price.toLocaleString('ko-KR')}원`;
+  return `₩${price.toLocaleString('ko-KR')}`;
 }
 
 /**
@@ -156,9 +166,8 @@ function ProductCard({
   compareDisabled = false,
   cardIndex,
   vibeTags,
+  indexNumber,
 }: ProductCardProps) {
-  const router = useRouter();
-
   /**
    * 원가 표시 여부 결정
    * - 원가가 존재하고(0 아님), 할인가도 존재하며, 둘이 다를 때만 취소선 원가를 보여줍니다.
@@ -193,43 +202,41 @@ function ProductCard({
   const detailHref = product?.id ? `/product/${product.id}` : '';
 
   /**
-   * 카드 클릭 핸들러 — 상세 페이지로 이동(큰 터치 영역 제공)
-   * 상품명 <Link>는 자체 href로 이동하므로, 여기서는 카드 여백 클릭을 처리합니다.
+   * 카드 진입 애니메이션 딜레이(인덱스 순서대로 등장)
+   *
+   * 무한 스크롤로 뒤늦게 붙는 카드까지 인덱스가 커지면 지연이 몇 초씩 쌓이므로,
+   * 한 화면 분량(12개) 주기로 순환시켜 최대 지연을 660ms로 제한합니다.
    */
-  const handleCardClick = () => {
-    if (!detailHref) {
-      return;
-    }
-    router.push(detailHref);
-  };
-
-  /**
-   * 키보드 접근성 — Enter/Space로 카드 "클릭"을 수행합니다.
-   */
-  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    if (!detailHref) {
-      return;
-    }
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleCardClick();
-    }
-  };
-
-  // 카드 진입 애니메이션 딜레이(인덱스 순서대로 등장)
   const cardStyle = cardIndex !== undefined
-    ? { animationDelay: `${cardIndex * 60}ms` }
+    ? { animationDelay: `${(cardIndex % 12) * 55}ms` }
     : undefined;
 
   return (
+    /*
+     * ═══════════════════════════════════════════════════════════════
+     * [접근성 수정] role="button" 제거 — "스트레치 링크" 패턴으로 전환
+     * ═══════════════════════════════════════════════════════════════
+     * 이전 구조:
+     *   <article role="button" tabIndex={0} onClick={...} aria-label="...">
+     *     <button 찜> <button 비교> <a 상품명> <a 외부링크>
+     *   </article>
+     *
+     * 문제가 두 가지였습니다.
+     * 1) 버튼 안에 버튼/링크를 넣는 것은 HTML·ARIA 규격 위반입니다.
+     *    스크린리더는 바깥 요소를 "버튼 하나"로 읽으면서 내부 컨트롤도 따로 읽어,
+     *    사용자에게 같은 카드가 중복·모순되게 전달됩니다.
+     * 2) aria-label을 준 role="button"은 내부 텍스트를 덮어씁니다.
+     *    즉 가격·할인율이 스크린리더에서 아예 안 읽혔습니다.
+     *
+     * 해결:
+     * 상품명 링크(<a>)에 ::after로 카드 전체를 덮는 투명 레이어를 깔았습니다.
+     * → 카드 아무 데나 눌러도 상세로 이동하는 "넓은 터치 영역"은 그대로 유지되고,
+     *   Tab 포커스는 링크 하나로 정리되며, 접근성 트리는 정상적인
+     *   "링크 + 버튼들"이 됩니다. 자바스크립트 라우팅도 필요 없어졌습니다.
+     */
     <article
       className={`${styles.card} ${isSoldOut ? styles.cardSoldOut : ''}`}
-      onClick={handleCardClick}
-      onKeyDown={handleCardKeyDown}
-      role="button"
-      tabIndex={0}
       style={cardStyle}
-      aria-label={`${displayBrand} ${name}${isSoldOut ? ' (품절)' : ''}`}
     >
       {/* 이미지 영역 */}
       <div className={styles.imageContainer}>
@@ -241,10 +248,8 @@ function ProductCard({
           sizes="(max-width: 768px) 90vw, 320px"
         />
 
-        {/* 할인율 배지 — 이미지 좌상단 (가장 강조하고 싶은 정보) */}
-        {calculatedDiscountRate > 0 && (
-          <div className={styles.discountBadgeOverlay}>{calculatedDiscountRate}% OFF</div>
-        )}
+        {/* Framer 시안: 할인율은 이미지 오버레이 배지가 아니라
+            가격 행 옆의 레드 텍스트("-50%")로 표시합니다. → 아래 priceContainer 참고 */}
 
         {/* 품절 오버레이 — inStock === false일 때 이미지를 흐리게 + "품절" 표시 */}
         {isSoldOut && (
@@ -253,13 +258,11 @@ function ProductCard({
           </div>
         )}
 
-        {/* 찜 버튼 — onFavoriteToggle이 전달된 경우에만 렌더 */}
+        {/* 찜 버튼 — onFavoriteToggle이 전달된 경우에만 렌더
+            카드 전체 onClick이 사라졌으므로 stopPropagation은 더 이상 필요 없습니다.
+            대신 CSS에서 z-index로 스트레치 링크 레이어보다 위에 올려 클릭을 받습니다. */}
         {onFavoriteToggle && (
-          <div
-            className={styles.favoriteButtonWrapper}
-            // 찜 버튼 영역 클릭이 카드 클릭(상세 이동)으로 번지지 않게 막습니다.
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className={styles.favoriteButtonWrapper}>
             <FavoriteButton
               product={product}
               isFavorite={isFavorite}
@@ -276,50 +279,50 @@ function ProductCard({
             className={`${styles.compareButton} ${isComparing ? styles.compareButtonActive : ''}`}
             // 비교함이 가득 찼고(disabled) 아직 담기지 않은 상품이면 클릭을 막습니다.
             disabled={compareDisabled && !isComparing}
-            onClick={(e) => {
-              e.stopPropagation() // 카드 클릭(상세 이동)으로 번지지 않게 차단
-              onCompareToggle(product)
-            }}
+            onClick={() => onCompareToggle(product)}
             aria-pressed={isComparing}
-            aria-label={isComparing ? '비교함에서 빼기' : '비교함에 담기'}
+            aria-label={`${name} ${isComparing ? '비교함에서 빼기' : '비교함에 담기'}`}
             title={compareDisabled && !isComparing ? '비교함이 가득 찼어요 (최대 4개)' : '비교'}
           >
-            {isComparing ? '✓ 비교중' : '⇄ 비교'}
+            {isComparing ? '비교중' : '비교'}
           </button>
         )}
 
-        {/* 바이브 태그 오버레이 — 최대 2개 */}
-        {vibeTags && vibeTags.length > 0 && (
-          <div className={styles.vibeTagsOverlay}>
-            {vibeTags.slice(0, 2).map(tag => (
-              <span key={tag} className={styles.vibeTagOverlay}>{tag}</span>
-            ))}
-          </div>
-        )}
+        {/* Framer 시안: 바이브(무드) 태그는 이미지 오버레이가 아니라
+            가격 아래의 보조 텍스트(.moodTag)로 표시합니다. → 아래 info 영역 참고 */}
       </div>
 
       {/* 상품 정보 영역 */}
       <div className={styles.info}>
-        {/* 메타 행: 브랜드명 + 성별 배지 */}
+        {/* ── 색인 행 ──
+            [Ledger 재설계] 이전에는 브랜드명 옆에 알약 모양 성별 "배지"가 있었습니다.
+            배지는 배경 도형을 하나 더 얹는 방식이라 항목마다 작은 상자가 반복돼
+            목록 전체가 어수선해졌습니다.
+            이제 색인 번호 · 브랜드 · 성별을 하나의 얇은 메타 줄로 묶고,
+            도형 없이 글자 크기와 색만으로 위계를 만듭니다. */}
         <div className={styles.meta}>
+          {indexNumber !== undefined && (
+            <span className={styles.indexNumber} aria-hidden="true">
+              {/* 두 자리로 0을 채워 세로로 자릿수가 맞습니다 (01, 02 … 12) */}
+              {String(indexNumber).padStart(2, '0')}
+            </span>
+          )}
           <span className={styles.brandName}>{displayBrand}</span>
           {gender && (
-            <span
-              className={`${styles.genderBadge} ${
-                gender === 'MAN' ? styles.genderMen
-                  : gender === 'WOMAN' ? styles.genderWomen
-                    : styles.genderUnisex
-              }`}
-            >
-              {GENDER_LABEL[gender]}
-            </span>
+            <span className={styles.genderNote}>{GENDER_LABEL[gender]}</span>
           )}
         </div>
 
-        {/* 상품명 — 실제 링크(<a>)로 만들어 href/SEO/새 탭 열기를 지원 */}
+        {/* 상품명 — 카드 전체를 덮는 "스트레치 링크"입니다(위 article 주석 참고).
+            aria-label에 브랜드와 품절 여부를 함께 담아, 링크 목록만 훑는
+            스크린리더 사용자도 어느 브랜드의 어떤 상품인지 알 수 있게 합니다. */}
         <h3 className={styles.productName}>
           {detailHref ? (
-            <Link href={detailHref} className={styles.productNameLink}>
+            <Link
+              href={detailHref}
+              className={styles.productNameLink}
+              aria-label={`${displayBrand} ${name}${isSoldOut ? ' (품절)' : ''}`}
+            >
               {name}
             </Link>
           ) : (
@@ -327,13 +330,30 @@ function ProductCard({
           )}
         </h3>
 
-        {/* 가격 영역: 할인가(강조) + 원가(취소선) */}
+        {/* 가격 영역: 할인가(굵게) + 원가(취소선) + 할인율(레드 텍스트)
+            Framer 시안의 "₩19,900 ₩39,900 -50%" 한 줄 구성입니다. */}
+        {/* [순서 변경] 할인가 → 할인율 → 원가
+            이전 순서는 할인가 → 원가 → 할인율이었습니다.
+            모바일 2열(카드 폭 약 165px)에서 세 값이 한 줄에 안 들어가면
+            맨 뒤의 할인율만 다음 줄로 떨어져, 카드마다 높이가 들쭉날쭉했습니다.
+            구매 판단의 핵심인 "얼마 / 몇 % 깎였나"를 붙여두고,
+            상대적으로 덜 중요한 원가가 밀려나도록 순서를 바꿨습니다. */}
         <div className={styles.priceContainer}>
           <span className={styles.salePrice}>{formatPrice(effectiveSalePrice)}</span>
+          {calculatedDiscountRate > 0 && (
+            <span className={styles.discountRate} aria-label={`${calculatedDiscountRate}퍼센트 할인`}>
+              -{calculatedDiscountRate}%
+            </span>
+          )}
           {showOriginalPrice && (
             <span className={styles.originalPrice}>{formatPrice(originalPrice)}</span>
           )}
         </div>
+
+        {/* 무드 태그 — 시안: 가격 아래 보조 텍스트 (예: "미니멀 · 시티 레이어드") */}
+        {vibeTags && vibeTags.length > 0 && (
+          <span className={styles.moodTag}>{vibeTags.slice(0, 2).join(' · ')}</span>
+        )}
 
         {/* 하단 행: 업데이트 시각 + 외부 사이트 이동 CTA */}
         <div className={styles.cardFooter}>
@@ -347,11 +367,14 @@ function ProductCard({
               target="_blank"
               rel="noopener noreferrer nofollow"
               className={styles.externalCta}
-              // 외부 링크 클릭이 카드 클릭(내부 상세 이동)으로 번지지 않게 막습니다.
-              onClick={(e) => e.stopPropagation()}
               aria-label={`${displayBrand} 공식 사이트에서 ${name} 보기 (새 창)`}
             >
-              {displayBrand}에서 보기 →
+              {/* 라벨을 "{브랜드}에서 보기"에서 "바로가기"로 줄였습니다.
+                  카드가 좁아지면(그리드 5열 기준 약 215px) 왼쪽 업데이트 시각과 함께
+                  한 줄에 들어가지 못해 글자가 잘렸습니다.
+                  브랜드명은 바로 위 메타 행에 이미 있으므로 중복이기도 했습니다.
+                  스크린리더에는 aria-label로 전체 맥락이 그대로 전달됩니다. */}
+              바로가기 →
             </a>
           )}
         </div>

@@ -2,17 +2,17 @@
  * Footer.module.css - 푸터 컴포넌트 스타일
  */
 
-/* v4: Apple HIG 기반 푸터 — flex 좌우 분할, 단색 배경 */
+/* ARCA 에디토리얼 푸터 — Framer 시안: 페이지 배경과 같은 색 + 상단 헤어라인만 */
 .footer {
   width: 100%;
-  background: var(--color-bg-secondary);
+  background: var(--color-bg);
   border-top: 0.5px solid var(--color-border);
   margin-top: var(--space-20);
   padding: var(--space-10) var(--space-6) var(--space-12);
 }
 
 .container {
-  max-width: 1160px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -147,14 +147,14 @@
   margin: 0;
 }
 
-/* 면책 조항 */
+/* 면책 조항 — 표면색 토큰 사용(다크 모드 자동 대응) */
 .disclaimer {
   max-width: 800px;
   margin: 0 auto;
   padding: 1rem 1.5rem;
-  background: rgba(248, 250, 252, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
   text-align: center;
 }
 

@@ -44,6 +44,17 @@
   pointer-events: auto;
 }
 
+/*
+ * ⚠️ [버그 수정] CSS Modules의 animation-name 스코프 처리 때문에
+ * globals.css의 전역 @keyframes toastIn과 이름이 맞지 않아
+ * 토스트가 아래에서 밀려 올라오지 않고 그냥 나타났습니다.
+ * 모듈 안에서 쓰는 keyframes는 같은 모듈에 정의합니다.
+ */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(100%); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 .icon {
   font-size: 1.2rem;
   line-height: 1;

@@ -55,7 +55,7 @@ import { normalizeProducts } from '../utils/productNormalization'
 import { parseSearchQuery, isActiveBrand } from '../utils/parseSearchQuery'
 import useFavorites from '../hooks/useFavorites'
 import useCompare from '../hooks/useCompare'
-import { SORT_OPTIONS, DEFAULT_SORT_VALUE } from '../types'
+import { SORT_OPTIONS, DEFAULT_SORT_VALUE, BRAND_METADATA } from '../types'
 import type { Brand, Gender, Category, NormalizedProduct } from '../types'
 import { DAILY_INSIGHTS, DAILY_MOODS } from '../constants/dailyContent'
 
@@ -220,6 +220,52 @@ export default function Home() {
     return DAILY_INSIGHTS[index]
   }, [])
 
+  /**
+   * activeBrandCount - "지금 세일 데이터를 수집 중인 브랜드 수"
+   *
+   * BRAND_METADATA에는 아직 수집 전인 브랜드(status: 'planned'/'noSale')도 함께 들어 있으므로,
+   * 실제로 데이터가 있는 'active' 브랜드만 세어야 히어로의 숫자가 거짓말을 하지 않습니다.
+   * 상수 기반이라 계산 비용은 0에 가깝지만, 렌더마다 배열을 새로 만들지 않도록 useMemo로 고정합니다.
+   */
+  const activeBrandCount = useMemo(
+    () => Object.values(BRAND_METADATA).filter(meta => meta.status === 'active').length,
+    [],
+  )
+
+  /**
+   * topDiscountRate - 현재 아카이브에서 가장 큰 할인율
+   *
+   * highlights는 "할인율 높은순" 상위 상품이므로 첫 번째 항목의 할인율이 곧 최고 할인율입니다.
+   * 별도 API 호출 없이 이미 받아온 데이터를 재사용합니다(네트워크 비용 0).
+   * 아직 로딩 전이면 0이고, 이때 히어로에서는 해당 지표를 렌더하지 않습니다.
+   */
+  const topDiscountRate = highlights[0]?.discountRate ?? 0
+
+  /**
+   * leadProduct - 지면 상단(Lead)에 크게 싣는 "오늘의 1번 항목"
+   *
+   * 별도 API 없이 highlights(할인율 높은순 상위)의 첫 항목을 그대로 씁니다.
+   * 장식용 이미지를 새로 만드는 대신, 실제 데이터 중 가장 강한 항목 하나를
+   * 크게 싣는 편이 이 서비스의 성격(인하 기록)을 훨씬 정확히 보여줍니다.
+   */
+  const leadProduct = highlights[0]
+
+  /**
+   * datelineDate - 마스트헤드 아래 날짜줄에 찍는 "오늘" 날짜
+   *
+   * 신문의 dateline처럼 "이 지면이 언제 것인지"를 밝힙니다.
+   * 서버와 클라이언트의 시각이 달라 hydration 경고가 나지 않도록
+   * 마운트 이후에 채웁니다(초기 렌더에서는 빈 문자열).
+   */
+  const [datelineDate, setDatelineDate] = useState<string>('')
+  useEffect(() => {
+    const now = new Date()
+    const yyyy = now.getFullYear()
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const dd = String(now.getDate()).padStart(2, '0')
+    setDatelineDate(`${yyyy}.${mm}.${dd}`)
+  }, [])
+
   // 로고 애니메이션: 1200ms마다 logoStep 0→1→2→3 순환
   // S(ales) / S·P(roduct) / S·P·A(rchive) 순서로 단어가 펼쳐집니다.
   useEffect(() => {
@@ -248,7 +294,19 @@ export default function Home() {
           sortBy: 'discount',
           sortDirection: 'desc',
         })
-        setHighlights(normalizeProducts(response.products ?? []))
+        const normalized = normalizeProducts(response.products ?? [])
+
+        // 백엔드에 같은 상품이 중복 문서로 존재하므로(id 중복 + 동일 상품 별도 문서),
+        // 스트립에서도 id·시그니처 기준으로 대표 1장만 남깁니다.
+        const seen = new Set<string>()
+        const unique = normalized.filter((product) => {
+          const keys = [product.id, `${product.brand}|${product.name}|${product.salePrice}`]
+          if (keys.some(key => seen.has(key))) return false
+          keys.forEach(key => seen.add(key))
+          return true
+        })
+
+        setHighlights(unique)
       } catch {
         // 스트립은 부가 기능이므로 실패해도 조용히 무시합니다(메인 그리드에 영향 없음).
         setHighlights([])
@@ -279,17 +337,34 @@ export default function Home() {
     return () => clearInterval(timer)
   }, [totalSaleCount])
 
+  /**
+   * mergeUniqueProducts - 상품 목록 병합 + 중복 제거
+   *
+   * 두 종류의 중복을 모두 걸러냅니다 (2026-07-19 백엔드 데이터 감사에서 발견):
+   * 1) 같은 id가 두 번 내려오는 경우 — 백엔드에 완전히 동일한 문서가 중복 저장됨
+   *    → React "duplicate key" 경고와 카드 2장 표시의 원인
+   * 2) id는 다른데 같은 상품인 경우 — 같은 상품이 별도 문서로 여러 번 크롤링됨
+   *    (예: "칼라 케이블 니트 탑"이 3장 연속 표시)
+   *    → 브랜드+상품명+가격 시그니처로 대표 1장만 남깁니다
+   *
+   * replace=true(필터 변경)일 때도 배치 내부 중복은 제거해야 하므로
+   * 기존처럼 incoming을 그대로 반환하지 않고 항상 dedupe를 거칩니다.
+   */
   const mergeUniqueProducts = useCallback((prevProducts: NormalizedProduct[], incomingProducts: NormalizedProduct[], replace: boolean) => {
-    if (replace) {
-      return incomingProducts
-    }
+    // 시그니처: 브랜드|상품명|판매가 — 같은 상품의 중복 문서를 하나로 묶는 키
+    const signatureOf = (product: NormalizedProduct) =>
+      `${product.brand}|${product.name}|${product.salePrice}`
 
-    const seenIds = new Set(prevProducts.map(product => product.id))
-    const merged = [...prevProducts]
+    const base = replace ? [] : prevProducts
+    const seenIds = new Set(base.map(product => product.id))
+    const seenSignatures = new Set(base.map(signatureOf))
+    const merged = [...base]
 
     incomingProducts.forEach((product) => {
-      if (product.id && !seenIds.has(product.id)) {
+      const signature = signatureOf(product)
+      if (product.id && !seenIds.has(product.id) && !seenSignatures.has(signature)) {
         seenIds.add(product.id)
+        seenSignatures.add(signature)
         merged.push(product)
       }
     })
@@ -693,16 +768,131 @@ export default function Home() {
     setShowFilters(prev => !prev)
   }
 
+  /**
+   * ═══════════════════════════════════════════════════════════════
+   * 활성 필터 요약 (#개편)
+   * ═══════════════════════════════════════════════════════════════
+   * 왜 필요한가요?
+   * 상세 필터를 접어두는 구조로 바꾸면서 "지금 뭐가 걸려 있는지"가 보이지 않게 됐습니다.
+   * 접힌 상태에서도 걸린 조건을 칩으로 보여주고, 한 번에 해제할 수 있어야
+   * 사용자가 "결과가 왜 이것뿐이지?"라고 헤매지 않습니다.
+   *
+   * 각 항목은 { key, label, clear } 형태입니다.
+   * - key   : React key 및 중복 방지용 식별자
+   * - label : 칩에 표시할 한글 라벨
+   * - clear : 그 조건만 개별 해제하는 함수
+   */
+  const activeFilters = useMemo(() => {
+    const list: { key: string; label: string; clear: () => void }[] = []
+
+    if (selectedBrand !== 'all') {
+      list.push({
+        key: 'brand',
+        label: BRAND_METADATA[selectedBrand]?.name ?? selectedBrand,
+        clear: () => setSelectedBrand('all'),
+      })
+    }
+    if (selectedGender !== 'all') {
+      const genderLabel = selectedGender === 'MAN' ? '남성' : selectedGender === 'WOMAN' ? '여성' : '공용'
+      list.push({ key: 'gender', label: genderLabel, clear: () => setSelectedGender('all') })
+    }
+    if (selectedCategory !== 'all') {
+      const categoryLabel: Record<string, string> = {
+        TOP: '상의', BOTTOM: '하의', OUTER: '아우터', SHOES: '신발', ETC: '기타',
+      }
+      list.push({
+        key: 'category',
+        label: categoryLabel[selectedCategory] ?? selectedCategory,
+        clear: () => setSelectedCategory('all'),
+      })
+    }
+    if (selectedDiscount > 0) {
+      list.push({
+        key: 'discount',
+        label: `${selectedDiscount}% 이상`,
+        clear: () => setSelectedDiscount(0),
+      })
+    }
+    if (Number.isFinite(selectedPrice)) {
+      list.push({
+        key: 'price',
+        // 30000 → "3만원 이하"처럼 사람이 읽는 단위로 변환합니다.
+        label: `${(selectedPrice / 10000).toLocaleString()}만원 이하`,
+        clear: () => setSelectedPrice(Infinity),
+      })
+    }
+    if (searchKeyword) {
+      list.push({
+        key: 'keyword',
+        label: `"${searchKeyword}"`,
+        clear: () => { setSearchKeyword(''); setSearchInput(''); setAppliedSearchLabels([]) },
+      })
+    }
+
+    return list
+  }, [selectedBrand, selectedGender, selectedCategory, selectedDiscount, selectedPrice, searchKeyword])
+
+  /**
+   * handleResetFilters - 모든 필터를 한 번에 초기 상태로 되돌립니다.
+   * 정렬(sortValue)은 "필터"가 아니라 "보기 방식"이므로 일부러 건드리지 않습니다.
+   */
+  const handleResetFilters = () => {
+    setSelectedBrand('all')
+    setSelectedGender('all')
+    setSelectedCategory('all')
+    setSelectedDiscount(0)
+    setSelectedPrice(Infinity)
+    setSearchKeyword('')
+    setSearchInput('')
+    setAppliedSearchLabels([])
+    setExcludeSoldOut(false)
+  }
+
+  /**
+   * 상세 필터 패널을 Escape 키로 닫습니다.
+   * 펼쳐진 영역을 키보드만으로 빠져나갈 수 있어야 접근성 기준을 만족합니다.
+   */
+  useEffect(() => {
+    if (!showFilters) {
+      return undefined
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowFilters(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [showFilters])
+
   // 통계 계산
-  const isBrandFilterActive = selectedBrand !== 'all'
   const isNoResultsError = error === 'NO_RESULTS'
   const hasBlockingError = Boolean(error && !isNoResultsError)
+
+  /**
+   * 실패를 두 갈래로 구분합니다.
+   * - initialLoadFailed : 목록이 비어 있는 상태에서의 실패 → 화면 전체를 에러로 대체
+   * - loadMoreFailed    : 이미 목록이 있는 상태에서의 실패 → 목록은 유지하고 배너만 추가
+   *
+   * 이 구분이 없으면 무한 스크롤 실패 한 번에 화면 전체가 비어버립니다(위 그리드 주석 참고).
+   */
+  const initialLoadFailed = hasBlockingError && products.length === 0
+  const loadMoreFailed = hasBlockingError && products.length > 0
+
   const shouldShowEmptyState = !isInitialLoading && filteredProducts.length === 0 && !hasBlockingError
-  const emptyIcon = isBrandFilterActive ? '😔' : '🔍'
-  const emptyTitle = isBrandFilterActive ? '현재 할인 중인 옷이 없는 거 같아요' : '상품이 없습니다'
-  const emptyDescription = isBrandFilterActive
-    ? '다른 브랜드를 선택해 보세요.'
-    : '선택하신 조건에 맞는 상품이 아직 없습니다. 다른 필터를 선택해 보세요.'
+
+  /**
+   * 빈 상태 문구 — "왜 비었는지"에 따라 다르게 안내합니다.
+   * 조건이 걸려 있으면 조건 탓이고, 아무 조건도 없는데 비었다면 데이터 자체가 없는 것이므로
+   * 사용자에게 요구할 행동이 다릅니다.
+   */
+  const hasAnyFilter = activeFilters.length > 0 || excludeSoldOut
+  const emptyTitle = hasAnyFilter
+    ? '조건에 맞는 상품이 없어요'
+    : '지금은 할인 중인 상품이 없어요'
+  const emptyDescription = hasAnyFilter
+    ? '조건을 하나씩 풀어보면 더 많은 상품을 볼 수 있습니다.'
+    : '세일 정보는 매일 갱신됩니다. 잠시 후 다시 확인해 주세요.'
 
   return (
     <div className={styles.container}>
@@ -766,15 +956,21 @@ export default function Home() {
           ]}
         />
 
-        {/* 네비게이션 — Apple HIG sticky glassmorphism nav
-            navScrolled 상태에 따라 stickyNavScrolled 클래스를 추가해 하단 border-bottom을 표시합니다.
-            3-column grid: [로고] [검색창] [액션] */}
-        <header className={`${styles.stickyNav} ${navScrolled ? styles.stickyNavScrolled : ''}`}>
-          <div className={styles.navInner}>
+        {/* ═══════════════════════════════════════════════════════════
+            마스트헤드
+            ═══════════════════════════════════════════════════════════
+            [Ledger 재설계]
+            이전 헤더는 반투명 배경 + backdrop-filter blur(18px)의 이른바
+            글래스모피즘이었습니다. 뒤로 상품 사진이 지나가면 헤더 글자의 대비가
+            스크롤 위치마다 달라져 읽기가 불안정했고, blur는 저사양 기기에서
+            스크롤 성능도 갉아먹습니다.
+            지금은 신문 제호(masthead)처럼 불투명 지면 위에 얹고
+            아래를 굵은 괘선으로 닫습니다. */}
+        <header className={`${styles.masthead} ${navScrolled ? styles.mastheadScrolled : ''}`}>
+          <div className={styles.mastheadInner}>
 
-            {/* 로고 — ARCA 프리미엄 모노그램 애니메이션
-                logoStep 0: "A"만 노출 / logoStep 1~3: "ARCA" 풀네임 노출
-                하나의 이니셜에서 브랜드 전체 이름이 펼쳐지는 고급스러운 리빌 효과입니다. */}
+            {/* 제호 — "A"에서 "ARCA"가 펼쳐지는 리빌은 유지하되,
+                아래에 발행 성격을 밝히는 부제를 붙여 색인의 제호처럼 읽히게 했습니다. */}
             <Link href="/" className={styles.logo}>
               <span className={styles.logoSegment}>
                 <span className={styles.logoChar}>A</span>
@@ -782,25 +978,45 @@ export default function Home() {
                   RCA
                 </span>
               </span>
+              <span className={styles.logoTagline}>SPA Sale Archive</span>
             </Link>
 
-            {/* 검색창 — nav 중앙 배치 (모바일에서는 CSS로 숨김 처리) */}
-            <form className={styles.navSearchForm} onSubmit={handleSearchSubmit}>
-              <span className={styles.navSearchIcon} aria-hidden="true">🔍</span>
+            {/* 검색창
+                [버그 수정] 이전에는 480px 이하에서 이 검색 폼이 CSS로 완전히 숨겨져 있었습니다.
+                주석에는 "모바일은 필터 패널 내 검색 사용"이라고 적혀 있었지만
+                필터 패널에는 검색 입력이 존재한 적이 없어서, 실제로는
+                작은 화면 사용자가 검색 기능 자체에 접근할 수 없었습니다.
+                이제 모바일에서는 nav 아래 줄로 내려오도록 바꿔 항상 사용 가능합니다.
+
+                아이콘은 이모지(🔍) 대신 인라인 SVG로 교체했습니다.
+                이모지는 OS/폰트마다 크기와 색이 제각각이고 컬러 이모지라
+                모노크롬 톤을 깨뜨립니다. SVG는 currentColor를 따라갑니다. */}
+            <form className={styles.searchForm} onSubmit={handleSearchSubmit} role="search">
+              <svg
+                className={styles.searchIcon}
+                viewBox="0 0 16 16"
+                width="14"
+                height="14"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <line x1="10.8" y1="10.8" x2="14" y2="14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
               <input
                 type="text"
                 name="keyword"
                 value={searchInput}
                 onChange={handleSearchInputChange}
-                className={styles.navSearchInput}
-                placeholder="브랜드, 무드, 상품 검색"
+                className={styles.searchInput}
+                placeholder="예) 유니클로 니트 5만원 이하"
                 aria-label="상품 검색"
               />
               {/* 검색어가 있을 때만 지우기 버튼 표시 */}
               {searchInput && (
                 <button
                   type="button"
-                  className={styles.navSearchClear}
+                  className={styles.searchClear}
                   onClick={() => { setSearchInput(''); setSearchKeyword(''); setAppliedSearchLabels([]); }}
                   aria-label="검색어 지우기"
                 >
@@ -809,156 +1025,227 @@ export default function Home() {
               )}
             </form>
 
-            {/* 오른쪽 액션 영역 — 찜 목록 링크 + 테마 토글 */}
-            <div className={styles.navActions}>
-              <Link href="/favorites" className={styles.navIconBtn} aria-label="찜 목록">
+            {/* 오른쪽 액션 — 찜 목록 + 테마 토글 */}
+            <div className={styles.mastheadActions}>
+              <Link href="/favorites" className={styles.iconLink} aria-label="찜 목록">
                 <span aria-hidden="true">♥</span>
                 {getFavoriteCount() > 0 && (
-                  <span className={styles.navBadge}>{getFavoriteCount()}</span>
+                  <span className={styles.iconLinkCount}>{getFavoriteCount()}</span>
                 )}
               </Link>
               <ThemeToggle />
             </div>
 
           </div>
+
+          {/* ── 날짜줄(dateline) ──
+              신문 1면에서 제호 아래 가로로 놓이는 발행 정보 줄입니다.
+              전부 실제 데이터이며, 이전 버전의 "지표 카드 3개"를 대체합니다.
+              카드로 감싸지 않고 한 줄에 눕히면 화면 위쪽 무게가 확 줄어들어
+              상품 목록이 훨씬 위로 올라옵니다. */}
+          <dl className={styles.dateline}>
+            <div className={styles.datelineItem}>
+              <dt>발행</dt>
+              <dd className={styles.datelineFigure}>{datelineDate || '—'}</dd>
+            </div>
+            <div className={styles.datelineItem}>
+              <dt>수록</dt>
+              <dd className={styles.datelineFigure}>
+                {(Number.isFinite(animatedCount) ? animatedCount : 0).toLocaleString()}건
+              </dd>
+            </div>
+            <div className={styles.datelineItem}>
+              <dt>브랜드</dt>
+              <dd className={styles.datelineFigure}>{activeBrandCount}</dd>
+            </div>
+            {topDiscountRate > 0 && (
+              <div className={styles.datelineItem}>
+                <dt>최대 인하</dt>
+                <dd className={`${styles.datelineFigure} ${styles.datelineAccent}`}>
+                  −{topDiscountRate}%
+                </dd>
+              </div>
+            )}
+          </dl>
         </header>
 
-        {/* 히어로 섹션 */}
-        <section className={styles.hero}>
-          <div className={styles.heroContent}>
-            <div className={styles.heroText}>
-              <span className={styles.heroKicker}>Sale archive</span>
-              <h1 className={styles.heroTitle}>
-                흩어진 할인 정보를 한눈에
-              </h1>
-              <p className={styles.heroSubtitle}>
-                돈을 아끼며 무드를 챙기세요.
-                <br />
-                매일 갱신되는 세일 정보를 한 눈에 확인하세요.
-              </p>
+        {/* ═══════════════════════════════════════════════════════════
+            리드(Lead) — 1면 머리기사
+            ═══════════════════════════════════════════════════════════
+            좌 7 : 우 5의 비대칭 2단 구성입니다.
+            좌측은 활자만으로 이루어진 사설 블록, 우측은 오늘 가장 크게 인하된
+            "실제 상품 1건"을 크게 싣습니다.
 
-              <div className={styles.heroInsights}>
-                <div className={styles.heroInsightCard}>
-                  <p className={styles.heroInsightLabel}>오늘의 시선</p>
-                  <strong>{dailyInsight.theme}</strong>
-                  <small>{dailyInsight.tip}</small>
-                </div>
-                <div className={styles.heroInsightCard}>
-                  <p className={styles.heroInsightLabel}>할인 중인 상품</p>
-                  <strong className={styles.countNumber}>
-                    {(Number.isFinite(animatedCount) ? animatedCount : 0).toLocaleString()}개
-                  </strong>
-                  <small>매일 갱신되는 세일 정보</small>
-                </div>
-              </div>
-            </div>
+            [왜 생성 이미지를 쓰지 않았나]
+            여기에 AI로 만든 히어로 비주얼을 넣을 수도 있었지만, 이 서비스의
+            1면에 실려야 할 그림은 "오늘 실제로 78% 내려간 옷"이지 분위기 사진이
+            아닙니다. 실데이터 항목을 크게 싣는 편이 서비스의 성격을 정확히
+            보여주고, 그 자체가 클릭 가능한 유효한 콘텐츠가 됩니다. */}
+        <section className={styles.lead}>
+          <div className={styles.leadText}>
+            <h1 className={styles.leadTitle}>
+              오늘 가장 많이<br />내려간 옷들
+            </h1>
 
-            <div className={styles.heroVisual}>
-              <div
-                className={styles.heroMoodBoard}
-                style={{
-                  background: dailyMood.background,
-                  color: dailyMood.textColor,
-                }}
-              >
-                <p className={styles.heroMoodTitle}>Wardrobe log</p>
-                <div className={styles.heroMoodRow}>
-                  <span>컬러 힌트</span>
-                  <strong>{dailyMood.palette}</strong>
-                </div>
-                <div className={styles.heroMoodRow}>
-                  <span>소재 선택</span>
-                  {/* dangerouslySetInnerHTML 제거: fabric은 순수 텍스트이므로 그대로 렌더해도
-                      충분하며, 불필요한 XSS 위험 표면을 없앱니다. */}
-                  <strong>{dailyMood.fabric}</strong>
-                </div>
-                <div className={styles.heroMoodRow}>
-                  <span>포커스 아이템</span>
-                  <strong>{dailyMood.focus}</strong>
-                </div>
-                <p className={styles.heroMoodNote}>
-                  {dailyMood.note}
+            <p className={styles.leadStanding}>
+              H&amp;M · ZARA · UNIQLO · MUJI · 찰스앤키스의 인하 항목을 매일 모아
+              한 자리에 기록합니다. 값이 내린 순서로 읽으세요.
+            </p>
+
+            {/* 오늘의 시선 — 매일 바뀌는 에디토리얼 한 줄.
+                제목 아래 얇은 괘선으로 본문과 분리해 "주석"처럼 읽히게 했습니다. */}
+            <p className={styles.leadNote}>
+              <span className={styles.leadNoteLabel}>오늘의 시선</span>
+              <strong>{dailyInsight.theme}</strong>
+              <span>{dailyInsight.tip}</span>
+              <span className={styles.leadNoteMood}>{dailyMood.palette} · {dailyMood.focus}</span>
+            </p>
+          </div>
+
+          {/* 1번 항목 — highlights의 첫 항목(할인율 최고)을 그대로 씁니다.
+              데이터가 도착하기 전에는 자리만 잡아두어 레이아웃이 튀지 않게 합니다. */}
+          <div className={styles.leadFeature}>
+            {leadProduct ? (
+              <>
+                <p className={styles.leadFeatureLabel}>
+                  <span className={styles.leadFeatureRank}>01</span>
+                  오늘의 최대 낙폭
                 </p>
-              </div>
-            </div>
+                <ProductCard
+                  product={leadProduct}
+                  {...leadProduct}
+                  isFavorite={isFavorite(leadProduct.id)}
+                  onFavoriteToggle={toggleFavorite}
+                  isComparing={isComparing(leadProduct.id)}
+                  onCompareToggle={toggleCompare}
+                  compareDisabled={isCompareFull}
+                />
+              </>
+            ) : (
+              <div className={styles.leadFeaturePlaceholder} aria-hidden="true" />
+            )}
           </div>
         </section>
 
-        {/* 최대 할인율 TOP 스트립 — 가로 스크롤로 "지금 가장 많이 깎인" 상품을 먼저 노출
-            메인 그리드의 필터와 독립적으로 동작하는 추천 영역입니다. */}
-        {highlights.length > 0 && (
-          <section className={styles.highlightSection} aria-label="최대 할인율 상품">
-            <div className={styles.highlightHeader}>
-              <h2 className={styles.highlightTitle}>🔥 최대 할인율 TOP</h2>
-              <p className={styles.highlightSubtitle}>지금 가장 많이 할인된 상품이에요</p>
+        {/* ═══════════════════════════════════════════════════════════
+            낙폭 상위 — 가로 밴드
+            ═══════════════════════════════════════════════════════════
+            리드에 실린 1번 항목 다음(02번부터)을 가로로 이어 붙입니다.
+            메인 색인의 필터와 무관하게 항상 "오늘 가장 많이 내려간 순"입니다. */}
+        {highlights.length > 1 && (
+          <section className={styles.band} aria-label="낙폭 상위 항목">
+            <div className={styles.bandHeader}>
+              <h2 className={styles.bandTitle}>낙폭 상위</h2>
+              <span className={styles.bandHint} aria-hidden="true">→ 옆으로</span>
             </div>
-            <div className={styles.highlightStrip}>
-              {highlights.map((product) => (
-                <div key={product.id} className={styles.highlightItem}>
+            <ul className={styles.bandStrip}>
+              {highlights.slice(1).map((product, index) => (
+                <li key={product.id} className={styles.bandItem}>
                   <ProductCard
                     product={product}
                     {...product}
+                    /* 리드가 01번이므로 밴드는 02번부터 시작합니다. */
+                    indexNumber={index + 2}
                     isFavorite={isFavorite(product.id)}
                     onFavoriteToggle={toggleFavorite}
                     isComparing={isComparing(product.id)}
                     onCompareToggle={toggleCompare}
                     compareDisabled={isCompareFull}
                   />
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         )}
 
-        {/* 메인 컨텐츠 */}
-        <main className={styles.main} id="products">
-          {/* 섹션 헤더 */}
-          <div className={styles.sectionHeader} ref={sectionHeaderRef}>
-            <h2 className={styles.sectionTitle}>오늘 챙겨야 할 옷장 업데이트</h2>
-            <p className={styles.sectionSubtitle}>
-              브랜드·성별·카테고리를 조합해서 지금 역할을 해줄 아이템만 남겨 보세요.
+        {/* ═══════════════════════════════════════════════════════════
+            색인(Index) — 전체 목록
+            ═══════════════════════════════════════════════════════════ */}
+        <main className={styles.index} id="products">
+          <div className={styles.indexHeader} ref={sectionHeaderRef}>
+            <h2 className={styles.indexTitle}>전체 색인</h2>
+            <p className={styles.indexSubtitle}>
+              브랜드와 조건을 좁혀 원하는 항목만 남기세요.
             </p>
           </div>
 
-          {/* 필터 토글 버튼
-              searchBarWrap은 nav 검색창으로 이동했으므로 제거되었습니다.
-              모바일에서는 이 토글 버튼을 통해 필터 패널을 열고 닫습니다. */}
-          <button
-            className={styles.filterToggleButton}
-            onClick={toggleFilters}
-            aria-label={showFilters ? '필터 숨기기' : '필터 보기'}
-            aria-expanded={showFilters}
-          >
-            <span className={styles.filterToggleIcon}>
-              {showFilters ? '✕' : '⚙'}
-            </span>
-            <span className={styles.filterToggleText}>
-              {showFilters ? '필터 닫기' : '필터'}
-            </span>
-          </button>
+          {/* ═══════════════════════════════════════════════════════════
+              탐색 바 (browseBar)
+              ═══════════════════════════════════════════════════════════
+              [개편 의도]
+              이전에는 브랜드·성별·카테고리·할인율·가격이 전부 하나의 큰 패널에
+              펼쳐진 채로 놓여 있어, 데스크톱에서만 371px을 차지했습니다.
+              그만큼 상품 그리드가 아래로 밀려났습니다.
 
-          {/* 모바일 오버레이 */}
-          {showFilters && (
-            <div
-              className={styles.filterOverlay}
-              onClick={toggleFilters}
-              aria-hidden="true"
-            />
-          )}
+              이 서비스에서 가장 자주 쓰는 축은 "브랜드"이므로 브랜드 칩만 항상 노출하고,
+              나머지(성별/카테고리/할인율/가격)는 '상세 필터' 안으로 접었습니다.
 
-          {/* 
-            필터 패널 
-            [수정됨] 이전에는 여기에 불필요한 중첩 div(filterPanel 클래스)가 하나 더 있어 
-            모바일 스크롤이 갇히는 문제가 있었습니다. 해당 중첩을 제거하여 해결했습니다.
-          */}
-          <div
-            className={`${styles.filterPanel} ${showFilters ? styles.filterPanelVisible : ''}`}
-            ref={filterPanelRef}
-          >
+              [모바일 바텀시트를 걷어낸 이유]
+              이전 구조는 position: fixed + bottom: -100%로 화면 밖에 "숨겨둔" 패널이었습니다.
+              CSS로 위치만 밀어낸 것이라 실제로는 DOM에 그대로 남아 있어,
+              닫힌 상태에서도 Tab 키로 그 안의 버튼들에 포커스가 들어갔습니다
+              (스크린리더 사용자에게는 보이지 않는 컨트롤이 계속 읽히는 상태).
+              모바일/데스크톱 모두 같은 인라인 접기 구조로 통일해 이 문제를 없앴고,
+              화면을 가리던 플로팅 필터 버튼(FAB)과 오버레이도 함께 제거했습니다. */}
+          <div className={styles.browseBar}>
             <BrandFilter
               selectedBrand={selectedBrand}
               onBrandChange={handleBrandChange}
             />
+          </div>
+
+          {/* 결과/정렬 툴바 — 좌: 현재 표시 개수, 우: 상세 필터 토글 + 품절 제외 + 정렬 */}
+          <div className={styles.resultsToolbar}>
+            <p className={styles.resultsCount} aria-live="polite">
+              {isInitialLoading
+                ? '불러오는 중…'
+                : <><strong>{filteredProducts.length.toLocaleString()}</strong>개 상품</>}
+            </p>
+
+            <div className={styles.toolbarActions}>
+              {/* 상세 필터 토글
+                  aria-expanded/aria-controls로 "이 버튼이 아래 영역을 여닫는다"는 관계를
+                  스크린리더에 명시합니다. 활성 필터 수는 배지로 함께 보여줍니다. */}
+              <button
+                type="button"
+                className={`${styles.toolbarButton} ${showFilters ? styles.toolbarButtonActive : ''}`}
+                onClick={toggleFilters}
+                aria-expanded={showFilters}
+                aria-controls="detail-filters"
+              >
+                상세 필터
+                {activeFilters.length > 0 && (
+                  <span className={styles.toolbarCount}>{activeFilters.length}</span>
+                )}
+              </button>
+
+              {/* 품절 제외 토글 — 켜지면 inStock === false 상품을 숨깁니다.
+                  ☑/☐ 문자 대신 CSS로 그린 체크박스를 써서 폰트에 따라
+                  글리프가 깨지거나 크기가 들쭉날쭉해지는 문제를 없앴습니다. */}
+              <button
+                type="button"
+                className={`${styles.toolbarButton} ${excludeSoldOut ? styles.toolbarButtonActive : ''}`}
+                onClick={handleToggleSoldOut}
+                aria-pressed={excludeSoldOut}
+              >
+                <span className={styles.toolbarCheck} aria-hidden="true" />
+                품절 제외
+              </button>
+
+              {/* 정렬 드롭다운 */}
+              <SortDropdown value={sortValue} onChange={handleSortChange} />
+            </div>
+          </div>
+
+          {/* 상세 필터 — 접이식 영역
+              hidden 속성을 쓰면 닫혔을 때 DOM에서 접근성 트리와 탭 순서에서 완전히 빠집니다.
+              (CSS로 화면 밖에 밀어내던 이전 방식과 결정적으로 다른 부분입니다) */}
+          <div
+            id="detail-filters"
+            className={styles.detailFilters}
+            ref={filterPanelRef}
+            hidden={!showFilters}
+          >
             <DetailedFilters
               selectedDiscount={selectedDiscount}
               onDiscountChange={handleDiscountChange}
@@ -983,44 +1270,46 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 자연어 검색 해석 결과 칩 — "이렇게 이해했어요"를 사용자에게 피드백
-              예: "유니클로", "5만원 이하", "30% 이상" */}
-          {appliedSearchLabels.length > 0 && (
-            <div className={styles.parsedChips} aria-label="검색 해석 결과">
-              <span className={styles.parsedChipsLabel}>이렇게 찾았어요:</span>
-              {appliedSearchLabels.map(label => (
-                <span key={label} className={styles.parsedChip}>{label}</span>
-              ))}
+          {/* 활성 필터 요약 — 접힌 상태에서도 걸린 조건이 보이도록 합니다.
+              각 칩을 눌러 개별 해제하고, 오른쪽 '전체 해제'로 한 번에 초기화합니다. */}
+          {activeFilters.length > 0 && (
+            <div className={styles.activeFilters}>
+              <span className={styles.activeFiltersLabel}>적용된 조건</span>
+              <ul className={styles.activeFiltersList}>
+                {activeFilters.map(filter => (
+                  <li key={filter.key}>
+                    <button
+                      type="button"
+                      className={styles.activeFilterChip}
+                      onClick={filter.clear}
+                      aria-label={`${filter.label} 조건 해제`}
+                    >
+                      {filter.label}
+                      <span className={styles.activeFilterChipRemove} aria-hidden="true">×</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                className={styles.resetButton}
+                onClick={handleResetFilters}
+              >
+                전체 해제
+              </button>
             </div>
           )}
 
-          {/* 결과/정렬 툴바 — 좌: 현재 표시 개수, 우: 품절 제외 토글 + 정렬 드롭다운
-              사용자가 "지금 몇 개가 보이는지", "어떤 순서로 볼지"를 한눈에 제어합니다. */}
-          <div className={styles.resultsToolbar}>
-            <span className={styles.resultsCount} aria-live="polite">
-              {isInitialLoading
-                ? '불러오는 중…'
-                : `${filteredProducts.length.toLocaleString()}개 상품`}
-            </span>
-
-            <div className={styles.toolbarActions}>
-              {/* 품절 제외 토글 — 켜지면 inStock === false 상품을 숨깁니다. */}
-              <button
-                type="button"
-                className={`${styles.soldOutToggle} ${excludeSoldOut ? styles.soldOutToggleActive : ''}`}
-                onClick={handleToggleSoldOut}
-                aria-pressed={excludeSoldOut}
-              >
-                <span className={styles.soldOutToggleCheck} aria-hidden="true">
-                  {excludeSoldOut ? '☑' : '☐'}
-                </span>
-                품절 제외
-              </button>
-
-              {/* 정렬 드롭다운 */}
-              <SortDropdown value={sortValue} onChange={handleSortChange} />
-            </div>
-          </div>
+          {/* 자연어 검색 해석 결과 칩 — "이렇게 이해했어요"를 사용자에게 피드백
+              예: "유니클로", "5만원 이하", "30% 이상" */}
+          {appliedSearchLabels.length > 0 && (
+            <p className={styles.parsedChips}>
+              <span className={styles.parsedChipsLabel}>이렇게 찾았어요</span>
+              {appliedSearchLabels.map(label => (
+                <span key={label} className={styles.parsedChip}>{label}</span>
+              ))}
+            </p>
+          )}
 
           {/* 초기 로딩 — shimmer 스켈레톤 카드 8개
               스피너 대신 shimmer 애니메이션으로 콘텐츠 영역을 미리 채웁니다.
@@ -1040,26 +1329,57 @@ export default function Home() {
             </div>
           )}
 
-          {/* 에러 상태 */}
-          {!isInitialLoading && hasBlockingError && products.length === 0 && (
-            <div className={styles.errorState} role="status">
-              <h3 className={styles.errorTitle}>데이터를 가져오는 데 실패했어요</h3>
-              <p className={styles.errorDescription}>
-                {error}
-              </p>
+          {/* ═══════════════════════════════════════════════════════════
+              최초 로딩 실패 — 보여줄 상품이 하나도 없는 상태
+              ═══════════════════════════════════════════════════════════
+              role="alert"는 화면이 바뀌는 즉시 스크린리더가 읽어줍니다.
+              (role="status"는 "여유 있을 때" 읽으므로 실패 알림에는 alert가 맞습니다) */}
+          {!isInitialLoading && initialLoadFailed && (
+            <div className={styles.errorState} role="alert">
+              <h3 className={styles.errorTitle}>상품을 불러오지 못했어요</h3>
+              <p className={styles.errorDescription}>{error}</p>
+              <button
+                type="button"
+                className={styles.errorRetryButton}
+                onClick={() => loadProducts({ pageToLoad: 0, replace: true })}
+              >
+                다시 시도
+              </button>
             </div>
           )}
 
-          {/* 상품 그리드 */}
-          {!isInitialLoading && !hasBlockingError && (
+          {/* ═══════════════════════════════════════════════════════════
+              상품 그리드
+              ═══════════════════════════════════════════════════════════
+              [버그 수정] 이전 조건은 `!isInitialLoading && !hasBlockingError` 였습니다.
+              무한 스크롤로 다음 페이지를 불러오다 실패하면 error가 채워지면서
+              hasBlockingError가 true가 되고, 그 순간 이 블록 전체가 사라져
+              "이미 보고 있던 상품 수십 개가 통째로 화면에서 증발"했습니다.
+              게다가 그때 표시되어야 할 에러 문구는 이 블록 *안에* 있어서
+              함께 사라졌기 때문에, 사용자에게는 아무 설명 없이 빈 화면만 남았습니다.
+
+              이제 실패를 두 종류로 나눠 처리합니다.
+                - initialLoadFailed : 보여줄 게 없음 → 위쪽 에러 화면
+                - loadMoreFailed    : 이미 본 목록은 그대로 두고 아래에 재시도 배너만 추가 */}
+          {!isInitialLoading && !initialLoadFailed && (
             <>
               <div className={styles.productsGrid}>
                 {shouldShowEmptyState
                   ? (
+                    /* 빈 상태 — 이모지(😔/🔍)를 걷어내고 "다음에 뭘 해야 하는지"를
+                       버튼으로 제시합니다. 조건이 걸려 있을 때만 해제 버튼을 띄웁니다. */
                     <div className={styles.emptyState}>
-                      <div className={styles.emptyIcon}>{emptyIcon}</div>
                       <h3 className={styles.emptyTitle}>{emptyTitle}</h3>
                       <p className={styles.emptyDescription}>{emptyDescription}</p>
+                      {activeFilters.length > 0 && (
+                        <button
+                          type="button"
+                          className={styles.emptyActionButton}
+                          onClick={handleResetFilters}
+                        >
+                          필터 전체 해제
+                        </button>
+                      )}
                     </div>
                   )
                   : (
@@ -1068,6 +1388,9 @@ export default function Home() {
                         key={product.id}
                         product={product}
                         {...product}
+                        /* 색인 번호는 1부터. 무한 스크롤로 항목이 늘어나도
+                           목록 내 순번이 이어지므로 "어디까지 봤는지" 감이 잡힙니다. */
+                        indexNumber={index + 1}
                         isFavorite={isFavorite(product.id)}
                         onFavoriteToggle={toggleFavorite}
                         isComparing={isComparing(product.id)}
@@ -1081,7 +1404,7 @@ export default function Home() {
 
               {/* 추가 로딩 — shimmer 스켈레톤 카드 4개 (무한 스크롤 시 하단에 표시) */}
               {isFetchingMore && (
-                <div className={styles.skeletonGrid}>
+                <div className={styles.skeletonGrid} aria-hidden="true">
                   {Array.from({ length: 4 }, (_, i) => (
                     <div key={i} className={styles.skeletonCard}>
                       <div className={styles.skeletonImage} />
@@ -1094,19 +1417,33 @@ export default function Home() {
                 </div>
               )}
 
-              {!isInitialLoading && hasBlockingError && products.length > 0 && (
-                <div className={styles.errorState} role="status">
-                  <h3 className={styles.errorTitle}>추가 데이터를 가져오지 못했습니다</h3>
-                  <p className={styles.errorDescription}>
-                    {error}
-                  </p>
+              {/* 추가 로딩 실패 — 지금까지 본 목록은 유지한 채 재시도만 제안합니다. */}
+              {loadMoreFailed && (
+                <div className={styles.loadMoreError} role="alert">
+                  <p className={styles.loadMoreErrorText}>{error}</p>
+                  <button
+                    type="button"
+                    className={styles.errorRetryButton}
+                    onClick={() => {
+                      setError(null)
+                      setHasMore(true)
+                      loadProducts({ pageToLoad: page + 1, replace: false })
+                    }}
+                  >
+                    다시 시도
+                  </button>
                 </div>
+              )}
+
+              {/* 마지막 페이지까지 다 본 경우 — 무한 스크롤이 왜 멈췄는지 알려줍니다. */}
+              {!hasMore && !loadMoreFailed && filteredProducts.length > 0 && (
+                <p className={styles.listEnd}>마지막 상품까지 모두 확인했습니다</p>
               )}
 
               {/* 이 div는 화면에 보이지 않지만, 관찰 대상이 되어 다음 페이지를 로드합니다. */}
               <div
                 ref={loadMoreRef}
-                style={{ width: '100%', height: '200px' }}
+                className={styles.loadMoreSentinel}
                 aria-hidden="true"
               />
             </>
