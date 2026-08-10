@@ -40,6 +40,11 @@
 // → 빠른 페이지 전환, 현재 스크롤 위치 유지 등의 장점이 있습니다.
 import Link from 'next/link';
 
+// useState: 컴포넌트가 기억해야 하는 값(여기서는 현재 연도)을 담는 React 훅
+// useEffect: 렌더가 끝난 뒤(=브라우저에서만) 실행할 코드를 등록하는 React 훅
+// → 아래 currentYear 주석에 설명한 hydration 문제를 피하기 위해 둘 다 필요합니다.
+import { useEffect, useState } from 'react';
+
 // 이 컴포넌트 전용 CSS 모듈
 import styles from '../styles/Footer.module.css';
 
@@ -57,16 +62,29 @@ export default function Footer() {
   /**
    * currentYear - 현재 연도 (저작권 표시에 사용)
    *
-   * new Date(): 현재 날짜와 시간의 Date 객체를 생성합니다.
-   * .getFullYear(): 4자리 연도(숫자)를 반환합니다.
-   * 예: 2024, 2025, ...
+   * ⚠️ 예전에는 이 자리에서 바로 `new Date().getFullYear()`를 호출했습니다.
+   * 하지만 그 코드는 "렌더 중"에 실행되기 때문에 서버와 브라우저가 서로 다른 값을
+   * 만들 수 있고, 그러면 React가 hydration 중 텍스트 불일치(#425)를 던집니다.
    *
-   * 왜 하드코딩(예: 2024) 대신 getFullYear()를 쓰나요?
-   * 연도가 바뀌어도 코드를 수정할 필요가 없습니다.
-   * 서버에서 렌더링 시 항상 최신 연도가 사용됩니다.
-   * Java 비유: LocalDate.now().getYear()와 동일합니다.
+   * 푸터는 _app.tsx를 통해 모든 페이지에 들어가는데, 이 페이지들은 빌드 시점에
+   * HTML이 미리 만들어집니다(SSG). 즉 서버 HTML에는 **빌드한 해**가 박제되고,
+   * 브라우저는 **접속한 해**를 계산합니다. 평소에는 두 값이 같아 문제가 없다가,
+   * 해가 바뀌는 순간(재배포 전 1월 1일) 모든 페이지에서 에러가 터지는 지뢰였습니다.
+   *
+   * 해결책은 pages/index.tsx의 todayKey와 같은 "2단계 렌더" 패턴입니다.
+   * - 첫 렌더(서버 HTML + hydration 시점): null → 연도를 아예 그리지 않습니다.
+   *   → 서버와 브라우저의 출력이 동일해지므로 불일치가 발생할 수 없습니다.
+   * - 마운트 이후 useEffect: 브라우저의 진짜 현재 연도로 채웁니다.
+   *   useEffect는 hydration이 끝난 뒤에만 실행되므로 안전합니다.
+   *
+   * Java 비유: LocalDate.now().getYear()를 템플릿 캐시를 만드는 시점이 아니라
+   * 응답을 내보낸 뒤에 채워 넣는 것과 같습니다.
    */
-  const currentYear = new Date().getFullYear();
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   /**
    * JSX 반환 — 푸터 UI
@@ -188,15 +206,21 @@ export default function Footer() {
           {/* 저작권 표시 */}
           <div className={styles.copyright}>
             {/**
-             * {currentYear}: JSX에서 중괄호 {}로 JavaScript 값을 표현합니다.
-             * → currentYear 변수의 값(숫자)이 텍스트로 삽입됩니다.
-             * → 예: '© 2025 ARCA. All rights reserved.'
+             * {...}: JSX에서 중괄호로 JavaScript 값을 표현합니다.
+             *
+             * currentYear는 마운트 전에는 null이므로 삼항 연산자로 두 문구를 나눕니다.
+             * - 첫 렌더(서버 HTML == 브라우저 첫 렌더): '© ARCA.'  ← 양쪽이 완전히 같은 문자열
+             * - 마운트 이후                            : '© 2026 ARCA.'
+             * 이렇게 문자열 전체를 한 번에 만들면 연도가 없을 때 공백이 두 칸 생기는 것도 막힙니다.
              *
              * ©: 저작권 기호 (Copyright symbol)
              * HTML에서는 &copy;, JSX에서는 ©를 직접 쓸 수 있습니다.
              */}
             {/* Framer 시안 카피: 저작권 + 가격 정보 기준 안내를 한 줄로 */}
-            <p>© {currentYear} ARCA. 모든 가격 정보는 각 브랜드 공식몰 기준입니다.</p>
+            <p>
+              {currentYear === null ? '© ARCA.' : `© ${currentYear} ARCA.`} 모든 가격 정보는 각
+              브랜드 공식몰 기준입니다.
+            </p>
           </div>
 
           {/* 면책 조항 (Disclaimer) */}

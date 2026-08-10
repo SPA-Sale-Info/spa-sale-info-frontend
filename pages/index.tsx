@@ -208,17 +208,86 @@ export default function Home() {
     isComparing,
     isFull: isCompareFull,
   } = useCompare()
-  const dailyMood = useMemo(() => {
-    const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-    const index = Number(todayKey) % DAILY_MOODS.length
-    return DAILY_MOODS[index]
+  /**
+   * todayKey - "오늘 날짜"를 20260810 같은 숫자 하나로 압축한 값
+   *
+   * ⚠️ 여기가 React error #425(Text content does not match server-rendered HTML)의 원인이었습니다.
+   *
+   * [무엇이 잘못됐었나]
+   * 예전 코드는 useMemo 안에서 곧바로 new Date()를 호출해 오늘 날짜로 인덱스를 계산했습니다.
+   * useMemo의 콜백은 "렌더 중"에 실행되므로, 서버 렌더링에서도 그대로 실행됩니다.
+   * 그런데 이 홈 지면에는 getServerSideProps가 없어서 Next.js가 **빌드 시점에 HTML을 미리 만들어 둡니다(SSG)**.
+   *   - 서버가 만든 HTML  : 배포(빌드)한 날짜로 뽑힌 문구가 박제됨
+   *   - 브라우저의 첫 렌더 : 사용자가 접속한 "오늘" 날짜로 뽑힌 문구
+   * 두 문자열이 다르면 React는 hydration 도중 텍스트 불일치를 감지하고 #425를 던집니다.
+   * 배포 당일에는 두 날짜가 같아서 멀쩡해 보이고, **다음 날부터** 매번 터지기 때문에
+   * 로컬 개발(dev 서버는 매 요청마다 렌더)에서는 거의 드러나지 않는 종류의 버그였습니다.
+   *
+   * [어떻게 고쳤나 — "2단계 렌더(two-pass rendering)" 패턴]
+   * 1단계: 첫 렌더에서는 서버·클라이언트 모두 todayKey = null 로 시작합니다.
+   *        → 아래 useMemo가 항상 인덱스 0을 쓰므로 두 쪽 HTML이 **글자 단위로 동일**해집니다.
+   * 2단계: 마운트가 끝난 뒤 useEffect에서 진짜 오늘 날짜를 채웁니다.
+   *        → useEffect는 브라우저에서 hydration이 끝난 다음에만 실행되므로,
+   *          React가 서버 HTML과 클라이언트 트리를 비교하는 순간에는 값이 이미 일치합니다.
+   *          그 뒤의 변경은 그냥 평범한 리렌더라 경고가 나지 않습니다.
+   *
+   * Java/Spring 비유: 템플릿을 빌드 타임에 미리 찍어두고 나중에 요청 시각 기준 값으로
+   * 덮어쓰려다 캐시본과 어긋난 상황과 같습니다. 캐시본에는 시각에 의존하지 않는 값만 넣고,
+   * 시각에 의존하는 값은 렌더가 끝난 뒤에 채우는 것이 해법입니다.
+   *
+   * 아래 datelineDate(날짜줄)도 같은 이유로 이미 이 패턴을 쓰고 있었기 때문에,
+   * 날짜 계산이 세 군데로 흩어지지 않도록 하나의 useEffect로 합쳤습니다.
+   */
+  const [todayKey, setTodayKey] = useState<number | null>(null)
+
+  /**
+   * datelineDate - 마스트헤드 아래 날짜줄에 찍는 "오늘" 날짜 (예: 2026.08.10)
+   *
+   * 신문의 dateline처럼 "이 지면이 언제 것인지"를 밝힙니다.
+   * todayKey와 똑같은 이유로 마운트 이후에 채웁니다(초기 렌더에서는 빈 문자열).
+   */
+  const [datelineDate, setDatelineDate] = useState<string>('')
+
+  useEffect(() => {
+    // 이 useEffect는 브라우저에서만, 그것도 hydration이 모두 끝난 뒤에 실행됩니다.
+    // 따라서 여기서 new Date()를 쓰는 것은 안전합니다.
+    const now = new Date()
+
+    // getMonth()는 0부터 시작하므로(0=1월) +1 해야 사람이 읽는 달이 됩니다.
+    // padStart(2, '0'): "8" → "08" 처럼 두 자리로 맞춰 자릿수를 통일합니다.
+    const yyyy = now.getFullYear()
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const dd = String(now.getDate()).padStart(2, '0')
+
+    setDatelineDate(`${yyyy}.${mm}.${dd}`)
+
+    // "20260810" 문자열을 숫자로 바꿔 인덱스 계산(나머지 연산)에 씁니다.
+    // 사용자의 로컬 시간대 기준 날짜라, 사용자가 체감하는 "오늘"과 일치합니다.
+    // (예전에는 toISOString()으로 UTC 날짜를 썼는데, 한국에서는 오전 9시 이전에
+    //  전날 문구가 나오는 문제가 있었습니다. 로컬 기준으로 바꿔 함께 해결했습니다.)
+    setTodayKey(Number(`${yyyy}${mm}${dd}`))
   }, [])
 
-  const dailyInsight = useMemo(() => {
-    const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-    const index = Number(todayKey) % DAILY_INSIGHTS.length
-    return DAILY_INSIGHTS[index]
-  }, [])
+  /**
+   * dailyMood / dailyInsight - 매일 바뀌는 에디토리얼 한 줄
+   *
+   * todayKey가 아직 null인 첫 렌더(서버 HTML + hydration 시점)에는 `?? 0`이 동작해
+   * 항상 배열의 0번 항목을 씁니다. 서버와 클라이언트가 같은 값을 보게 만드는 것이 핵심입니다.
+   * 마운트 후 todayKey가 채워지면 의존성 배열 덕분에 useMemo가 다시 계산되어
+   * 오늘 날짜에 해당하는 항목으로 교체됩니다.
+   *
+   * % (나머지 연산자): 날짜 숫자가 아무리 커도 배열 길이 범위 안의 인덱스로 접어줍니다.
+   * → 날짜가 하루 넘어가면 인덱스도 바뀌므로 "매일 다른 문구"가 됩니다.
+   */
+  const dailyMood = useMemo(
+    () => DAILY_MOODS[(todayKey ?? 0) % DAILY_MOODS.length],
+    [todayKey],
+  )
+
+  const dailyInsight = useMemo(
+    () => DAILY_INSIGHTS[(todayKey ?? 0) % DAILY_INSIGHTS.length],
+    [todayKey],
+  )
 
   /**
    * activeBrandCount - "지금 세일 데이터를 수집 중인 브랜드 수"
@@ -250,21 +319,8 @@ export default function Home() {
    */
   const leadProduct = highlights[0]
 
-  /**
-   * datelineDate - 마스트헤드 아래 날짜줄에 찍는 "오늘" 날짜
-   *
-   * 신문의 dateline처럼 "이 지면이 언제 것인지"를 밝힙니다.
-   * 서버와 클라이언트의 시각이 달라 hydration 경고가 나지 않도록
-   * 마운트 이후에 채웁니다(초기 렌더에서는 빈 문자열).
-   */
-  const [datelineDate, setDatelineDate] = useState<string>('')
-  useEffect(() => {
-    const now = new Date()
-    const yyyy = now.getFullYear()
-    const mm = String(now.getMonth() + 1).padStart(2, '0')
-    const dd = String(now.getDate()).padStart(2, '0')
-    setDatelineDate(`${yyyy}.${mm}.${dd}`)
-  }, [])
+  // (datelineDate 상태와 날짜 계산 useEffect는 위쪽 todayKey 블록으로 옮겼습니다.
+  //  같은 new Date() 호출을 세 번 반복하지 않고 한 번만 하기 위해서입니다.)
 
   // 로고 애니메이션: 1200ms마다 logoStep 0→1→2→3 순환
   // S(ales) / S·P(roduct) / S·P·A(rchive) 순서로 단어가 펼쳐집니다.
