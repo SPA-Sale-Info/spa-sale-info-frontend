@@ -169,7 +169,7 @@ export class ApiRequestError extends Error {
  * @returns Promise<T> - 비동기로 T 타입 데이터를 반환
  * @throws Error - HTTP 오류 또는 API 실패 시 에러를 던집니다
  */
-async function fetchAPI<T>(url: string, options?: RequestInit): Promise<T> {
+export async function fetchAPI<T>(url: string, options?: RequestInit): Promise<T> {
   /**
    * fetch(url, options): 브라우저/Node.js 내장 HTTP 요청 함수입니다.
    * - XMLHttpRequest(XHR)의 현대적 대안입니다.

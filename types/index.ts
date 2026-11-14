@@ -552,3 +552,77 @@ export interface ContactFormData {
  * Java의 enum Theme { LIGHT, DARK }와 같습니다.
  */
 export type Theme = 'light' | 'dark';
+
+// ============================================================================
+// 관심상품 · 알림 · 가격 통계 · 비슷한 상품 (백엔드 사용자 기능 API 응답)
+// ============================================================================
+
+/** 관심상품의 알림 조건. PUT /watchlist/{id}/alerts 는 전체 교체라 항상 모든 필드를 보냅니다. */
+export interface AlertSettings {
+  targetPrice: number | null;        // 이 가격 이하가 되면 알림 (없으면 null)
+  targetDiscountRate: number | null; // 이 할인율 이상이 되면 알림 (1~100, 없으면 null)
+  priceDropAlertEnabled: boolean;    // 가격이 내려가면 알림
+  restockAlertEnabled: boolean;      // 품절 상품이 다시 들어오면 알림
+  preferredColors: string[];
+  preferredSizes: string[];
+}
+
+/** 서버에 저장된 관심상품 한 건 (GET /api/v1/watchlist) */
+export interface WatchlistItem extends AlertSettings {
+  watchlistId: string;
+  productId: string;
+  addedAt: string;     // ISO 문자열
+  product: ApiProduct; // 최신 상품 정보
+}
+
+/** 인앱 알림 종류 (백엔드 NotificationType) */
+export type NotificationType =
+  | 'PRICE_DROP'
+  | 'TARGET_PRICE_REACHED'
+  | 'TARGET_DISCOUNT_REACHED'
+  | 'BACK_IN_STOCK';
+
+/** 인앱 알림 한 건 (GET /api/v1/notifications) */
+export interface NotificationItem {
+  id: string;
+  productId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  currentPrice: number | null;
+  previousPrice: number | null;
+  discountRate: number | null;
+  read: boolean;
+  occurredAt: string;
+  readAt: string | null;
+}
+
+/** 가격 위치 판정 (백엔드 PriceInsightResponse.Verdict) */
+export type PriceVerdict =
+  | 'INSUFFICIENT_DATA' // 추적 기간이 짧거나 기록이 없어 판정하지 않음
+  | 'NO_CHANGE'         // 충분히 추적했지만 가격이 바뀐 적 없음
+  | 'LOWEST'            // 추적 시작 이후 최저가
+  | 'NEAR_LOWEST'       // 최저가의 5% 이내
+  | 'ABOVE_LOWEST';     // 그보다 높음
+
+/** 가격 통계 (GET /api/v1/products/{id}/price-insight). "역대"가 아니라 추적 시작 이후 기준입니다. */
+export interface PriceInsight {
+  productId: string;
+  currentPrice: number | null;
+  lowestPrice: number | null;
+  lowestPriceDate: string | null; // YYYY-MM-DD
+  highestPrice: number | null;
+  trackedSince: string | null;    // YYYY-MM-DD
+  trackedDays: number;
+  changeCount: number;
+  verdict: PriceVerdict;
+}
+
+/** 비슷한 상품 (GET /api/v1/products/{id}/similar). strategy가 METADATA면 이미지 유사도가 아닙니다. */
+export interface SimilarProducts {
+  productId: string;
+  strategy: 'IMAGE' | 'METADATA';
+  modelVersion: string | null;
+  items: { product: ApiProduct; score: number | null }[];
+  fallbackReason: string | null;
+}
