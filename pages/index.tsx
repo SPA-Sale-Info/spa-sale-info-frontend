@@ -58,6 +58,8 @@ import useCompare from '../hooks/useCompare'
 import { SORT_OPTIONS, DEFAULT_SORT_VALUE, BRAND_METADATA } from '../types'
 import type { Brand, Gender, Category, NormalizedProduct } from '../types'
 import { DAILY_INSIGHTS, DAILY_MOODS } from '../constants/dailyContent'
+import NotificationToast from '../components/NotificationToast'
+import NotificationBell from '../components/NotificationBell'
 
 /**
  * PAGE_SIZE - 한 번에 불러올 상품 수
@@ -197,7 +199,7 @@ export default function Home() {
   const didHydrateFromUrl = useRef<boolean>(false)
 
   // 찜 기능 훅
-  const { toggleFavorite, isFavorite, getFavoriteCount } = useFavorites()
+  const { toggleFavorite, isFavorite, getFavoriteCount, lastError: favoriteNotice, clearError: clearFavoriteNotice } = useFavorites()
 
   // 상품 비교 훅 (최대 4개, localStorage 저장)
   const {
@@ -1083,6 +1085,8 @@ export default function Home() {
 
             {/* 오른쪽 액션 — 찜 목록 + 테마 토글 */}
             <div className={styles.mastheadActions}>
+              {/* 읽지 않은 가격 알림 개수와 알림함 링크 */}
+              <NotificationBell />
               <Link href="/favorites" className={styles.iconLink} aria-label="찜 목록">
                 <span aria-hidden="true">♥</span>
                 {getFavoriteCount() > 0 && (
@@ -1530,6 +1534,9 @@ export default function Home() {
         onRemove={removeCompare}
         onClear={clearCompare}
       />
+
+      {/* 찜을 서버에 저장하지 못했거나 정리한 상품이 있을 때 알려줍니다. */}
+      <NotificationToast message={favoriteNotice ?? ''} isVisible={Boolean(favoriteNotice)} onClose={clearFavoriteNotice} />
     </div >
   )
 }

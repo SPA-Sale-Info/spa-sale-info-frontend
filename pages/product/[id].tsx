@@ -33,6 +33,11 @@ import ShareButton from '../../components/ShareButton'
 import styles from '../../styles/ProductDetail.module.css'
 import { BRAND_METADATA } from '../../types'
 import type { Brand, Category, Gender, Product } from '../../types'
+import NotificationToast from '../../components/NotificationToast'
+import BuySignal from '../../components/BuySignal'
+import NotificationBell from '../../components/NotificationBell'
+import PriceAlertPanel from '../../components/PriceAlertPanel'
+import SimilarProducts from '../../components/SimilarProducts'
 
 /**
  * 성별 메타 정보
@@ -125,7 +130,10 @@ export default function ProductDetail() {
   const [error, setError] = useState<string | null>(null)
 
   // 커스텀 훅 사용 (찜/최근 본 상품)
-  const { isFavorite, toggleFavorite } = useFavorites()
+  const {
+    isFavorite, toggleFavorite, getWatchlistItem, refresh: refreshFavorites, applyWatchlistItem,
+    lastError: favoriteNotice, clearError: clearFavoriteNotice,
+  } = useFavorites()
   const { addRecentItem, recentItems } = useRecentlyViewed()
 
   // API 호출 중복 방지를 위한 ref (상품 ID별로 관리)
@@ -265,6 +273,7 @@ export default function ProductDetail() {
             ← 목록으로
           </Link>
           <div className={styles.headerActions}>
+            <NotificationBell />
             <ShareButton
               title={`${product.name} - ${brandName}`}
               text={`${product.discountRate}% 할인! ${product.name} 확인해보세요.`}
@@ -336,6 +345,9 @@ export default function ProductDetail() {
             </div>
 
             {/* CTA 버튼 */}
+            {/* 추적 기간 기준으로 현재 가격의 위치를 한 줄로 알려줍니다. */}
+            <BuySignal productId={String(product.id)} />
+
             <div className={styles.actions}>
               {/* 반전 pill 버튼 — 이모지 없이 텍스트만 (에디토리얼 톤) */}
               <a
@@ -347,6 +359,22 @@ export default function ProductDetail() {
                 <span>{brandName}에서 구매하기 →</span>
               </a>
             </div>
+
+            {/* 가격 알림: 관심상품으로 등록하고 목표 가격·알림 종류를 설정합니다. */}
+            <PriceAlertPanel
+              product={product}
+              watchlistItem={getWatchlistItem(product.id)}
+              subscribed={isFavorite(product.id)}
+              onSubscribe={() => {
+                // 아직 찜하지 않았으면 등록하고, 이미 찜했는데 서버 항목이 없으면 서버와 다시 맞춥니다.
+                if (!isFavorite(product.id)) {
+                  toggleFavorite(product)
+                } else {
+                  void refreshFavorites()
+                }
+              }}
+              onSaved={applyWatchlistItem}
+            />
 
             {/* 가격 히스토리 차트 */}
             {product.originalPrice && product.originalPrice > product.salePrice && (
@@ -452,8 +480,18 @@ export default function ProductDetail() {
           </div>
         </div>
 
+        {/* 이미지가 비슷한 상품. 이미지 검색을 쓸 수 없으면 같은 카테고리의 세일 상품으로 대체됩니다. */}
+        <SimilarProducts
+          productId={String(product.id)}
+          isFavorite={isFavorite}
+          onFavoriteToggle={toggleFavorite}
+        />
+
         <RecentlyViewed products={recentItems} />
       </div>
+
+      {/* 찜을 서버에 저장하지 못했거나 정리한 상품이 있을 때 알려줍니다. */}
+      <NotificationToast message={favoriteNotice ?? ''} isVisible={Boolean(favoriteNotice)} onClose={clearFavoriteNotice} />
     </>
   )
 }

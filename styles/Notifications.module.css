@@ -1,0 +1,241 @@
+/* 알림함 — Ledger: 괘선으로 나눈 장부형 목록. 빨강은 인하된 가격에만 씁니다. */
+.container {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border-bottom: 0.5px solid var(--color-border);
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+}
+
+.backLink {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--color-text);
+}
+
+.main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 var(--space-6) var(--space-16);
+}
+
+.pageHead {
+  padding: var(--space-10) 0 var(--space-4);
+  border-bottom: 2px solid var(--color-rule-strong);
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-light);
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.titleCount {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  color: var(--color-text-light);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: start;
+  width: 100%;
+  padding: var(--space-4) 0 var(--space-4) var(--space-3);
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--color-bg-secondary);
+}
+
+/* 읽지 않은 알림: 왼쪽에 굵은 잉크 괘선 + 굵은 제목 */
+.unread {
+  border-left-color: var(--color-rule-strong);
+}
+
+.tag {
+  padding-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-text-light);
+}
+
+.unread .tag {
+  color: var(--color-text);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: 0.9375rem;
+  color: var(--color-text-light);
+}
+
+.unread .rowTitle {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.rowMessage {
+  font-size: 0.8125rem;
+  color: var(--color-text-light);
+}
+
+.rowPrice {
+  margin-top: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.rowPrice s {
+  color: var(--color-text-lighter);
+}
+
+.rowPrice b {
+  color: var(--color-discount);
+}
+
+.when {
+  padding-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--color-text-lighter);
+  white-space: nowrap;
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-6) 0 0;
+}
+
+.ghostButton {
+  height: 36px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ghostButton:hover {
+  background: var(--color-bg-secondary);
+}
+
+.ghostButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.state {
+  padding: var(--space-12) 0;
+  text-align: center;
+  color: var(--color-text-light);
+}
+
+.state p {
+  margin: 0 0 var(--space-4);
+}
+
+.empty {
+  margin-top: var(--space-6);
+  padding: var(--space-16) var(--space-6);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+  text-align: center;
+  color: var(--color-text-light);
+}
+
+.empty strong {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: 1.0625rem;
+  color: var(--color-text);
+}
+
+.empty p {
+  margin: 0;
+}
+
+/* 화면에는 보이지 않고 화면 낭독기에만 읽히는 텍스트 */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .tag {
+    grid-column: 1 / -1;
+    padding-top: 0;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+}
