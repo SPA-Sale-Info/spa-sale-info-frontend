@@ -108,4 +108,5 @@ test('인식한 종류와 넓혀 찾은 범위를 안내한다', () => {
   assert.equal(describeDetection({ ...base, detectedCategory: 'SOMETHING_NEW' }), null);
   assert.match(describeDetection({ ...base, detectedCategory: 'SHIRT', widenedTo: null }), /셔츠만 찾았습니다/);
   assert.match(describeDetection({ ...base, detectedCategory: 'SHIRT', widenedTo: 'TOP' }), /상의 전체에서/);
+  assert.match(describeDetection({ ...base, detectedCategory: null, widenedTo: 'OUTER' }), /아우터에서 찾았습니다/);
 });

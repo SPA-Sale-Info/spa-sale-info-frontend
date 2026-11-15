@@ -83,10 +83,13 @@ const WIDENED_LABELS: Record<string, string> = {
 /** 사진에서 종류를 인식해 좁혀 찾았을 때 결과 위에 보여줄 한 줄. 인식하지 않았으면 null입니다. */
 export function describeDetection(result: ImageSearchResult): string | null {
   const detected = result.detectedCategory ? DETECTED_LABELS[result.detectedCategory] : undefined;
-  if (!detected) {
-    return null;
-  }
   const widened = result.widenedTo ? WIDENED_LABELS[result.widenedTo] : undefined;
+  if (!detected) {
+    // 세부 종류는 가려내지 못했지만 대분류(아우터 등)는 인식한 경우
+    return widened
+      ? `사진을 ${widened}(으)로 인식해 ${widened}에서 찾았습니다. 다른 종류를 보려면 위에서 분류를 고르세요.`
+      : null;
+  }
   return widened
     ? `사진을 ${detected}(으)로 인식했습니다. 비슷한 ${detected}이(가) 적어 ${widened} 전체에서 찾았습니다.`
     : `사진을 ${detected}(으)로 인식해 ${detected}만 찾았습니다. 다른 종류를 보려면 위에서 분류를 고르세요.`;
