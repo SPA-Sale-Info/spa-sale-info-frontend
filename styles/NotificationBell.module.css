@@ -1,0 +1,21 @@
+/* 종 아이콘 — 홈의 찜 링크(.iconLink)와 같은 문법: 아이콘 + 모노 숫자 */
+.bell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+}
+
+.bell:hover {
+  opacity: 0.6;
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,407 +1,325 @@
 /**
- * hooks/useFavorites.ts - 찜/북마크 기능을 관리하는 커스텀 훅 (TypeScript 버전)
+ * hooks/useFavorites.ts - 찜(관심상품) 상태를 관리하는 커스텀 훅
  *
  * ═══════════════════════════════════════════════════════════════
- * 📌 이 파일이 하는 일
+ * 이 훅이 하는 일
  * ═══════════════════════════════════════════════════════════════
- * 사용자가 "♥ 찜하기" 버튼을 클릭했을 때 상품을 저장하고 관리합니다.
- * 찜 목록은 브라우저의 localStorage에 저장되어 새로고침 후에도 유지됩니다.
+ * 찜 목록을 보여주고, 추가·제거하고, 서버의 관심상품과 맞춥니다.
  *
- * ═══════════════════════════════════════════════════════════════
- * 커스텀 훅(Custom Hook)이란?
- * ═══════════════════════════════════════════════════════════════
- * - useState, useEffect 같은 React 내장 훅들을 조합하여 만든 재사용 가능한 로직입니다.
- * - 이름이 반드시 "use"로 시작해야 합니다 (React의 규칙).
- * - 여러 컴포넌트에서 같은 로직을 공유할 때 사용합니다.
+ * 저장 위치가 두 곳입니다.
+ * - 서버 관심상품(/api/v1/watchlist): 기준입니다. 가격 알림은 여기 등록된 상품에만 옵니다.
+ * - 브라우저 localStorage: 첫 화면을 빨리 그리기 위한 사본이자, 서버에 아직 못 올린 찜의 임시 보관소입니다.
  *
- * Java/Spring 비유:
- * - @Service 어노테이션이 붙은 Service 클래스와 유사합니다.
- * - 비즈니스 로직을 UI 컴포넌트에서 분리하는 역할을 합니다.
- * - 예: @Service public class FavoriteService { ... }
+ * 흐름:
+ * 1) 마운트하면 로컬 사본으로 먼저 그립니다(네트워크를 기다리지 않음).
+ * 2) 서버 목록을 받아 비교하고, 로컬에만 있는 찜을 하나씩 서버에 등록합니다(utils/favoriteSync.ts가 계획을 계산).
+ * 3) 화면 목록을 서버 기준으로 바꿉니다. 일시 오류로 못 올린 찜은 로컬에 남겨 다음 접속에 다시 시도합니다.
  *
- * ═══════════════════════════════════════════════════════════════
- * localStorage란?
- * ═══════════════════════════════════════════════════════════════
- * - 브라우저에 데이터를 영구적으로 저장하는 키-값 저장소입니다.
- * - 탭을 닫아도, 브라우저를 재시작해도 데이터가 유지됩니다.
- * - 사용자가 직접 삭제하거나 코드로 지우기 전까지 남아있습니다.
- * - Java/Spring 비유: 서버의 Redis(세션) 대신 클라이언트의 간단한 영속 저장소
+ * localStorage를 쓸 수 없는 브라우저에서는 서버 기능을 쓰지 않고 메모리 안의 찜으로만 동작합니다.
  *
- * TypeScript 문법 포인트:
- * - interface: 객체 구조 정의
- * - useState<타입>: 상태의 타입을 명시
- * - useCallback: 함수를 메모이제이션하여 불필요한 재생성 방지
- * - string | number: 유니온 타입 (string 또는 number 중 하나)
+ * Java/Spring 비유: 캐시(로컬)와 원본 DB(서버)를 두고, 캐시를 먼저 보여준 뒤 원본으로 갱신하는
+ * cache-aside 패턴과 비슷합니다.
  */
 
-// useState: 변하는 값(상태)을 관리
-// useEffect: 컴포넌트 마운트/업데이트 시 실행할 코드 등록
-// useCallback: 함수를 의존성이 변경될 때만 재생성 (성능 최적화)
-import { useState, useEffect, useCallback } from 'react';
-
-// import type: 타입 정보만 가져옵니다 (빌드된 JS에 포함 안 됨)
-import type { ApiProduct, Product, StoredFavoriteProduct } from '../types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import type { ApiProduct, Product, StoredFavoriteProduct, WatchlistItem } from '../types';
 import { normalizeProduct } from '../utils/productNormalization';
+import { ApiRequestError } from '../utils/api';
+import { classifyUploadFailure, planFavoriteSync, withoutPendingRemovals } from '../utils/favoriteSync';
+import { addToWatchlist, getWatchlist, isUserFeatureAvailable, removeFromWatchlist } from '../utils/userApi';
 
-/**
- * localStorage 키 상수
- *
- * 문자열 상수로 키를 관리하면:
- * 1. 오타를 방지할 수 있습니다.
- * 2. 키 이름을 바꿀 때 한 곳만 수정하면 됩니다.
- *
- * 다른 앱과 충돌을 피하기 위해 프로젝트명을 접두사로 붙입니다.
- * Java 비유: private static final String FAVORITES_KEY = "mat_project_favorites";
- */
+/** 찜 사본을 보관하는 localStorage 키 (기존 사용자의 찜을 잃지 않도록 이름을 유지합니다) */
 const FAVORITES_STORAGE_KEY = 'mat_project_favorites';
 
-/**
- * FavoriteItem - 찜 목록에 저장하는 상품 정보 구조
- *
- * Product 타입의 모든 필드를 저장하는 대신, 찜 목록에 필요한 최소한의 정보만 저장합니다.
- * 이렇게 하면 localStorage 용량을 절약하고, 데이터 구조가 단순해집니다.
- *
- * interface: 객체의 형태(필드와 타입)를 정의합니다.
- * ?: optional 필드 — 있어도 되고 없어도 됩니다.
- * Java 비유: @Getter @Setter DTO 클래스 (Lombok 사용)
- */
+/** 서버 등록을 확인한 상품 ID 목록을 보관하는 키. "다른 곳에서 지운 찜"과 "아직 못 올린 찜"을 구분합니다. */
+const SYNCED_STORAGE_KEY = 'mion_favorites_synced';
+
+const TOGGLE_FAILED_MESSAGE = '찜 상태를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+
 type FavoriteItem = StoredFavoriteProduct;
 
+/** 상품을 저장용 찜 항목으로 바꿉니다. 이미 찜 항목이면 추가 시각을 유지합니다. */
 const toFavoriteItem = (product: Product | FavoriteItem): FavoriteItem => {
   const normalized = normalizeProduct(product as ApiProduct);
   const existingAddedAt = 'addedAt' in product && typeof product.addedAt === 'string'
     ? product.addedAt
     : undefined;
-
   return {
     ...normalized,
     addedAt: existingAddedAt || new Date().toISOString(),
   };
 };
 
-/**
- * UseFavoritesReturn - useFavorites 훅이 반환하는 값들의 타입
- *
- * 이 훅을 사용하는 컴포넌트는 이 타입에 정의된 값과 함수들을 받습니다.
- * 반환 타입을 명시하면 실수로 잘못된 값을 반환하는 것을 TypeScript가 방지합니다.
- *
- * Java 비유:
- * public interface FavoriteService {
- *   List<FavoriteItem> getFavorites();
- *   void toggleFavorite(Product product);
- *   boolean isFavorite(String productId);
- *   int getFavoriteCount();
- *   ...
- * }
- */
+/** 서버 관심상품을 화면용 찜 항목으로 바꿉니다. 상품 정보는 서버의 최신 값을 씁니다. */
+const fromWatchlistItem = (item: WatchlistItem): FavoriteItem => ({
+  ...normalizeProduct(item.product),
+  addedAt: item.addedAt || new Date().toISOString(),
+});
+
+/** 서버 등록을 확인한 ID 목록을 읽습니다. 저장소를 쓸 수 없으면 빈 목록입니다. */
+const readSyncedIds = (): string[] => {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(SYNCED_STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeSyncedIds = (ids: Iterable<string>): void => {
+  try {
+    localStorage.setItem(SYNCED_STORAGE_KEY, JSON.stringify(Array.from(new Set(ids))));
+  } catch {
+    // 저장 실패는 다음 동기화에서 다시 계산되므로 무시합니다.
+  }
+};
+
 interface UseFavoritesReturn {
-  favorites: FavoriteItem[];  // 찜한 상품 목록 (배열)
-  // (Product | FavoriteItem): Product 또는 FavoriteItem 둘 다 받을 수 있습니다 (유니온 타입)
+  favorites: FavoriteItem[];  // 찜한 상품 목록
   toggleFavorite: (product: Product | FavoriteItem) => void; // 찜 추가/제거
-  // string | number: 문자열이나 숫자 ID 둘 다 받습니다
   isFavorite: (productId: string | number) => boolean; // 찜 여부 확인
-  getFavoriteCount: () => number; // 찜한 상품 수 반환
-  // checkPriceDrops 반환 타입: hasDrop이 true이면 product와 message가 있고, false면 없습니다.
-  checkPriceDrops: () => { hasDrop: boolean; product?: FavoriteItem; message?: string };
-  isInitialized: boolean; // 초기화 완료 여부 (localStorage 로드 완료)
+  getFavoriteCount: () => number; // 찜한 상품 수
+  /** 서버 관심상품 항목(알림 조건 포함). 서버에 아직 없거나 기능을 쓸 수 없으면 undefined */
+  getWatchlistItem: (productId: string | number) => WatchlistItem | undefined;
+  /** 서버와 다시 맞춥니다. */
+  refresh: () => Promise<void>;
+  /** 서버가 돌려준 관심상품 항목을 바로 반영합니다(알림 조건을 저장한 직후). */
+  applyWatchlistItem: (item: WatchlistItem) => void;
+  /** 사용자에게 보여줄 안내·오류 문구. 없으면 null */
+  lastError: string | null;
+  clearError: () => void;
+  isInitialized: boolean; // 로컬 사본 로드 완료 여부
 }
 
-/**
- * useFavorites - 찜 기능 관리 커스텀 훅
- *
- * 사용 예시:
- * const { favorites, toggleFavorite, isFavorite, getFavoriteCount } = useFavorites();
- *
- * 반환 타입(UseFavoritesReturn)을 명시하여 어떤 구조가 반환되는지 명확히 합니다.
- * → 사용하는 곳에서 자동완성이 되고, 잘못된 필드 접근을 방지합니다.
- */
 export default function useFavorites(): UseFavoritesReturn {
-  /**
-   * favorites 상태 — 찜한 상품 목록
-   *
-   * useState<FavoriteItem[]>([]):
-   * - <FavoriteItem[]>: 이 상태는 FavoriteItem 배열임을 TypeScript에 알립니다.
-   * - 초기값: 빈 배열([])
-   * - setFavorites를 호출하면 favorites 값이 바뀌고 컴포넌트가 다시 렌더됩니다.
-   *
-   * Java 비유: private List<FavoriteItem> favorites = new ArrayList<>();
-   */
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-
-  /**
-   * isInitialized 상태 — localStorage 초기화 완료 여부
-   *
-   * false로 시작하고, localStorage 읽기가 완료되면 true로 바뀝니다.
-   * 이 값이 false일 때는 찜 목록을 아직 신뢰할 수 없으므로 UI를 숨길 수 있습니다.
-   */
+  const [watchlistItems, setWatchlistItems] = useState<Record<string, WatchlistItem>>({});
+  const [lastError, setLastError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  /**
-   * 초기 로드 Effect — 컴포넌트 마운트 시 localStorage에서 찜 목록을 불러옵니다.
-   *
-   * useEffect(() => { ... }, []):
-   * - 의존성 배열이 []이면 컴포넌트가 처음 화면에 나타날 때 딱 한 번만 실행됩니다.
-   * - 클라이언트에서만 실행됩니다 (localStorage는 브라우저에만 있음).
-   *
-   * try-catch-finally 패턴:
-   * - try: localStorage 읽기 시도
-   * - catch: 파싱 오류 등이 발생하면 빈 배열로 초기화
-   * - finally: 성공/실패 상관없이 항상 isInitialized = true로 설정
-   *
-   * Java 비유:
-   * @PostConstruct
-   * void loadFavorites() {
-   *   try {
-   *     String json = localStorage.get(FAVORITES_KEY);
-   *     this.favorites = objectMapper.readValue(json, ...);
-   *   } catch (Exception e) {
-   *     this.favorites = new ArrayList<>();
-   *   } finally {
-   *     this.isInitialized = true;
-   *   }
-   * }
-   */
-  useEffect(() => {
-    try {
-      // localStorage.getItem(key): 키에 해당하는 값을 문자열로 반환합니다.
-      // 값이 없으면 null을 반환합니다.
-      const stored = localStorage.getItem(FAVORITES_STORAGE_KEY);
-      if (stored) {
-        // JSON.parse(): JSON 문자열을 JavaScript 객체/배열로 변환합니다.
-        // '[{"id":"1","name":"..."}]' → [{id:"1", name:"..."}]
-        // Java의 ObjectMapper.readValue() 또는 Gson.fromJson()과 유사합니다.
-        const parsed = JSON.parse(stored);
+  // 비동기 작업 안에서 "지금의" 찜 목록을 읽기 위한 참조입니다(클로저에 갇힌 옛 값을 피함).
+  const favoritesRef = useRef<FavoriteItem[]>([]);
+  // 동기화가 동시에 두 번 돌지 않게 막습니다(개발 모드의 effect 이중 실행 포함).
+  const syncingRef = useRef(false);
+  // 동기화 도중 사용자가 찜을 바꿨는지 알아내기 위한 카운터입니다.
+  const mutationRef = useRef(0);
+  // 서버 삭제가 아직 끝나지 않은 상품. 그사이 받은 서버 목록에 남아 있어도 화면에 되살리지 않습니다.
+  const pendingRemovalsRef = useRef<Set<string>>(new Set());
+  // 상품별 서버 요청을 순서대로 보내기 위한 대기열. 찜 직후 바로 해제해도 등록 → 삭제 순서가 지켜집니다.
+  const operationChainsRef = useRef<Map<string, Promise<unknown>>>(new Map());
 
-        // Array.isArray(): 파싱된 값이 배열인지 확인합니다.
-        // localStorage에 잘못된 데이터가 있을 경우를 대비합니다.
-        if (Array.isArray(parsed)) {
-          /**
-           * 데이터 정규화(Normalization):
-           * - .filter(): null, undefined, id 없는 항목 제거
-           * - .map(): id를 항상 string으로 통일
-           *
-           * 왜 id를 String으로 변환하나요?
-           * 이전에 저장한 데이터의 id가 숫자일 수도 있습니다.
-           * 비교 시 항상 String끼리 비교하도록 통일합니다.
-           *
-           * 스프레드 연산자 {...item}:
-           * - item 객체의 모든 필드를 복사하고, id만 String으로 덮어씁니다.
-           * - Java의 BeanUtils.copyProperties() + 특정 필드 수정과 유사합니다.
-           */
-          const normalized = parsed
-            .filter((item): item is ApiProduct & { addedAt?: unknown } => {
-              return Boolean(item && typeof item === 'object' && item.id !== undefined && item.id !== null);
-            })
-            .map((item) => {
-              const normalizedProduct = normalizeProduct(item);
-              return {
-                ...normalizedProduct,
-                addedAt: typeof item.addedAt === 'string' ? item.addedAt : new Date().toISOString(),
-              };
-            });
-          setFavorites(normalized);
-        }
-      }
-    } catch {
-      // JSON 파싱 실패 등의 예외 발생 시 빈 배열로 초기화
-      setFavorites([]);
-    } finally {
-      // 성공/실패에 관계없이 초기화 완료를 표시
-      setIsInitialized(true);
-    }
-  }, []); // 빈 배열: 마운트 시 딱 한 번만 실행
+  /** 같은 상품에 대한 요청을 앞선 요청이 끝난 뒤에 보냅니다. */
+  const enqueue = useCallback(<T,>(productId: string, operation: () => Promise<T>): Promise<T> => {
+    const previous = operationChainsRef.current.get(productId) ?? Promise.resolve();
+    const next = previous.catch(() => undefined).then(operation);
+    operationChainsRef.current.set(productId, next);
+    return next;
+  }, []);
 
-  /**
-   * localStorage 저장 Effect — favorites가 변경될 때마다 저장합니다.
-   *
-   * 의존성 배열: [favorites, isInitialized]
-   * → favorites 또는 isInitialized가 변경될 때 이 Effect가 실행됩니다.
-   *
-   * isInitialized 체크:
-   * - 초기 로드가 완료되지 않은 상태(isInitialized = false)에서는
-   *   localStorage를 덮어쓰지 않습니다.
-   * - 초기화 전에 빈 배열이 저장되면 기존 찜 목록이 지워집니다!
-   *
-   * JSON.stringify(): JavaScript 객체/배열을 JSON 문자열로 변환합니다.
-   * [{id:"1", name:"..."}] → '[{"id":"1","name":"..."}]'
-   * Java의 ObjectMapper.writeValueAsString() 또는 Gson.toJson()과 유사합니다.
-   */
   useEffect(() => {
-    if (!isInitialized) {
-      // 아직 초기화 전이면 저장하지 않음
+    favoritesRef.current = favorites;
+  }, [favorites]);
+
+  /** 서버 목록을 받아 로컬 찜과 맞춥니다. */
+  const refresh = useCallback(async (): Promise<void> => {
+    if (syncingRef.current || !isUserFeatureAvailable()) {
       return;
     }
+    syncingRef.current = true;
+    const mutationAtStart = mutationRef.current;
+    let goneCount = 0;
 
     try {
-      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
-    } catch {
-      // localStorage 저장 실패 (용량 초과 등) — 무시하고 계속 진행
-    }
-  }, [favorites, isInitialized]); // favorites 또는 isInitialized가 바뀔 때 실행
+      let serverItems: WatchlistItem[];
+      try {
+        serverItems = await getWatchlist();
+      } catch {
+        return; // 서버에 닿지 못하면 로컬 사본을 그대로 씁니다. 오류는 표시하지 않습니다.
+      }
 
-  /**
-   * toggleFavorite - 찜 추가/제거 토글 함수
-   *
-   * useCallback(() => { ... }, [의존성배열]):
-   * - 의존성이 바뀔 때만 함수를 새로 생성합니다.
-   * - 의존성이 같으면 이전에 만든 함수 참조를 재사용합니다.
-   * - 왜 필요하나요? 함수가 매 렌더마다 새로 생성되면
-   *   useEffect의 의존성 배열에 함수를 넣었을 때 무한 루프가 발생할 수 있습니다.
-   *   useCallback으로 함수 동일성을 보장하여 이를 방지합니다.
-   * Java 비유: @Cacheable (메서드 결과를 캐시, 입력이 같으면 캐시된 결과 반환)
-   *
-   * (product: Product | FavoriteItem):
-   * - Product 타입 또는 FavoriteItem 타입 둘 다 받을 수 있습니다 (유니온 타입).
-   * - index.tsx에서는 NormalizedProduct(Product 확장)를 전달합니다.
-   * - favorites.tsx에서는 FavoriteItem을 전달합니다.
-   */
-  const toggleFavorite = useCallback(
-    (product: Product | FavoriteItem) => {
-      // 방어적 코딩: product나 id가 없으면 처리하지 않습니다.
-      if (!product || product.id === undefined || product.id === null) {
+      const localBefore = favoritesRef.current;
+      const syncedIds = new Set(readSyncedIds());
+      const plan = planFavoriteSync(
+        localBefore.map((favorite) => favorite.id),
+        serverItems.map((item) => item.productId),
+        Array.from(syncedIds)
+      );
+
+      // 로컬에만 있는 찜을 순서대로 하나씩 올립니다. 서버는 (사용자, 상품)당 한 건만 허용하므로 다시 보내도 중복되지 않습니다.
+      const uploaded: WatchlistItem[] = [];
+      const retryIds = new Set<string>();
+      for (const productId of plan.toUpload) {
+        try {
+          uploaded.push(await addToWatchlist(productId));
+        } catch (error) {
+          const status = error instanceof ApiRequestError ? error.status : undefined;
+          if (classifyUploadFailure(status) === 'gone') {
+            goneCount += 1; // 서버에서 사라진 상품: 다시 시도하지 않고 정리합니다.
+          } else {
+            retryIds.add(productId); // 일시 오류: 로컬에 남겨 다음 접속에 다시 시도합니다.
+          }
+        }
+      }
+
+      // 동기화 도중 사용자가 찜을 바꿨다면 이번 결과로 덮어쓰지 않고 처음부터 다시 맞춥니다.
+      if (mutationRef.current !== mutationAtStart) {
+        syncingRef.current = false;
+        await refresh();
         return;
       }
 
-      // String(): 숫자든 문자열이든 항상 String으로 변환합니다.
-      const productId = String(product.id);
+      // 삭제 요청이 진행 중인 상품은 서버 목록에 아직 있어도 제외합니다.
+      const allServerItems = withoutPendingRemovals([...serverItems, ...uploaded], pendingRemovalsRef.current);
+      const nextFavorites = [
+        ...allServerItems.map(fromWatchlistItem),
+        ...localBefore.filter((favorite) => retryIds.has(favorite.id)),
+      ];
+      plan.removedElsewhere.forEach((id) => syncedIds.delete(id));
+      allServerItems.forEach((item) => syncedIds.add(item.productId));
 
-      // .some(): 배열에 조건을 만족하는 항목이 하나라도 있으면 true를 반환합니다.
-      // Java의 Stream.anyMatch()와 완전히 같습니다.
-      const alreadyExists = favorites.some((fav) => fav.id === productId);
-
-      if (alreadyExists) {
-        /**
-         * 이미 찜된 상품이면 → 제거
-         *
-         * setFavorites(prevFavorites => ...):
-         * - 상태 업데이트 함수(functional update) 형태입니다.
-         * - prevFavorites: 이전 favorites 값을 매개변수로 받습니다.
-         * - 이 형태는 비동기 상태 업데이트에서 최신 값을 보장합니다.
-         * Java 비유: this.favorites.removeIf(fav -> fav.getId().equals(productId));
-         *
-         * .filter(): 조건을 만족하는 항목만 남긴 새 배열을 반환합니다.
-         * fav.id !== productId: 클릭한 상품 ID와 다른 항목만 남깁니다.
-         * Java의 Stream.filter().collect(toList())와 같습니다.
-         */
-        setFavorites((prevFavorites) => prevFavorites.filter((fav) => fav.id !== productId));
-      } else {
-        /**
-         * 아직 찜하지 않은 상품이면 → 추가
-         *
-         * FavoriteItem 객체 구성:
-         * 'brandCode' in product:
-         * - product 객체에 'brandCode' 필드가 있는지 확인합니다.
-         * - Product 타입에는 없고 NormalizedProduct에만 있는 필드입니다.
-         * - Java의 instanceof 또는 reflection으로 필드 존재 여부 확인과 유사합니다.
-         *
-         * 'brandCode' in product ? product.brandCode : product.brand:
-         * - brandCode 필드가 있으면 사용하고, 없으면 brand 코드를 사용합니다.
-         */
-        const favoriteItem = toFavoriteItem(product);
-
-        /**
-         * 중복 체크 후 배열에 추가
-         *
-         * setFavorites((prevFavorites) => { ... }):
-         * - functional update 형태로 최신 favorites 값을 기반으로 업데이트합니다.
-         *
-         * [...prevFavorites, favoriteItem]:
-         * - 스프레드 연산자(...)로 기존 배열을 펼치고 새 항목을 뒤에 추가합니다.
-         * - 기존 배열을 직접 수정하지 않고 새 배열을 반환합니다 (불변성 유지).
-         * - Java의 new ArrayList<>(prevFavorites); list.add(favoriteItem);와 유사합니다.
-         *
-         * 왜 배열을 직접 수정하지 않나요?
-         * React의 상태 관리 원칙: 상태를 직접 변경하면 React가 변경을 감지하지 못합니다.
-         * 항상 새 배열/객체를 반환해야 React가 리렌더를 트리거합니다.
-         */
-        setFavorites((prevFavorites) => {
-          // 동시성 문제 방지: 이미 추가되어 있으면 중복 추가 안 함
-          if (prevFavorites.some((fav) => fav.id === productId)) {
-            return prevFavorites;
-          }
-          return [...prevFavorites, favoriteItem]; // 새 배열 반환
-        });
+      writeSyncedIds(syncedIds);
+      setWatchlistItems(Object.fromEntries(allServerItems.map((item) => [item.productId, item])));
+      setFavorites(nextFavorites);
+      if (goneCount > 0) {
+        setLastError(`판매가 끝난 상품 ${goneCount}개를 찜 목록에서 정리했습니다`);
       }
-    },
-    [favorites] // favorites가 바뀔 때만 함수를 새로 생성
-  );
+    } finally {
+      syncingRef.current = false;
+    }
+  }, []);
+
+  // 1) 마운트: 로컬 사본으로 먼저 그린 뒤 서버와 맞춥니다.
+  useEffect(() => {
+    let loaded: FavoriteItem[] = [];
+    try {
+      const stored = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      if (stored) {
+        const parsed: unknown = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          loaded = parsed
+            .filter((item): item is ApiProduct & { addedAt?: unknown } => {
+              return Boolean(item && typeof item === 'object' && item.id !== undefined && item.id !== null);
+            })
+            .map((item) => ({
+              ...normalizeProduct(item),
+              addedAt: typeof item.addedAt === 'string' ? item.addedAt : new Date().toISOString(),
+            }));
+        }
+      }
+    } catch {
+      loaded = []; // 손상된 사본이나 접근 불가: 빈 목록으로 시작합니다.
+    }
+    favoritesRef.current = loaded;
+    setFavorites(loaded);
+    setIsInitialized(true);
+    void refresh();
+  }, [refresh]);
+
+  // 2) 찜 목록이 바뀔 때마다 로컬 사본을 갱신합니다.
+  useEffect(() => {
+    if (!isInitialized) {
+      return;
+    }
+    try {
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+    } catch {
+      // 저장소를 쓸 수 없어도 화면 동작은 계속합니다.
+    }
+  }, [favorites, isInitialized]);
 
   /**
-   * isFavorite - 특정 상품이 찜 목록에 있는지 확인하는 함수
-   *
-   * @param productId - 확인할 상품 ID (string 또는 number)
-   * @returns boolean (찜되어 있으면 true, 아니면 false)
-   *
-   * String(productId): 숫자 ID도 문자열로 변환하여 일관되게 비교합니다.
-   * .some(): 조건 만족 항목이 하나라도 있으면 true
+   * 찜을 추가하거나 제거합니다.
+   * 화면을 먼저 바꾸고 서버에 알립니다. 서버가 거절하면 화면을 되돌리고 이유를 알립니다.
    */
+  const toggleFavorite = useCallback(
+    (product: Product | FavoriteItem) => {
+      if (!product || product.id === undefined || product.id === null) {
+        return;
+      }
+      const productId = String(product.id);
+      const existing = favoritesRef.current.find((favorite) => favorite.id === productId);
+      const serverEnabled = isUserFeatureAvailable();
+      mutationRef.current += 1;
+
+      if (existing) {
+        setFavorites((previous) => previous.filter((favorite) => favorite.id !== productId));
+        if (!serverEnabled) {
+          return;
+        }
+        pendingRemovalsRef.current.add(productId);
+        enqueue(productId, () => removeFromWatchlist(productId))
+          .then(() => {
+            writeSyncedIds(readSyncedIds().filter((id) => id !== productId));
+            setWatchlistItems((previous) => {
+              const next = { ...previous };
+              delete next[productId];
+              return next;
+            });
+          })
+          .catch(() => {
+            // 되돌리기: 그사이 다시 찜하지 않았을 때만 복원합니다.
+            setFavorites((previous) =>
+              previous.some((favorite) => favorite.id === productId) ? previous : [...previous, existing]
+            );
+            setLastError(TOGGLE_FAILED_MESSAGE);
+          })
+          .finally(() => {
+            pendingRemovalsRef.current.delete(productId);
+          });
+        return;
+      }
+
+      const favoriteItem = toFavoriteItem(product);
+      setFavorites((previous) =>
+        previous.some((favorite) => favorite.id === productId) ? previous : [...previous, favoriteItem]
+      );
+      if (!serverEnabled) {
+        return;
+      }
+      enqueue(productId, () => addToWatchlist(productId))
+        .then((item) => {
+          writeSyncedIds([...readSyncedIds(), productId]);
+          setWatchlistItems((previous) => ({ ...previous, [productId]: item }));
+        })
+        .catch(() => {
+          setFavorites((previous) => previous.filter((favorite) => favorite.id !== productId));
+          setLastError(TOGGLE_FAILED_MESSAGE);
+        });
+    },
+    [enqueue]
+  );
+
   const isFavorite = useCallback(
     (productId: string | number): boolean => {
       const normalizedId = String(productId);
-      return favorites.some((fav) => fav.id === normalizedId);
+      return favorites.some((favorite) => favorite.id === normalizedId);
     },
-    [favorites] // favorites가 바뀔 때만 함수를 재생성
+    [favorites]
   );
 
-  /**
-   * getFavoriteCount - 찜한 상품 수를 반환하는 함수
-   *
-   * .length: 배열의 길이(항목 수)를 반환합니다.
-   * Java의 list.size()와 같습니다.
-   *
-   * 왜 직접 favorites.length를 쓰지 않고 함수로 감싸나요?
-   * - 컴포넌트가 favorites 배열 자체에 의존하지 않고
-   *   "개수"만 알고 싶을 때 편리합니다.
-   * - 향후 필터링 로직(예: 특정 브랜드의 찜 개수)을 추가하기 쉽습니다.
-   */
-  const getFavoriteCount = useCallback((): number => {
-    return favorites.length;
-  }, [favorites]);
+  const getFavoriteCount = useCallback((): number => favorites.length, [favorites]);
 
-  /**
-   * checkPriceDrops - 가격 인하 알림 체크 함수 (현재는 시뮬레이션)
-   *
-   * 실제 서비스에서는 찜한 상품들의 현재 가격을 서버에서 조회하여
-   * 저장된 가격과 비교해야 합니다.
-   *
-   * 현재 구현: 10% 확률로 랜덤 상품을 선택하여 가격 인하를 가장합니다.
-   * Math.random(): 0 이상 1 미만의 랜덤 숫자 → 0.9보다 크면 약 10% 확률
-   *
-   * 반환 타입:
-   * { hasDrop: boolean; product?: FavoriteItem; message?: string }
-   * - hasDrop이 true일 때만 product와 message가 의미있는 값을 가집니다.
-   * - TypeScript의 ? (optional): 있을 수도 없을 수도 있는 필드
-   */
-  const checkPriceDrops = useCallback(() => {
-    if (favorites.length > 0 && Math.random() > 0.9) {
-      // Math.floor(): 소수점 버림 (내림)
-      // Math.random() * favorites.length: 0 이상 favorites.length 미만의 랜덤 숫자
-      // → 배열의 유효한 인덱스 범위 내의 랜덤 숫자
-      const randomProduct = favorites[Math.floor(Math.random() * favorites.length)];
-      return {
-        hasDrop: true,
-        product: randomProduct,
-        message: `${randomProduct.brand} ${randomProduct.name} 상품 가격이 인하되었습니다!`,
-      };
-    }
-    return { hasDrop: false };
-  }, [favorites]);
+  const getWatchlistItem = useCallback(
+    (productId: string | number): WatchlistItem | undefined => watchlistItems[String(productId)],
+    [watchlistItems]
+  );
 
-  /**
-   * 훅 반환값 — 이 훅을 사용하는 컴포넌트가 받을 값과 함수들
-   *
-   * 객체 단축 표기법(shorthand property):
-   * { favorites: favorites, ... } 대신 { favorites, ... } 처럼 씁니다.
-   * 키와 값의 이름이 같을 때 사용 가능합니다.
-   *
-   * Java 비유: return new UseFavoritesResult(favorites, toggleFavorite, ...);
-   */
+  const clearError = useCallback(() => setLastError(null), []);
+
+  const applyWatchlistItem = useCallback((item: WatchlistItem) => {
+    setWatchlistItems((previous) => ({ ...previous, [item.productId]: item }));
+  }, []);
+
   return {
-    favorites,      // 찜한 상품 배열
-    toggleFavorite, // 찜 추가/제거 함수
-    isFavorite,     // 찜 여부 확인 함수
-    getFavoriteCount, // 찜 개수 반환 함수
-    checkPriceDrops,  // 가격 인하 체크 함수
-    isInitialized,  // 초기화 완료 여부
+    favorites,
+    toggleFavorite,
+    isFavorite,
+    getFavoriteCount,
+    getWatchlistItem,
+    refresh,
+    applyWatchlistItem,
+    lastError,
+    clearError,
+    isInitialized,
   };
 }

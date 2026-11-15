@@ -11,16 +11,22 @@ import Link from 'next/link';
 import SEO from '../components/SEO';
 import ProductCard from '../components/ProductCard';
 import useFavorites from '../hooks/useFavorites';
+import NotificationToast from '../components/NotificationToast';
+import NotificationBell from '../components/NotificationBell';
+import BuySignal from '../components/BuySignal';
 import styles from '../styles/Favorites.module.css';
 
 export default function Favorites() {
   // 커스텀 훅에서 찜 데이터와 함수들을 가져옵니다.
-  const { favorites, toggleFavorite, isFavorite, getFavoriteCount } = useFavorites();
+  const {
+    favorites, toggleFavorite, isFavorite, getFavoriteCount,
+    lastError: favoriteNotice, clearError: clearFavoriteNotice,
+  } = useFavorites();
   // "전체 삭제 확인" UI를 보여줄지 여부
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  // 페이지 타이틀은 찜 개수에 따라 동적으로 표시 (리브랜딩: 맛 프로젝트 → ARCA)
-  const pageTitle = `찜한 상품 (${getFavoriteCount()}개) | ARCA`;
+  // 페이지 타이틀은 찜 개수에 따라 동적으로 표시 (리브랜딩: 맛 프로젝트 → DUPE)
+  const pageTitle = `찜한 상품 (${getFavoriteCount()}개) | DUPE`;
 
   // 전체 삭제 버튼 클릭 시 동작
   const handleClearAll = () => {
@@ -58,6 +64,8 @@ export default function Favorites() {
               <span className={styles.heartIcon}>♥</span>
               찜한 상품
             </h1>
+
+            <NotificationBell />
 
             {favorites.length > 0 && (
               <div className={styles.headerActions}>
@@ -109,8 +117,8 @@ export default function Favorites() {
 
               <div className={styles.grid}>
                 {favorites.map((product) => (
+                  <div key={product.id}>
                   <ProductCard
-                    key={product.id}
                     product={product}
                     brand={product.brand}
                     name={product.name}
@@ -121,6 +129,9 @@ export default function Favorites() {
                     isFavorite={isFavorite(product.id)}
                     onFavoriteToggle={toggleFavorite}
                   />
+                  {/* 추적 기간 기준 가격 위치 (보여줄 것이 없으면 아무것도 그리지 않음) */}
+                  <BuySignal productId={product.id} />
+                  </div>
                 ))}
               </div>
             </>
@@ -130,10 +141,13 @@ export default function Favorites() {
         {/* 푸터 */}
         <footer className={styles.footer}>
           <p className={styles.footerText}>
-            찜한 상품은 브라우저에 저장되며, 브라우저 데이터를 삭제하면 함께 삭제됩니다.
+            찜한 상품은 이 브라우저에 연결되어 저장됩니다. 브라우저 데이터를 삭제하면 찜 목록과 가격 알림을 다시 찾을 수 없습니다.
           </p>
         </footer>
       </div>
+
+      {/* 찜을 서버에 저장하지 못했거나 정리한 상품이 있을 때 알려줍니다. */}
+      <NotificationToast message={favoriteNotice ?? ''} isVisible={Boolean(favoriteNotice)} onClose={clearFavoriteNotice} />
     </>
   );
 }

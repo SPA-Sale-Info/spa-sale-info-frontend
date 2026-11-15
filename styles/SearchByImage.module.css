@@ -1,0 +1,345 @@
+/* 사진으로 찾기 — Ledger: 괘선과 여백으로 구획하고 장식은 쓰지 않습니다. */
+.container {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border-bottom: 0.5px solid var(--color-border);
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.backLink {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--color-text);
+}
+
+.main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 var(--space-6) var(--space-16);
+}
+
+.pageHead {
+  padding: var(--space-10) 0 var(--space-5);
+  border-bottom: 2px solid var(--color-rule-strong);
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-light);
+}
+
+.title {
+  margin: var(--space-2) 0 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.lead {
+  max-width: 44rem;
+  margin: var(--space-3) 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-text-light);
+}
+
+.uploadRow {
+  display: grid;
+  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  gap: var(--space-8);
+  align-items: start;
+  padding: var(--space-8) 0 var(--space-6);
+}
+
+.dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  border: 1px dashed var(--color-rule-strong);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-secondary);
+  cursor: pointer;
+  overflow: hidden;
+  transition: background var(--transition-fast);
+}
+
+.dropzone:hover,
+.dropzoneActive {
+  background: var(--color-bg-tertiary);
+}
+
+/* 키보드로 파일 입력에 초점이 오면 영역 전체에 표시합니다. */
+.dropzone:focus-within {
+  outline: 2px solid var(--color-rule-strong);
+  outline-offset: 2px;
+}
+
+.fileInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.dropzoneText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--color-text-light);
+  pointer-events: none;
+}
+
+.dropzoneText strong {
+  font-size: 0.9375rem;
+  color: var(--color-text);
+}
+
+.preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.uploadSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--color-text-light);
+}
+
+.error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-8);
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.filterGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-chip);
+  background: transparent;
+  color: var(--color-text-light);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--color-rule-strong);
+  color: var(--color-text);
+}
+
+.chipOn {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.chipOn:hover {
+  color: var(--color-on-primary);
+}
+
+/* 웹에서 찾은 결과 — 우리 상품 카드와 구분되도록 링크 목록 형태로 둡니다. */
+.webSection {
+  padding: var(--space-8) 0 var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.webNote {
+  margin: 0 0 var(--space-5);
+  font-size: 0.8125rem;
+  color: var(--color-text-light);
+}
+
+.webList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
+  gap: 24px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.webCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.webThumb {
+  display: block;
+  aspect-ratio: 3 / 4;
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-secondary);
+  overflow: hidden;
+}
+
+.webThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.webBrand {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--color-text-light);
+}
+
+.webTitle {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.webLink {
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+}
+
+.webCard:hover .webLink,
+.webCard:hover .webTitle {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+.results {
+  min-height: 12rem;
+  padding-top: var(--space-8);
+}
+
+.resultsTitle {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-5);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.resultsCount {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  gap: 32px 20px;
+}
+
+.state {
+  padding: var(--space-12) 0;
+  text-align: center;
+  color: var(--color-text-light);
+}
+
+.state p {
+  margin: 0 0 var(--space-4);
+}
+
+.ghostButton {
+  height: 36px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: var(--radius-card);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ghostButton:hover {
+  background: var(--color-bg-secondary);
+}
+
+@media (max-width: 720px) {
+  .uploadRow {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropzone {
+    transition: none;
+  }
+}

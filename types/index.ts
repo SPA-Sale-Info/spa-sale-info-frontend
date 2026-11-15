@@ -552,3 +552,101 @@ export interface ContactFormData {
  * Java의 enum Theme { LIGHT, DARK }와 같습니다.
  */
 export type Theme = 'light' | 'dark';
+
+// ============================================================================
+// 관심상품 · 알림 · 가격 통계 · 비슷한 상품 (백엔드 사용자 기능 API 응답)
+// ============================================================================
+
+/** 관심상품의 알림 조건. PUT /watchlist/{id}/alerts 는 전체 교체라 항상 모든 필드를 보냅니다. */
+export interface AlertSettings {
+  targetPrice: number | null;        // 이 가격 이하가 되면 알림 (없으면 null)
+  targetDiscountRate: number | null; // 이 할인율 이상이 되면 알림 (1~100, 없으면 null)
+  priceDropAlertEnabled: boolean;    // 가격이 내려가면 알림
+  restockAlertEnabled: boolean;      // 품절 상품이 다시 들어오면 알림
+  preferredColors: string[];
+  preferredSizes: string[];
+}
+
+/** 서버에 저장된 관심상품 한 건 (GET /api/v1/watchlist) */
+export interface WatchlistItem extends AlertSettings {
+  watchlistId: string;
+  productId: string;
+  addedAt: string;     // ISO 문자열
+  product: ApiProduct; // 최신 상품 정보
+}
+
+/** 인앱 알림 종류 (백엔드 NotificationType) */
+export type NotificationType =
+  | 'PRICE_DROP'
+  | 'TARGET_PRICE_REACHED'
+  | 'TARGET_DISCOUNT_REACHED'
+  | 'BACK_IN_STOCK';
+
+/** 인앱 알림 한 건 (GET /api/v1/notifications) */
+export interface NotificationItem {
+  id: string;
+  productId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  currentPrice: number | null;
+  previousPrice: number | null;
+  discountRate: number | null;
+  read: boolean;
+  occurredAt: string;
+  readAt: string | null;
+}
+
+/** 가격 위치 판정 (백엔드 PriceInsightResponse.Verdict) */
+export type PriceVerdict =
+  | 'INSUFFICIENT_DATA' // 추적 기간이 짧거나 기록이 없어 판정하지 않음
+  | 'NO_CHANGE'         // 충분히 추적했지만 가격이 바뀐 적 없음
+  | 'LOWEST'            // 추적 시작 이후 최저가
+  | 'NEAR_LOWEST'       // 최저가의 5% 이내
+  | 'ABOVE_LOWEST';     // 그보다 높음
+
+/** 가격 통계 (GET /api/v1/products/{id}/price-insight). "역대"가 아니라 추적 시작 이후 기준입니다. */
+export interface PriceInsight {
+  productId: string;
+  currentPrice: number | null;
+  lowestPrice: number | null;
+  lowestPriceDate: string | null; // YYYY-MM-DD
+  highestPrice: number | null;
+  trackedSince: string | null;    // YYYY-MM-DD
+  trackedDays: number;
+  changeCount: number;
+  verdict: PriceVerdict;
+}
+
+/** 비슷한 상품 (GET /api/v1/products/{id}/similar). strategy가 METADATA면 이미지 유사도가 아닙니다. */
+export interface SimilarProducts {
+  productId: string;
+  strategy: 'IMAGE' | 'METADATA';
+  modelVersion: string | null;
+  items: { product: ApiProduct; score: number | null }[];
+  fallbackReason: string | null;
+}
+
+/**
+ * 사진으로 찾은 비슷한 세일 상품 (POST /api/v1/products/search/by-image).
+ * 검색을 쓸 수 없거나 결과가 없으면 items가 비고 unavailableReason에 이유가 담깁니다.
+ */
+export interface ImageSearchResult {
+  strategy: 'IMAGE';
+  modelVersion: string | null;
+  items: { product: ApiProduct; score: number | null }[];
+  unavailableReason: 'DISABLED' | 'SEARCH_ERROR' | 'NO_MATCH' | null;
+  /** 분류를 고르지 않았을 때 사진에서 인식해 적용한 종류(백엔드 ProductCategory 이름). 없으면 null */
+  detectedCategory?: string | null;
+  /** 인식한 종류의 결과가 적어 넓혀 찾은 대분류(백엔드 MainCategory 이름). 넓히지 않았으면 null */
+  widenedTo?: string | null;
+}
+
+/**
+ * 웹에서 찾은, 사진과 비슷한 이미지가 실린 SPA 브랜드 사이트의 페이지
+ * (POST /api/v1/products/search/by-image/web). 우리 DB의 상품이 아니라 가격·재고는 알 수 없습니다.
+ */
+export interface WebImageSearchResult {
+  items: { brandType: string; brandName: string; title: string; pageUrl: string; imageUrl: string | null }[];
+  unavailableReason: 'DISABLED' | 'QUOTA_EXCEEDED' | 'SEARCH_ERROR' | 'NO_MATCH' | null;
+}

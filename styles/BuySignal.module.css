@@ -1,0 +1,37 @@
+/* 가격 위치 한 줄 — 앞의 점으로 상태를 표시합니다. */
+.signal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-light);
+}
+
+.signal::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-text-lighter);
+}
+
+/* 최저가이거나 최저가에 가까울 때 */
+.good {
+  color: var(--color-buy-signal, #1f6f4a);
+  font-weight: 600;
+}
+
+.good::before {
+  background: var(--color-buy-signal, #1f6f4a);
+}
+
+:global([data-theme='dark']) .good {
+  color: var(--color-buy-signal, #6fcf97);
+}
+
+:global([data-theme='dark']) .good::before {
+  background: var(--color-buy-signal, #6fcf97);
+}

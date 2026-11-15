@@ -219,8 +219,8 @@ export default function StyleGuide() {
   return (
     <div className={styles.container}>
       <SEO
-        title="스타일 가이드 - 100가지 코디 팁 | ARCA"
-        description="ARCA의 스타일 가이드. 미니멀, 캐주얼, 스트리트, 오피스 등 다양한 스타일의 100가지 코디 팁과 패션 노하우를 제공합니다."
+        title="스타일 가이드 - 100가지 코디 팁 | DUPE"
+        description="DUPE의 스타일 가이드. 미니멀, 캐주얼, 스트리트, 오피스 등 다양한 스타일의 100가지 코디 팁과 패션 노하우를 제공합니다."
         canonical="https://mion-spa-info.vercel.app/style-guide"
         keywords="스타일 가이드, 코디 팁, 패션, 미니멀, 캐주얼, 스트리트 패션, 오피스룩, 빈티지 스타일"
       />
@@ -240,7 +240,7 @@ export default function StyleGuide() {
         {/* 소개 섹션 */}
         <section className={styles.intro}>
           <p className={styles.introText}>
-            ARCA가 제공하는 스타일 가이드는 다양한 패션 스타일과 코디 노하우를 담고 있습니다.
+            DUPE가 제공하는 스타일 가이드는 다양한 패션 스타일과 코디 노하우를 담고 있습니다.
             미니멀부터 스트리트까지, 초보자도 쉽게 따라할 수 있는 팁부터 고급 기법까지
             모든 것을 한 곳에서 만나보세요.
           </p>
@@ -334,7 +334,7 @@ export default function StyleGuide() {
         <section className={styles.cta}>
           <h2 className={styles.ctaTitle}>마음에 드는 스타일을 찾으셨나요?</h2>
           <p className={styles.ctaText}>
-            ARCA에서 합리적인 가격의 상품을 찾아보세요.
+            DUPE에서 합리적인 가격의 상품을 찾아보세요.
           </p>
           <Link href="/" className={styles.ctaButton}>
             세일 상품 보러가기
