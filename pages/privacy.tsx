@@ -14,8 +14,8 @@ export default function Privacy() {
   return (
     <div className={styles.container}>
       <SEO
-        title="개인정보처리방침 - ARCA"
-        description="ARCA의 개인정보처리방침입니다."
+        title="개인정보처리방침 - DUPE"
+        description="DUPE의 개인정보처리방침입니다."
         canonical="https://mion-spa-info.vercel.app/privacy"
       />
 
@@ -32,7 +32,7 @@ export default function Privacy() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>1. 개인정보의 처리 목적</h2>
             <p className={styles.text}>
-              ARCA(이하 &quot;본 서비스&quot;)는 다음의 목적을 위하여 개인정보를 처리합니다.
+              DUPE(이하 &quot;본 서비스&quot;)는 다음의 목적을 위하여 개인정보를 처리합니다.
               처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며,
               이용 목적이 변경되는 경우에는 「개인정보 보호법」 제18조에 따라 별도의 동의를 받는 등
               필요한 조치를 이행할 예정입니다.
@@ -113,6 +113,17 @@ export default function Privacy() {
               <li>방문 일시</li>
               <li>기기 정보 (브라우저 종류, OS 등)</li>
             </ul>
+            <p className={styles.text}>
+              찜과 가격 알림 기능은 로그인 없이 동작하도록, 브라우저가 임의로 만든 식별값을 이 기기에 저장하고
+              서버로 전송합니다. 이 식별값은 찜한 상품과 알림 설정을 구분하는 데만 쓰이며 이름·연락처 등과
+              연결되지 않습니다. 브라우저 데이터를 삭제하면 함께 사라집니다.
+            </p>
+            <p className={styles.text}>
+              사진으로 비슷한 상품을 찾을 때 올린 사진은 이 기기에서 크기를 줄인 뒤 서버로 전송되어, 비슷한 상품을
+              찾기 위한 계산에만 쓰이고 저장되지 않습니다. 계산은 본 서비스가 운영하는 별도 서버(클라우드)에서
+              이루어집니다. 또한 웹에서 비슷한 상품을 찾기 위해 같은 사진이 Google의 이미지 분석 서비스
+              (Google Cloud Vision)로 전송될 수 있으며, 이 경우 Google의 약관과 개인정보 처리 정책이 적용됩니다.
+            </p>
           </section>
 
           <section className={styles.section}>

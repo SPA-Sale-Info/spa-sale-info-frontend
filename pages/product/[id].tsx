@@ -240,7 +240,7 @@ export default function ProductDetail() {
         상품 정보를 기반으로 Open Graph 태그를 생성하여 SNS 공유 시 미리보기를 최적화합니다.
       */}
       <SEO
-        title={`${brandName} ${product.name} - ARCA`}
+        title={`${brandName} ${product.name} - DUPE`}
         description={`${brandName} ${product.name} ${product.discountRate}% 할인 중! 현재 가격: ${formatPriceValue(product.salePrice)}`}
         canonical={`https://mion-spa-info.vercel.app/product/${product.id}`}
         ogImage={product.imageUrl}

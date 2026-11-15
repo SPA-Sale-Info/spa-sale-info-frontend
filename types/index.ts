@@ -626,3 +626,27 @@ export interface SimilarProducts {
   items: { product: ApiProduct; score: number | null }[];
   fallbackReason: string | null;
 }
+
+/**
+ * 사진으로 찾은 비슷한 세일 상품 (POST /api/v1/products/search/by-image).
+ * 검색을 쓸 수 없거나 결과가 없으면 items가 비고 unavailableReason에 이유가 담깁니다.
+ */
+export interface ImageSearchResult {
+  strategy: 'IMAGE';
+  modelVersion: string | null;
+  items: { product: ApiProduct; score: number | null }[];
+  unavailableReason: 'DISABLED' | 'SEARCH_ERROR' | 'NO_MATCH' | null;
+  /** 분류를 고르지 않았을 때 사진에서 인식해 적용한 종류(백엔드 ProductCategory 이름). 없으면 null */
+  detectedCategory?: string | null;
+  /** 인식한 종류의 결과가 적어 넓혀 찾은 대분류(백엔드 MainCategory 이름). 넓히지 않았으면 null */
+  widenedTo?: string | null;
+}
+
+/**
+ * 웹에서 찾은, 사진과 비슷한 이미지가 실린 SPA 브랜드 사이트의 페이지
+ * (POST /api/v1/products/search/by-image/web). 우리 DB의 상품이 아니라 가격·재고는 알 수 없습니다.
+ */
+export interface WebImageSearchResult {
+  items: { brandType: string; brandName: string; title: string; pageUrl: string; imageUrl: string | null }[];
+  unavailableReason: 'DISABLED' | 'QUOTA_EXCEEDED' | 'SEARCH_ERROR' | 'NO_MATCH' | null;
+}

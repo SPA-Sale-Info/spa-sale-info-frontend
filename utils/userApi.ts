@@ -10,6 +10,9 @@
 
 import type {
   AlertSettings,
+  ApiResponse,
+  ImageSearchResult,
+  WebImageSearchResult,
   NotificationItem,
   PagedResponse,
   PriceInsight,
@@ -115,4 +118,56 @@ export function getSimilarProducts(
   limit: number = SIMILAR_PRODUCTS_LIMIT
 ): Promise<SimilarProducts> {
   return fetchAPI<SimilarProducts>(`/api/v1/products/${productPath(productId)}/similar?limit=${limit}`);
+}
+
+// ── 사진으로 비슷한 상품 찾기 ─────────────────────────────────────────────────
+
+/** 사진 검색 조건. 값은 백엔드 enum 이름입니다. */
+export interface ImageSearchFilters {
+  mainCategory?: string;
+  subCategory?: string;
+  gender?: string;
+  limit?: number;
+}
+
+/**
+ * 사진을 올려 비슷한 세일 상품을 찾습니다.
+ *
+ * 다른 함수와 달리 JSON이 아니라 multipart(파일 업로드)로 보냅니다. 그래서 fetchAPI를 쓰지 않고,
+ * Content-Type을 직접 지정하지 않습니다(브라우저가 파일 경계값을 포함해 자동으로 붙입니다).
+ * 사진은 서버에서 벡터로 바꾸는 데만 쓰이고 저장되지 않습니다.
+ */
+export async function searchByImage(image: Blob, filters: ImageSearchFilters = {}): Promise<ImageSearchResult> {
+  const form = new FormData();
+  form.append('image', image, 'photo.jpg');
+  if (filters.mainCategory) form.append('mainCategory', filters.mainCategory);
+  if (filters.subCategory) form.append('subCategory', filters.subCategory);
+  if (filters.gender) form.append('gender', filters.gender);
+  if (filters.limit) form.append('limit', String(filters.limit));
+  return postForm<ImageSearchResult>('/api/v1/products/search/by-image', form);
+}
+
+/**
+ * 사진과 비슷한 이미지를 웹 전체에서 찾아, SPA 브랜드 공식 사이트의 페이지만 돌려받습니다.
+ * 사진은 서버를 거쳐 외부 이미지 검색 서비스(Google)로 전송됩니다.
+ */
+export async function searchWebByImage(image: Blob): Promise<WebImageSearchResult> {
+  const form = new FormData();
+  form.append('image', image, 'photo.jpg');
+  return postForm<WebImageSearchResult>('/api/v1/products/search/by-image/web', form);
+}
+
+/** multipart 요청을 보내고 표준 응답({ success, data, message })을 풉니다. */
+async function postForm<T>(path: string, form: FormData): Promise<T> {
+  const response = await fetch(path, { method: 'POST', body: form });
+  let body: ApiResponse<T> | null = null;
+  try {
+    body = await response.json();
+  } catch {
+    // 본문이 JSON이 아닌 오류 응답(프록시 오류 등)
+  }
+  if (!response.ok || !body || !body.success) {
+    throw new ApiRequestError(body?.message || `HTTP error! status: ${response.status}`, response.status);
+  }
+  return body.data;
 }

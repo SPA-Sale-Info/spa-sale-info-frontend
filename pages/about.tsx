@@ -14,8 +14,8 @@ export default function About() {
   return (
     <div className={styles.container}>
       <SEO
-        title="ARCA 소개 - SPA 세일 큐레이션"
-        description="ARCA의 서비스 목적, 운영 원칙, 데이터 수집·검증 방식, 광고 고지 및 연락처를 확인하세요."
+        title="DUPE 소개 - SPA 세일 큐레이션"
+        description="DUPE의 서비스 목적, 운영 원칙, 데이터 수집·검증 방식, 광고 고지 및 연락처를 확인하세요."
         canonical="https://mion-spa-info.vercel.app/about"
       />
 
@@ -24,7 +24,7 @@ export default function About() {
           <Link href="/" className={styles.backLink}>
             ← 홈으로 돌아가기
           </Link>
-          <h1 className={styles.title}>ARCA 소개</h1>
+          <h1 className={styles.title}>DUPE 소개</h1>
           <p className={styles.subtitle}>최종 업데이트: 2024년 12월 16일</p>
         </header>
 
@@ -32,9 +32,14 @@ export default function About() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>서비스 미션</h2>
             <p className={styles.text}>
-              ARCA는 H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 주요 SPA 브랜드의 할인 상품을 한곳에서
+              DUPE는 H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 주요 SPA 브랜드의 할인 상품을 한곳에서
               비교할 수 있게 설계된 큐레이션 서비스입니다. 단순 나열이 아닌, 시즌별 스타일링 팁과 소재·체형·예산을
               고려한 추천을 제공해 사용자가 빠르게 &quot;지금 사도 되는 상품&quot;을 찾도록 돕습니다.
+            </p>
+            <p className={styles.text}>
+              마음에 드는 옷이나 가방 사진을 올리면, 지금 세일 중인 SPA 상품 가운데 비슷하게 생긴 것을 찾아 주는
+              사진 검색도 제공합니다. 결과는 사진의 생김새가 비슷한 정도로 고른 것이며, 같은 제품이거나 품질이
+              같다는 뜻은 아닙니다.
             </p>
             <p className={styles.text}>
               매일 2회 이상 데이터를 갱신하며, 가격·할인율·이미지 오류가 확인되면 비노출 처리 후 대체 상품을

@@ -25,7 +25,7 @@ export default function Document() {
 
         {/* PWA 설정 */}
         <meta name="theme-color" content="#ffffff" />
-        <meta name="apple-mobile-web-app-title" content="ARCA" />
+        <meta name="apple-mobile-web-app-title" content="DUPE" />
 
         {/* Google AdSense */}
         <meta name="google-adsense-account" content="ca-pub-6853743390551388" />

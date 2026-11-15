@@ -109,7 +109,7 @@ export default function Footer() {
              * 페이지 구조: h1(페이지 제목) > h2(주요 섹션) > h3(하위 섹션)
              * 검색 엔진은 h태그 계층 구조를 분석합니다.
              */}
-            <h3 className={styles.brand}>ARCA</h3>
+            <h3 className={styles.brand}>DUPE</h3>
             <p className={styles.description}>
               합리적인 가격으로 즐기는
               {/**
@@ -209,8 +209,8 @@ export default function Footer() {
              * {...}: JSX에서 중괄호로 JavaScript 값을 표현합니다.
              *
              * currentYear는 마운트 전에는 null이므로 삼항 연산자로 두 문구를 나눕니다.
-             * - 첫 렌더(서버 HTML == 브라우저 첫 렌더): '© ARCA.'  ← 양쪽이 완전히 같은 문자열
-             * - 마운트 이후                            : '© 2026 ARCA.'
+             * - 첫 렌더(서버 HTML == 브라우저 첫 렌더): '© DUPE.'  ← 양쪽이 완전히 같은 문자열
+             * - 마운트 이후                            : '© 2026 DUPE.'
              * 이렇게 문자열 전체를 한 번에 만들면 연도가 없을 때 공백이 두 칸 생기는 것도 막힙니다.
              *
              * ©: 저작권 기호 (Copyright symbol)
@@ -218,7 +218,7 @@ export default function Footer() {
              */}
             {/* Framer 시안 카피: 저작권 + 가격 정보 기준 안내를 한 줄로 */}
             <p>
-              {currentYear === null ? '© ARCA.' : `© ${currentYear} ARCA.`} 모든 가격 정보는 각
+              {currentYear === null ? '© DUPE.' : `© ${currentYear} DUPE.`} 모든 가격 정보는 각
               브랜드 공식몰 기준입니다.
             </p>
           </div>

@@ -37,7 +37,7 @@
  * ═══════════════════════════════════════════════════════════════
  * TypeScript 문법 포인트
  * ═══════════════════════════════════════════════════════════════
- * - interface props의 기본값: function SEO({ title = 'ARCA ...' })
+ * - interface props의 기본값: function SEO({ title = 'DUPE ...' })
  * - Record<string, unknown>: "키가 string, 값은 직렬화 전까지 구체화하지 않는 객체"를 나타내는 TypeScript 유틸리티 타입
  * - structuredData || defaultStructuredData: null 폴백 (nullish coalescing 대신 OR 연산자)
  * - dangerouslySetInnerHTML: React에서 HTML 문자열을 직접 삽입하는 방법 (XSS 주의)
@@ -55,7 +55,7 @@ import Head from 'next/head';
  * - 값이 전달되지 않으면 컴포넌트 파라미터의 기본값(= ...)이 사용됩니다.
  * - 이렇게 하면 <SEO />만 써도 기본 SEO 설정이 적용됩니다.
  *
- * title?: 페이지 제목 (기본: 'ARCA - SPA 브랜드 세일 정보')
+ * title?: 페이지 제목 (기본: 'DUPE - SPA 브랜드 세일 정보')
  * description?: 페이지 설명 (기본: 긴 설명 문구)
  * canonical?: 표준 URL (기본: 프로덕션 URL) — 중복 콘텐츠를 하나의 URL로 지정
  * ogImage?: Open Graph 이미지 URL (기본: og-image.png)
@@ -85,14 +85,14 @@ interface SEOProps {
  * { title = '기본값', description = '기본값', ... }
  * → props가 undefined이면 지정한 기본값을 사용합니다.
  * → Java에서는 불가능하지만, JavaScript/TypeScript에서는 파라미터에 기본값을 설정할 수 있습니다.
- * Java 비유: public void render(String title) { if (title == null) title = "ARCA..."; }
+ * Java 비유: public void render(String title) { if (title == null) title = "DUPE..."; }
  *
  * 사용 예시 (pages/index.tsx):
  * <SEO /> // 기본값 사용
  *
  * 사용 예시 (pages/product/[id].tsx):
  * <SEO
- *   title={`${product.name} - ARCA`}
+ *   title={`${product.name} - DUPE`}
  *   description={product.description}
  *   ogImage={product.imageUrl}
  *   ogType="product"
@@ -100,7 +100,7 @@ interface SEOProps {
  * />
  */
 export default function SEO({
-  title = 'ARCA - SPA 브랜드 세일 정보',
+  title = 'DUPE - 사진으로 찾는 SPA 세일 상품',
   description = 'H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 최신 세일 정보.',
   canonical = 'https://mion-spa-info.vercel.app',
   ogImage = 'https://mion-spa-info.vercel.app/og-image.png',
@@ -126,7 +126,7 @@ export default function SEO({
   const defaultStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'ARCA',
+    name: 'DUPE',
     description: 'SPA 브랜드 세일 정보 모음',
     url: 'https://mion-spa-info.vercel.app',
     potentialAction: {
@@ -139,7 +139,7 @@ export default function SEO({
     },
     publisher: {
       '@type': 'Organization',
-      name: 'ARCA',
+      name: 'DUPE',
       logo: {
         '@type': 'ImageObject',
         url: 'https://mion-spa-info.vercel.app/favicon.svg',
@@ -205,7 +205,7 @@ export default function SEO({
         name="keywords"
         content={keywords}
       />
-      <meta key="author" name="author" content="ARCA" />
+      <meta key="author" name="author" content="DUPE" />
       {googleSiteVerification && (
         <meta
           key="google-site-verification"
@@ -251,7 +251,7 @@ export default function SEO({
       <meta key="og:description" property="og:description" content={description} />
       <meta key="og:url" property="og:url" content={canonical} />
       <meta key="og:image" property="og:image" content={ogImage} />
-      <meta key="og:site_name" property="og:site_name" content="ARCA" />
+      <meta key="og:site_name" property="og:site_name" content="DUPE" />
       <meta key="og:locale" property="og:locale" content="ko_KR" />
 
       {/* ────────────────────────────────────────

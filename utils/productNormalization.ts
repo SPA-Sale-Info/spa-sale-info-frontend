@@ -15,7 +15,7 @@ import type {
  *
  * 이전 값(placeholder-product.svg)은 구 디자인 시스템에서 남은 청보라 그라데이션 +
  * 영문 "No Image" 텍스트라, 현재의 모노크롬 웜그레이 팔레트와 충돌했습니다.
- * ARCA 팔레트(#F1F1EE 배경 / #DCDCD6 실루엣)에 맞춘 옷걸이 일러스트로 교체해
+ * DUPE 팔레트(#F1F1EE 배경 / #DCDCD6 실루엣)에 맞춘 옷걸이 일러스트로 교체해
  * 이미지가 깨진 카드도 그리드 안에서 튀지 않고 자연스럽게 섞이도록 했습니다.
  */
 const FALLBACK_IMAGE = '/placeholder-product.jpg';

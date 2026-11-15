@@ -115,7 +115,7 @@ export default function NotificationsPage() {
   return (
     <>
       <Head>
-        <title>알림 | ARCA</title>
+        <title>알림 | DUPE</title>
         <meta name="robots" content="noindex" />
       </Head>
 

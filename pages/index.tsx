@@ -4,7 +4,7 @@
  * ═══════════════════════════════════════════════════════════════
  * 📌 이 파일이 하는 일
  * ═══════════════════════════════════════════════════════════════
- * ARCA 앱의 메인 화면입니다. URL "/" 에 해당합니다.
+ * DUPE 앱의 메인 화면입니다. URL "/" 에 해당합니다.
  * 상품 목록 표시, 필터(브랜드/성별/카테고리), 검색, 무한 스크롤을 담당합니다.
  *
  * ═══════════════════════════════════════════════════════════════
@@ -959,7 +959,7 @@ export default function Home() {
       </div>
       <div className={styles.mainContent}>
         <SEO
-          title="ARCA - H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 세일 정보 | 매일 업데이트"
+          title="DUPE - 사진으로 찾는 SPA 세일 상품 | H&M, ZARA, UNIQLO, MUJI"
           description="H&M, ZARA, UNIQLO, MUJI, 찰스앤키스 등 인기 SPA 브랜드의 할인 상품을 한눈에 비교하세요. 매일 업데이트되는 세일 정보로 합리적인 쇼핑을 즐기세요."
           canonical="https://mion-spa-info.vercel.app"
           googleSiteVerification="Jq8ncQ8slNfWXuqPL_ZZv8f10qrXEApKFkjkwDsy56k"
@@ -967,8 +967,8 @@ export default function Home() {
             {
               '@context': 'https://schema.org',
               '@type': 'WebSite',
-              name: 'ARCA',
-              description: 'SPA 브랜드 세일 정보 큐레이션 서비스 - ARCA',
+              name: 'DUPE',
+              description: 'SPA 브랜드 세일 정보 큐레이션 서비스 - DUPE',
               url: 'https://mion-spa-info.vercel.app',
               potentialAction: {
                 '@type': 'SearchAction',
@@ -1005,10 +1005,10 @@ export default function Home() {
             {
               '@context': 'https://schema.org',
               '@type': 'Organization',
-              name: 'ARCA',
+              name: 'DUPE',
               url: 'https://mion-spa-info.vercel.app',
               logo: 'https://mion-spa-info.vercel.app/favicon.ico',
-              description: 'ARCA - SPA 브랜드 할인 상품 정보를 제공하는 큐레이션 서비스',
+              description: 'DUPE - SPA 브랜드 할인 상품 정보를 제공하는 큐레이션 서비스',
               sameAs: [],
             },
           ]}
@@ -1027,16 +1027,16 @@ export default function Home() {
         <header className={`${styles.masthead} ${navScrolled ? styles.mastheadScrolled : ''}`}>
           <div className={styles.mastheadInner}>
 
-            {/* 제호 — "A"에서 "ARCA"가 펼쳐지는 리빌은 유지하되,
+            {/* 제호 — "D"에서 "DUPE"가 펼쳐지는 리빌은 유지하되,
                 아래에 발행 성격을 밝히는 부제를 붙여 색인의 제호처럼 읽히게 했습니다. */}
             <Link href="/" className={styles.logo}>
               <span className={styles.logoSegment}>
-                <span className={styles.logoChar}>A</span>
+                <span className={styles.logoChar}>D</span>
                 <span className={`${styles.logoWord} ${logoStep >= 1 ? styles.logoWordVisible : ''}`}>
-                  RCA
+                  UPE
                 </span>
               </span>
-              <span className={styles.logoTagline}>SPA Sale Archive</span>
+              <span className={styles.logoTagline}>Find the SPA dupe</span>
             </Link>
 
             {/* 검색창
@@ -1085,6 +1085,8 @@ export default function Home() {
 
             {/* 오른쪽 액션 — 찜 목록 + 테마 토글 */}
             <div className={styles.mastheadActions}>
+              {/* 사진을 올려 비슷한 세일 상품을 찾는 페이지로 이동 */}
+              <Link href="/search-by-image" className={styles.iconLink}>사진으로 찾기</Link>
               {/* 읽지 않은 가격 알림 개수와 알림함 링크 */}
               <NotificationBell />
               <Link href="/favorites" className={styles.iconLink} aria-label="찜 목록">
