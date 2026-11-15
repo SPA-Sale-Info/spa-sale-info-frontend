@@ -291,7 +291,8 @@ const nextConfig = {
    */
   async rewrites() {
     // 백엔드 API 서버 주소 (환경변수로 관리, .env.local의 API_URL 사용)
-    const apiUrl = process.env.API_URL || '';
+    // 끝의 '/'를 떼지 않으면 '//api/v1/...'로 전달되어 백엔드가 400으로 거부합니다.
+    const apiUrl = (process.env.API_URL || '').replace(/\/+$/, '');
     return [
       {
         // /api/v1/... 로 들어오는 모든 요청을 백엔드로 프록시
