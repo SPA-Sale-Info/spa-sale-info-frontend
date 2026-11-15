@@ -73,6 +73,11 @@ export default function SearchByImagePage() {
   const [inputError, setInputError] = useState<string | null>(null);
   const [view, setView] = useState<SearchView | null>(null);
   const [detection, setDetection] = useState<string | null>(null);
+
+  // 사진 검색 서버는 안 쓸 때 꺼져 있어 첫 검색이 느립니다. 화면이 열릴 때 미리 깨워 둡니다.
+  useEffect(() => {
+    fetch('/api/v1/products/search/by-image/warmup').catch(() => undefined);
+  }, []);
   const [products, setProducts] = useState<NormalizedProduct[]>([]);
   const [categoryIndex, setCategoryIndex] = useState(0);
   const [genderIndex, setGenderIndex] = useState(0);
